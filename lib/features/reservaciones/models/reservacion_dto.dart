@@ -16,8 +16,8 @@ class ReservacionDto {
   Map<String, dynamic> toJson() => {
     'idVehiculo': idVehiculo,
     'idCliente': idCliente,
-    'fechaInicio': fechaInicio.toIso8601String(),
-    'fechaFin': fechaFin.toIso8601String(),
+    'fechaInicio': fechaInicio.toUtc().toIso8601String(),
+    'fechaFin': fechaFin.toUtc().toIso8601String(),
     'observacion': _nullable(observacion),
   };
 

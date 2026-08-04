@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:sgrv_frontend/features/auth/pages/login_page.dart';
 import 'package:sgrv_frontend/features/auth/providers/auth_provider.dart';
 import 'package:sgrv_frontend/features/empresas/pages/empresa_page.dart';
 import 'package:sgrv_frontend/features/proveedores/pages/proveedores_vehiculos_page.dart';
 import 'package:sgrv_frontend/features/reservaciones/pages/reservaciones_page.dart';
+import 'package:sgrv_frontend/features/reservaciones/providers/reservacion_provider.dart';
 import 'package:sgrv_frontend/features/vehiculos/pages/vehiculos_page.dart';
 import 'package:sgrv_frontend/features/clientes/pages/clientes_page.dart';
 
@@ -30,6 +32,14 @@ class _DashboardPageState extends State<DashboardPage> {
   static const Color _dangerColor = Color(0xFFE94B4B);
 
   int _indiceSeleccionado = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ReservacionProvider>().loadDashboard();
+    });
+  }
 
   final List<_MenuItem> _opcionesMenu = const [
     _MenuItem(titulo: 'Dashboard', icono: Icons.dashboard_rounded),
@@ -830,35 +840,9 @@ class _GraficoIngresosPainter extends CustomPainter {
 class _TarjetaReservas extends StatelessWidget {
   const _TarjetaReservas();
 
-  static const List<_ReservaDashboard> reservas = [
-    _ReservaDashboard(
-      vehiculo: 'Toyota RAV4 2021',
-      cliente: 'Juan Pérez',
-      estado: 'Confirmada',
-      color: _DashboardPageState._successColor,
-    ),
-    _ReservaDashboard(
-      vehiculo: 'Hyundai Tucson 2020',
-      cliente: 'María García',
-      estado: 'En proceso',
-      color: _DashboardPageState._primaryColor,
-    ),
-    _ReservaDashboard(
-      vehiculo: 'Kia Sportage 2022',
-      cliente: 'Carlos Rodríguez',
-      estado: 'Pendiente',
-      color: _DashboardPageState._warningColor,
-    ),
-    _ReservaDashboard(
-      vehiculo: 'Nissan X-Trail 2021',
-      cliente: 'Laura Martínez',
-      estado: 'Confirmada',
-      color: _DashboardPageState._successColor,
-    ),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final reservas = context.watch<ReservacionProvider>().recent;
     return _Panel(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -904,12 +888,12 @@ class _TarjetaReservas extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          reserva.vehiculo,
+                          reserva.vehiculoDescripcion,
                           style: const TextStyle(fontWeight: FontWeight.w700),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          reserva.cliente,
+                          reserva.clienteNombre,
                           style: const TextStyle(
                             color: _DashboardPageState._mutedColor,
                             fontSize: 12,
@@ -924,13 +908,15 @@ class _TarjetaReservas extends StatelessWidget {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: reserva.color.withValues(alpha: 0.11),
+                      color: _stateColor(
+                        reserva.estadoCodigo,
+                      ).withValues(alpha: 0.11),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      reserva.estado,
+                      reserva.estadoNombre,
                       style: TextStyle(
-                        color: reserva.color,
+                        color: _stateColor(reserva.estadoCodigo),
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
                       ),
@@ -944,6 +930,12 @@ class _TarjetaReservas extends StatelessWidget {
       ),
     );
   }
+
+  static Color _stateColor(String code) => switch (code) {
+    'CONFIRMADA' => _DashboardPageState._successColor,
+    'CANCELADA' => _DashboardPageState._dangerColor,
+    _ => _DashboardPageState._warningColor,
+  };
 }
 
 class _TarjetaCategorias extends StatelessWidget {
@@ -951,11 +943,12 @@ class _TarjetaCategorias extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const _Panel(
+    final reservas = context.watch<ReservacionProvider>().upcoming;
+    return _Panel(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          const Text(
             'Vehículos por categoría',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
           ),
@@ -1042,22 +1035,19 @@ class _TarjetaProximasReservas extends StatelessWidget {
             'Próximas reservas',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
           ),
-          SizedBox(height: 16),
-          _ElementoLista(
-            icono: Icons.directions_car,
-            titulo: 'Toyota Land Cruiser 2022',
-            subtitulo: 'Mañana · 09:00 AM',
-          ),
-          _ElementoLista(
-            icono: Icons.directions_car,
-            titulo: 'Ford Explorer 2021',
-            subtitulo: '24 Jul · 02:00 PM',
-          ),
-          _ElementoLista(
-            icono: Icons.directions_car,
-            titulo: 'Chevrolet Tahoe 2022',
-            subtitulo: '25 Jul · 10:30 AM',
-          ),
+          const SizedBox(height: 16),
+          if (reservas.isEmpty)
+            const Text('No hay próximas reservaciones.')
+          else
+            ...reservas.map(
+              (reserva) => _ElementoLista(
+                icono: Icons.directions_car,
+                titulo: reserva.vehiculoDescripcion,
+                subtitulo: DateFormat(
+                  'dd MMM · hh:mm a',
+                ).format(reserva.fechaInicio),
+              ),
+            ),
         ],
       ),
     );
@@ -1289,19 +1279,5 @@ class _MenuItem {
     required this.titulo,
     required this.icono,
     this.proximamente = false,
-  });
-}
-
-class _ReservaDashboard {
-  final String vehiculo;
-  final String cliente;
-  final String estado;
-  final Color color;
-
-  const _ReservaDashboard({
-    required this.vehiculo,
-    required this.cliente,
-    required this.estado,
-    required this.color,
   });
 }

@@ -36,8 +36,8 @@ class _ReservacionFormPageState extends State<ReservacionFormPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final clients = context.read<ClienteProvider>();
       final vehicles = context.read<VehiculoProvider>();
-      if (clients.clientes.isEmpty) clients.cargar();
-      if (vehicles.vehiculos.isEmpty) vehicles.cargar();
+      clients.cargarParaSelector();
+      vehicles.cargar();
     });
   }
 

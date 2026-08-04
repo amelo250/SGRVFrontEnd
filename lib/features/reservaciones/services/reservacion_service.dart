@@ -56,6 +56,23 @@ class ReservacionService {
   Future<Reservacion> cancel(int id) =>
       _parse(_apiClient.patchJson('${ApiConfig.reservaciones}/$id/cancelar'));
 
+  Future<List<Reservacion>> getUpcoming({int take = 3}) async {
+    final uri = Uri.parse(ApiConfig.reservaciones).replace(
+      path: '${Uri.parse(ApiConfig.reservaciones).path}/proximas',
+      queryParameters: {'take': '$take'},
+    );
+    final response = ApiResponse<List<Reservacion>>.fromJson(
+      await _apiClient.getJson(uri.toString()),
+      (value) => (value as List<dynamic>)
+          .map((item) => Reservacion.fromJson(item as Map<String, dynamic>))
+          .toList(growable: false),
+    );
+    if (!response.success) throw ApiException(message: response.message);
+    return response.data ?? const <Reservacion>[];
+  }
+
+  void dispose() => _apiClient.dispose();
+
   Future<Reservacion> _parse(Future<Map<String, dynamic>> request) async {
     final response = ApiResponse<Reservacion>.fromJson(
       await request,

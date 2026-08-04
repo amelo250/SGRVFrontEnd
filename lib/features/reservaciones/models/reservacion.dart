@@ -42,9 +42,9 @@ class Reservacion {
     idEstado: (json['idEstado'] as num).toInt(),
     estadoCodigo: json['estadoCodigo']?.toString() ?? '',
     estadoNombre: json['estadoNombre']?.toString() ?? '',
-    fechaInicio: DateTime.parse(json['fechaInicio'] as String),
-    fechaFin: DateTime.parse(json['fechaFin'] as String),
+    fechaInicio: DateTime.parse(json['fechaInicio'] as String).toLocal(),
+    fechaFin: DateTime.parse(json['fechaFin'] as String).toLocal(),
     observacion: json['observacion']?.toString() ?? '',
-    fechaCreacion: DateTime.parse(json['fechaCreacion'] as String),
+    fechaCreacion: DateTime.parse(json['fechaCreacion'] as String).toLocal(),
   );
 }

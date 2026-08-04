@@ -49,9 +49,7 @@ class ClienteProvider extends ChangeNotifier {
       _pageSize = page.pageSize;
       _totalCount = page.totalCount;
       _totalPages = page.totalPages;
-      _status = _clientes.isEmpty
-          ? ClienteStatus.empty
-          : ClienteStatus.success;
+      _status = _clientes.isEmpty ? ClienteStatus.empty : ClienteStatus.success;
     } on ApiException catch (error) {
       _errorMessage = error.message;
       _status = ClienteStatus.error;
@@ -65,6 +63,14 @@ class ClienteProvider extends ChangeNotifier {
   Future<void> buscar(String value) async {
     _search = value.trim();
     _pageNumber = 1;
+    await cargar();
+  }
+
+  Future<void> cargarParaSelector() async {
+    _search = '';
+    _incluirInactivos = false;
+    _pageNumber = 1;
+    _pageSize = 100;
     await cargar();
   }
 
@@ -86,16 +92,14 @@ class ClienteProvider extends ChangeNotifier {
     await cargar();
   }
 
-  Future<bool> crear(ClienteDto dto) =>
-      _mutar(() => _service.crear(dto));
+  Future<bool> crear(ClienteDto dto) => _mutar(() => _service.crear(dto));
   Future<bool> actualizar(int id, ClienteDto dto) =>
       _mutar(() => _service.actualizar(id, dto));
   Future<bool> desactivar(int id) => _mutar(() async {
     await _service.desactivar(id);
     return null;
   });
-  Future<bool> restaurar(int id) =>
-      _mutar(() => _service.restaurar(id));
+  Future<bool> restaurar(int id) => _mutar(() => _service.restaurar(id));
 
   Future<bool> _mutar(Future<Object?> Function() operation) async {
     _isMutating = true;

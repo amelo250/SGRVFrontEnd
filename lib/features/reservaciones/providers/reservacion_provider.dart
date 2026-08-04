@@ -20,6 +20,9 @@ class ReservacionProvider extends ChangeNotifier {
   int _pageSize = 20;
   int _totalCount = 0;
   int _totalPages = 1;
+  int _requestVersion = 0;
+  List<Reservacion> _recent = const [];
+  List<Reservacion> _upcoming = const [];
 
   List<Reservacion> get items => List.unmodifiable(_items);
   ReservacionStatus get status => _status;
@@ -30,8 +33,11 @@ class ReservacionProvider extends ChangeNotifier {
   int get totalCount => _totalCount;
   bool get hasPreviousPage => _pageNumber > 1;
   bool get hasNextPage => _pageNumber < _totalPages;
+  List<Reservacion> get recent => List.unmodifiable(_recent);
+  List<Reservacion> get upcoming => List.unmodifiable(_upcoming);
 
   Future<void> load({bool refresh = false}) async {
+    final requestVersion = ++_requestVersion;
     if (!refresh) _status = ReservacionStatus.loading;
     _errorMessage = null;
     notifyListeners();
@@ -41,6 +47,7 @@ class ReservacionProvider extends ChangeNotifier {
         pageSize: _pageSize,
         search: _search,
       );
+      if (requestVersion != _requestVersion) return;
       _items = page.items;
       _pageNumber = page.pageNumber;
       _pageSize = page.pageSize;
@@ -50,19 +57,36 @@ class ReservacionProvider extends ChangeNotifier {
           ? ReservacionStatus.empty
           : ReservacionStatus.success;
     } on ApiException catch (error) {
+      if (requestVersion != _requestVersion) return;
       _errorMessage = error.message;
       _status = ReservacionStatus.error;
     } catch (_) {
+      if (requestVersion != _requestVersion) return;
       _errorMessage = 'No fue posible cargar las reservaciones.';
       _status = ReservacionStatus.error;
     }
-    notifyListeners();
+    if (requestVersion == _requestVersion) notifyListeners();
   }
 
   Future<void> search(String value) async {
     _search = value.trim();
     _pageNumber = 1;
     await load();
+  }
+
+  Future<void> loadDashboard() async {
+    try {
+      final results = await Future.wait<Object>([
+        _service.getAll(pageNumber: 1, pageSize: 4),
+        _service.getUpcoming(take: 3),
+      ]);
+      _recent = (results[0] as ReservacionPageResult).items;
+      _upcoming = results[1] as List<Reservacion>;
+      notifyListeners();
+    } on ApiException catch (error) {
+      _errorMessage = error.message;
+      notifyListeners();
+    }
   }
 
   Future<void> previousPage() async {
@@ -102,5 +126,11 @@ class ReservacionProvider extends ChangeNotifier {
       _isMutating = false;
       notifyListeners();
     }
+  }
+
+  @override
+  void dispose() {
+    _service.dispose();
+    super.dispose();
   }
 }
