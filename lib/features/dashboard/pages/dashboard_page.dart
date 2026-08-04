@@ -4,6 +4,7 @@ import 'package:sgrv_frontend/features/auth/pages/login_page.dart';
 import 'package:sgrv_frontend/features/auth/providers/auth_provider.dart';
 import 'package:sgrv_frontend/features/empresas/pages/empresa_page.dart';
 import 'package:sgrv_frontend/features/proveedores/pages/proveedores_vehiculos_page.dart';
+import 'package:sgrv_frontend/features/reservaciones/pages/reservaciones_page.dart';
 import 'package:sgrv_frontend/features/vehiculos/pages/vehiculos_page.dart';
 import 'package:sgrv_frontend/features/clientes/pages/clientes_page.dart';
 
@@ -32,11 +33,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
   final List<_MenuItem> _opcionesMenu = const [
     _MenuItem(titulo: 'Dashboard', icono: Icons.dashboard_rounded),
-    _MenuItem(
-      titulo: 'Reservas',
-      icono: Icons.event_note_rounded,
-      proximamente: true,
-    ),
+    _MenuItem(titulo: 'Reservas', icono: Icons.event_note_rounded),
     _MenuItem(titulo: 'Vehículos', icono: Icons.directions_car_rounded),
     _MenuItem(titulo: 'Clientes', icono: Icons.people_alt_rounded),
     _MenuItem(
@@ -92,6 +89,15 @@ class _DashboardPageState extends State<DashboardPage> {
       Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => const VehiculosPage()),
+      );
+
+      return;
+    }
+
+    if (indice == 1) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const ReservacionesPage()),
       );
 
       return;
