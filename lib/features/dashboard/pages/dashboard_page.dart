@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:sgrv_frontend/features/auth/pages/login_page.dart';
 import 'package:sgrv_frontend/features/auth/providers/auth_provider.dart';
 import 'package:sgrv_frontend/features/empresas/pages/empresa_page.dart';
+import 'package:sgrv_frontend/features/proveedores/pages/proveedores_vehiculos_page.dart';
+import 'package:sgrv_frontend/features/vehiculos/pages/vehiculos_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -34,11 +36,7 @@ class _DashboardPageState extends State<DashboardPage> {
       icono: Icons.event_note_rounded,
       proximamente: true,
     ),
-    _MenuItem(
-      titulo: 'Vehículos',
-      icono: Icons.directions_car_rounded,
-      proximamente: true,
-    ),
+    _MenuItem(titulo: 'Vehículos', icono: Icons.directions_car_rounded),
     _MenuItem(
       titulo: 'Clientes',
       icono: Icons.people_alt_rounded,
@@ -60,11 +58,7 @@ class _DashboardPageState extends State<DashboardPage> {
       proximamente: true,
     ),
     _MenuItem(titulo: 'Empresas', icono: Icons.business_rounded),
-    _MenuItem(
-      titulo: 'Proveedores',
-      icono: Icons.handshake_rounded,
-      proximamente: true,
-    ),
+    _MenuItem(titulo: 'Proveedores', icono: Icons.handshake_rounded),
     _MenuItem(
       titulo: 'Configuración',
       icono: Icons.settings_rounded,
@@ -97,10 +91,28 @@ class _DashboardPageState extends State<DashboardPage> {
       Navigator.pop(context);
     }
 
+    if (indice == 2) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const VehiculosPage()),
+      );
+
+      return;
+    }
+
     if (indice == 7) {
       Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => const EmpresasPage()),
+      );
+
+      return;
+    }
+
+    if (indice == 8) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const ProveedoresVehiculosPage()),
       );
 
       return;

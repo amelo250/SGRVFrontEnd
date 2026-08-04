@@ -2,7 +2,7 @@ class ApiConfig {
   ApiConfig._();
 
   static const String baseUrl = String.fromEnvironment(
-    'https://localhost:7206',
+    'API_BASE_URL',
     defaultValue: 'http://10.0.2.2:5083',
   );
 
@@ -12,4 +12,6 @@ class ApiConfig {
   static const String empresas = '$baseUrl/api/empresas';
   static const String clientes = '$baseUrl/api/clientes';
   static const String vehiculos = '$baseUrl/api/vehiculos';
+  static const String proveedoresVehiculos =
+      '$baseUrl/api/proveedoresvehiculos';
 }
