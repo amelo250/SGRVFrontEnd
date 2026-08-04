@@ -5,6 +5,7 @@ import 'package:sgrv_frontend/features/auth/providers/auth_provider.dart';
 import 'package:sgrv_frontend/features/empresas/pages/empresa_page.dart';
 import 'package:sgrv_frontend/features/proveedores/pages/proveedores_vehiculos_page.dart';
 import 'package:sgrv_frontend/features/vehiculos/pages/vehiculos_page.dart';
+import 'package:sgrv_frontend/features/clientes/pages/clientes_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -37,11 +38,7 @@ class _DashboardPageState extends State<DashboardPage> {
       proximamente: true,
     ),
     _MenuItem(titulo: 'Vehículos', icono: Icons.directions_car_rounded),
-    _MenuItem(
-      titulo: 'Clientes',
-      icono: Icons.people_alt_rounded,
-      proximamente: true,
-    ),
+    _MenuItem(titulo: 'Clientes', icono: Icons.people_alt_rounded),
     _MenuItem(
       titulo: 'Pagos',
       icono: Icons.payments_rounded,
@@ -95,6 +92,14 @@ class _DashboardPageState extends State<DashboardPage> {
       Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => const VehiculosPage()),
+      );
+
+      return;
+    }
+    if (indice == 3) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const ClientesPage()),
       );
 
       return;
