@@ -9,6 +9,7 @@ import 'package:sgrv_frontend/features/reservaciones/pages/reservaciones_page.da
 import 'package:sgrv_frontend/features/reservaciones/providers/reservacion_provider.dart';
 import 'package:sgrv_frontend/features/vehiculos/pages/vehiculos_page.dart';
 import 'package:sgrv_frontend/features/clientes/pages/clientes_page.dart';
+import 'package:sgrv_frontend/features/rentas/pages/rentas_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -44,6 +45,7 @@ class _DashboardPageState extends State<DashboardPage> {
   final List<_MenuItem> _opcionesMenu = const [
     _MenuItem(titulo: 'Dashboard', icono: Icons.dashboard_rounded),
     _MenuItem(titulo: 'Reservas', icono: Icons.event_note_rounded),
+    _MenuItem(titulo: 'Rentas', icono: Icons.key_rounded),
     _MenuItem(titulo: 'Vehículos', icono: Icons.directions_car_rounded),
     _MenuItem(titulo: 'Clientes', icono: Icons.people_alt_rounded),
     _MenuItem(
@@ -95,7 +97,7 @@ class _DashboardPageState extends State<DashboardPage> {
       Navigator.pop(context);
     }
 
-    if (indice == 2) {
+    if (indice == 3) {
       Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => const VehiculosPage()),
@@ -112,7 +114,15 @@ class _DashboardPageState extends State<DashboardPage> {
 
       return;
     }
-    if (indice == 3) {
+    if (indice == 2) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const RentasPage()),
+      );
+
+      return;
+    }
+    if (indice == 4) {
       Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => const ClientesPage()),
@@ -121,7 +131,7 @@ class _DashboardPageState extends State<DashboardPage> {
       return;
     }
 
-    if (indice == 7) {
+    if (indice == 8) {
       Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => const EmpresasPage()),
@@ -130,7 +140,7 @@ class _DashboardPageState extends State<DashboardPage> {
       return;
     }
 
-    if (indice == 8) {
+    if (indice == 9) {
       Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => const ProveedoresVehiculosPage()),

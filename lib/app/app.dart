@@ -5,6 +5,7 @@ import 'package:sgrv_frontend/features/auth/providers/auth_provider.dart';
 import 'package:sgrv_frontend/features/empresas/providers/empresa_provider.dart';
 import 'package:sgrv_frontend/features/proveedores/providers/proveedor_vehiculo_provider.dart';
 import 'package:sgrv_frontend/features/reservaciones/providers/reservacion_provider.dart';
+import 'package:sgrv_frontend/features/rentas/providers/renta_provider.dart';
 import 'package:sgrv_frontend/features/vehiculos/providers/vehiculo_provider.dart';
 import 'package:sgrv_frontend/features/vehiculos/providers/vehicle_catalog_provider.dart';
 import 'package:sgrv_frontend/shared/colors/app_theme.dart';
@@ -24,6 +25,7 @@ class SgrvApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => VehicleCatalogProvider()),
         ChangeNotifierProvider(create: (_) => ClienteProvider()),
         ChangeNotifierProvider(create: (_) => ReservacionProvider()),
+        ChangeNotifierProvider(create: (_) => RentaProvider()),
       ],
       child: MaterialApp(
         title: 'SGRV',
