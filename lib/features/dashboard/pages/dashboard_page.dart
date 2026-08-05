@@ -10,6 +10,7 @@ import 'package:sgrv_frontend/features/reservaciones/providers/reservacion_provi
 import 'package:sgrv_frontend/features/vehiculos/pages/vehiculos_page.dart';
 import 'package:sgrv_frontend/features/clientes/pages/clientes_page.dart';
 import 'package:sgrv_frontend/features/rentas/pages/rentas_page.dart';
+import 'package:sgrv_frontend/features/pagos/pages/pagos_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -48,11 +49,7 @@ class _DashboardPageState extends State<DashboardPage> {
     _MenuItem(titulo: 'Rentas', icono: Icons.key_rounded),
     _MenuItem(titulo: 'Vehículos', icono: Icons.directions_car_rounded),
     _MenuItem(titulo: 'Clientes', icono: Icons.people_alt_rounded),
-    _MenuItem(
-      titulo: 'Pagos',
-      icono: Icons.payments_rounded,
-      proximamente: true,
-    ),
+    _MenuItem(titulo: 'Pagos', icono: Icons.payments_rounded),
     _MenuItem(
       titulo: 'Calendario',
       icono: Icons.calendar_month_rounded,
@@ -126,6 +123,15 @@ class _DashboardPageState extends State<DashboardPage> {
       Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => const ClientesPage()),
+      );
+
+      return;
+    }
+
+    if (indice == 5) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const PagosPage()),
       );
 
       return;

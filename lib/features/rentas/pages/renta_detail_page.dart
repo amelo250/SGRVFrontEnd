@@ -6,6 +6,7 @@ import 'package:sgrv_frontend/features/rentas/pages/renta_form_page.dart';
 import 'package:sgrv_frontend/features/rentas/providers/renta_provider.dart';
 import 'package:sgrv_frontend/features/rentas/widgets/renta_financial_summary.dart';
 import 'package:sgrv_frontend/features/rentas/widgets/renta_status_chip.dart';
+import 'package:sgrv_frontend/features/pagos/pages/pago_form_page.dart';
 
 class RentaDetailPage extends StatefulWidget {
   const RentaDetailPage({required this.rentaId, super.key});
@@ -146,6 +147,12 @@ class _RentaDetailPageState extends State<RentaDetailPage> {
             code: rental.estadoCodigo,
             label: rental.estadoNombre,
           ),
+          if (rental.activa)
+            FilledButton.icon(
+              onPressed: provider.isMutating ? null : _registerPayment,
+              icon: const Icon(Icons.add_card_rounded),
+              label: const Text('Registrar pago'),
+            ),
           if (rental.puedeEditar)
             OutlinedButton.icon(
               style: OutlinedButton.styleFrom(
@@ -315,6 +322,17 @@ class _RentaDetailPageState extends State<RentaDetailPage> {
       MaterialPageRoute(builder: (_) => RentaFormPage(renta: rental)),
     );
     if (mounted) await _load();
+  }
+
+  Future<void> _registerPayment() async {
+    final rental = context.read<RentaProvider>().selected!;
+    final created = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PagoFormPage(initialRentaId: rental.idRenta),
+      ),
+    );
+    if (created == true && mounted) await _load();
   }
 
   Future<void> _complete() async {
