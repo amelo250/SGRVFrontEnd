@@ -101,7 +101,7 @@ class _ReservacionesPageState extends State<ReservacionesPage> {
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
                 itemCount: provider.items.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 8),
+                separatorBuilder: (_, _) => const SizedBox(height: 8),
                 itemBuilder: (_, index) {
                   final item = provider.items[index];
                   return ReservacionCard(

@@ -268,7 +268,7 @@ class _Sidebar extends StatelessWidget {
           Expanded(
             child: ListView.separated(
               itemCount: opciones.length,
-              separatorBuilder: (_, __) {
+              separatorBuilder: (_, _) {
                 return const SizedBox(height: 4);
               },
               itemBuilder: (context, indice) {
@@ -943,7 +943,6 @@ class _TarjetaCategorias extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final reservas = context.watch<ReservacionProvider>().upcoming;
     return _Panel(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1027,7 +1026,8 @@ class _TarjetaProximasReservas extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const _Panel(
+    final reservas = context.watch<ReservacionProvider>().upcoming;
+    return _Panel(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

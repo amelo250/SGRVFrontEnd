@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:sgrv_frontend/core/network/api_exception.dart';
 import 'package:sgrv_frontend/features/reservaciones/models/reservacion.dart';
 import 'package:sgrv_frontend/features/reservaciones/models/reservacion_dto.dart';
+import 'package:sgrv_frontend/features/reservaciones/models/reservacion_page_result.dart';
 import 'package:sgrv_frontend/features/reservaciones/services/reservacion_service.dart';
 
 enum ReservacionStatus { initial, loading, success, empty, error }

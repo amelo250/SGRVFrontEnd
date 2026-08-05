@@ -23,8 +23,7 @@ class ClienteService {
         'pageNumber': '$pageNumber',
         'pageSize': '$pageSize',
         'incluirInactivos': '$incluirInactivos',
-        if (search != null && search.trim().isNotEmpty)
-          'search': search.trim(),
+        if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
       },
     );
     final result = await _apiClient.getJsonResult(uri.toString());
@@ -49,17 +48,15 @@ class ClienteService {
   Future<Cliente> crear(ClienteDto dto) =>
       _parse(_apiClient.postJson(ApiConfig.clientes, dto.toJson()));
 
-  Future<Cliente> actualizar(int id, ClienteDto dto) => _parse(
-    _apiClient.putJson('${ApiConfig.clientes}/$id', dto.toJson()),
-  );
+  Future<Cliente> actualizar(int id, ClienteDto dto) =>
+      _parse(_apiClient.putJson('${ApiConfig.clientes}/$id', dto.toJson()));
 
   Future<void> desactivar(int id) async {
     await _apiClient.deleteJson('${ApiConfig.clientes}/$id');
   }
 
-  Future<Cliente> restaurar(int id) => _parse(
-    _apiClient.patchJson('${ApiConfig.clientes}/$id/restaurar'),
-  );
+  Future<Cliente> restaurar(int id) =>
+      _parse(_apiClient.patchJson('${ApiConfig.clientes}/$id/restaurar'));
 
   Future<Cliente> _parse(Future<Map<String, dynamic>> request) async {
     final response = ApiResponse<Cliente>.fromJson(
@@ -76,9 +73,6 @@ class ClienteService {
     return response.data!;
   }
 
-  static int _header(
-    Map<String, String> headers,
-    String key,
-    int fallback,
-  ) => int.tryParse(headers[key] ?? '') ?? fallback;
+  static int _header(Map<String, String> headers, String key, int fallback) =>
+      int.tryParse(headers[key] ?? '') ?? fallback;
 }

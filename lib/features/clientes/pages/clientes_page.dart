@@ -49,9 +49,7 @@ class _ClientesPageState extends State<ClientesPage> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: provider.isMutating
-            ? null
-            : () => _abrirFormulario(context),
+        onPressed: provider.isMutating ? null : () => _abrirFormulario(context),
         icon: const Icon(Icons.person_add_alt_1),
         label: const Text('Nuevo cliente'),
       ),
@@ -71,10 +69,7 @@ class _ClientesPageState extends State<ClientesPage> {
           ),
           if (provider.status == ClienteStatus.success)
             Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 18,
-                vertical: 8,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
@@ -91,9 +86,8 @@ class _ClientesPageState extends State<ClientesPage> {
 
   Widget _body(ClienteProvider provider) {
     return switch (provider.status) {
-      ClienteStatus.initial || ClienteStatus.loading => const Center(
-        child: CircularProgressIndicator(),
-      ),
+      ClienteStatus.initial ||
+      ClienteStatus.loading => const Center(child: CircularProgressIndicator()),
       ClienteStatus.error => _ErrorState(
         message: provider.errorMessage ?? 'No fue posible cargar.',
         onRetry: provider.cargar,
@@ -104,9 +98,7 @@ class _ClientesPageState extends State<ClientesPage> {
           physics: AlwaysScrollableScrollPhysics(),
           slivers: [
             SliverFillRemaining(
-              child: Center(
-                child: Text('No hay clientes para mostrar.'),
-              ),
+              child: Center(child: Text('No hay clientes para mostrar.')),
             ),
           ],
         ),
@@ -120,21 +112,16 @@ class _ClientesPageState extends State<ClientesPage> {
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
                 itemCount: provider.clientes.length,
-                separatorBuilder: (_, __) =>
-                    const SizedBox(height: 8),
+                separatorBuilder: (_, __) => const SizedBox(height: 8),
                 itemBuilder: (_, index) {
                   final cliente = provider.clientes[index];
                   return ClienteCard(
                     cliente: cliente,
                     onEditar: () => _abrirFormulario(context, cliente),
-                    onDesactivar: () => _confirmarEstado(
-                      cliente,
-                      restaurar: false,
-                    ),
-                    onRestaurar: () => _confirmarEstado(
-                      cliente,
-                      restaurar: true,
-                    ),
+                    onDesactivar: () =>
+                        _confirmarEstado(cliente, restaurar: false),
+                    onRestaurar: () =>
+                        _confirmarEstado(cliente, restaurar: true),
                   );
                 },
               ),
@@ -174,23 +161,15 @@ class _ClientesPageState extends State<ClientesPage> {
 
   void _onSearchChanged(String value) {
     _searchDebounce?.cancel();
-    _searchDebounce = Timer(
-      const Duration(milliseconds: 400),
-      () {
-        if (mounted) context.read<ClienteProvider>().buscar(value);
-      },
-    );
+    _searchDebounce = Timer(const Duration(milliseconds: 400), () {
+      if (mounted) context.read<ClienteProvider>().buscar(value);
+    });
   }
 
-  Future<void> _abrirFormulario(
-    BuildContext context, [
-    Cliente? cliente,
-  ]) {
+  Future<void> _abrirFormulario(BuildContext context, [Cliente? cliente]) {
     return Navigator.push<void>(
       context,
-      MaterialPageRoute(
-        builder: (_) => ClienteFormPage(cliente: cliente),
-      ),
+      MaterialPageRoute(builder: (_) => ClienteFormPage(cliente: cliente)),
     );
   }
 
@@ -203,9 +182,7 @@ class _ClientesPageState extends State<ClientesPage> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text('${restaurar ? 'Restaurar' : 'Desactivar'} cliente'),
-        content: Text(
-          '¿Deseas $verb a ${cliente.nombreCompleto}?',
-        ),
+        content: Text('¿Deseas $verb a ${cliente.nombreCompleto}?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),

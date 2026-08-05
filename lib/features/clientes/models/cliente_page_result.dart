@@ -13,6 +13,5 @@ class ClientePageResult {
   final int pageNumber;
   final int pageSize;
 
-  int get totalPages =>
-      totalCount == 0 ? 1 : (totalCount / pageSize).ceil();
+  int get totalPages => totalCount == 0 ? 1 : (totalCount / pageSize).ceil();
 }

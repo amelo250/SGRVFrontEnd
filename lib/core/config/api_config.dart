@@ -13,6 +13,7 @@ class ApiConfig {
   static const String clientes = '$baseUrl/api/clientes';
   static const String reservaciones = '$baseUrl/api/reservaciones';
   static const String vehiculos = '$baseUrl/api/vehiculos';
+  static const String catalogs = '$baseUrl/api/catalogos';
   static const String proveedoresVehiculos =
       '$baseUrl/api/proveedoresvehiculos';
 }

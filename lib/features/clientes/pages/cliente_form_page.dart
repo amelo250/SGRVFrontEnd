@@ -64,10 +64,7 @@ class _ClienteFormPageState extends State<ClienteFormPage> {
             children: [
               _section(context, 'Información personal'),
               const SizedBox(height: 14),
-              _row(
-                _field('nombre', 'Nombre'),
-                _field('apellido', 'Apellido'),
-              ),
+              _row(_field('nombre', 'Nombre'), _field('apellido', 'Apellido')),
               _row(
                 _field('documento', 'Cédula o pasaporte'),
                 _dateField(
@@ -106,9 +103,7 @@ class _ClienteFormPageState extends State<ClienteFormPage> {
                   _fechaVencLicencia,
                   (value) => setState(() => _fechaVencLicencia = value),
                   firstDate: DateTime.now(),
-                  lastDate: DateTime.now().add(
-                    const Duration(days: 3650),
-                  ),
+                  lastDate: DateTime.now().add(const Duration(days: 3650)),
                 ),
               ),
               const SizedBox(height: 20),
@@ -120,9 +115,7 @@ class _ClienteFormPageState extends State<ClienteFormPage> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.save),
-                label: Text(
-                  provider.isMutating ? 'Guardando…' : 'Guardar',
-                ),
+                label: Text(provider.isMutating ? 'Guardando…' : 'Guardar'),
               ),
             ],
           ),
@@ -131,10 +124,8 @@ class _ClienteFormPageState extends State<ClienteFormPage> {
     );
   }
 
-  Widget _section(BuildContext context, String text) => Text(
-    text,
-    style: Theme.of(context).textTheme.titleLarge,
-  );
+  Widget _section(BuildContext context, String text) =>
+      Text(text, style: Theme.of(context).textTheme.titleLarge);
 
   Widget _row(Widget first, Widget second) {
     return LayoutBuilder(
@@ -168,8 +159,7 @@ class _ClienteFormPageState extends State<ClienteFormPage> {
           labelText: label,
           border: const OutlineInputBorder(),
         ),
-        keyboardType:
-            email ? TextInputType.emailAddress : TextInputType.text,
+        keyboardType: email ? TextInputType.emailAddress : TextInputType.text,
         validator: (value) {
           final text = value?.trim() ?? '';
           if (required && text.isEmpty) return 'Campo obligatorio';
@@ -256,23 +246,15 @@ class _ClienteFormPageState extends State<ClienteFormPage> {
     if (success) {
       Navigator.pop(context);
     } else {
-      _message(
-        provider.errorMessage ?? 'No fue posible guardar el cliente.',
-      );
+      _message(provider.errorMessage ?? 'No fue posible guardar el cliente.');
     }
   }
 
   void _message(String text) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(text)),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
   }
 
-  static DateTime _clampDate(
-    DateTime value,
-    DateTime first,
-    DateTime last,
-  ) {
+  static DateTime _clampDate(DateTime value, DateTime first, DateTime last) {
     if (value.isBefore(first)) return first;
     if (value.isAfter(last)) return last;
     return value;

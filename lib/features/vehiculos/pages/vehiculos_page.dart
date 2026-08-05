@@ -66,7 +66,7 @@ class _VehiculosPageState extends State<VehiculosPage> {
           child: ListView.separated(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
             itemCount: provider.vehiculos.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 8),
+            separatorBuilder: (_, _) => const SizedBox(height: 8),
             itemBuilder: (_, index) {
               final vehicle = provider.vehiculos[index];
               return VehiculoCard(

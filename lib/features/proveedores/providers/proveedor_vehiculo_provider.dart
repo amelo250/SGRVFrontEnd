@@ -58,6 +58,7 @@ class ProveedorVehiculoProvider extends ChangeNotifier {
 
   Future<bool> desactivar(int id) => _mutar(() async {
     await _service.desactivar(id);
+    return null;
   });
 
   Future<bool> _mutar(Future<Object?> Function() operation) async {

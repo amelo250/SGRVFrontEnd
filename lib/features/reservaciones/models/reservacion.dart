@@ -28,7 +28,7 @@ class Reservacion {
   final DateTime fechaCreacion;
 
   bool get puedeEditar =>
-      estadoCodigo != 'CANCELADA' && estadoCodigo != 'CONVERTIDA';
+      estadoCodigo == 'PENDIENTE' || estadoCodigo == 'CONFIRMADA';
   bool get puedeConfirmar => estadoCodigo == 'PENDIENTE';
   bool get puedeCancelar =>
       estadoCodigo != 'CANCELADA' && estadoCodigo != 'CONVERTIDA';

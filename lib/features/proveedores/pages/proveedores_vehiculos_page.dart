@@ -108,7 +108,7 @@ class _ProveedoresVehiculosPageState extends State<ProveedoresVehiculosPage> {
           : ListView.separated(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
               itemCount: provider.proveedores.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              separatorBuilder: (_, _) => const SizedBox(height: 8),
               itemBuilder: (_, index) {
                 final proveedor = provider.proveedores[index];
                 return ProveedorVehiculoCard(

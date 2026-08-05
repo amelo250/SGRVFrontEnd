@@ -48,13 +48,13 @@ class ClienteCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(cliente.cedulaPasaporte),
-                    if (cliente.telefono != null ||
-                        cliente.email != null) ...[
+                    if (cliente.telefono != null || cliente.email != null) ...[
                       const SizedBox(height: 5),
                       Text(
-                        [cliente.telefono, cliente.email]
-                            .whereType<String>()
-                            .join(' · '),
+                        [
+                          cliente.telefono,
+                          cliente.email,
+                        ].whereType<String>().join(' · '),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -77,15 +77,10 @@ class ClienteCard extends StatelessWidget {
                 },
                 itemBuilder: (_) => [
                   if (cliente.activo)
-                    const PopupMenuItem(
-                      value: 'editar',
-                      child: Text('Editar'),
-                    ),
+                    const PopupMenuItem(value: 'editar', child: Text('Editar')),
                   PopupMenuItem(
                     value: cliente.activo ? 'desactivar' : 'restaurar',
-                    child: Text(
-                      cliente.activo ? 'Desactivar' : 'Restaurar',
-                    ),
+                    child: Text(cliente.activo ? 'Desactivar' : 'Restaurar'),
                   ),
                 ],
               ),

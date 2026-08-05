@@ -20,7 +20,6 @@ class _LoginPageState extends State<LoginPage> {
 
   static const Color _primaryColor = Color(0xFF3867F4);
   static const Color _secondaryColor = Color(0xFF7057F5);
-  static const Color _darkColor = Color(0xFF081225);
   static const Color _textColor = Color(0xFF172033);
   static const Color _mutedColor = Color(0xFF7B8498);
   static const Color _backgroundColor = Color(0xFFF5F7FB);
