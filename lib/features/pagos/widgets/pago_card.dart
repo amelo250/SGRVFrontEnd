@@ -16,7 +16,7 @@ class PagoCard extends StatelessWidget {
       symbol:
           '${pago.simboloMoneda.isEmpty ? pago.codigoMoneda : pago.simboloMoneda} ',
     );
-    final date = DateFormat('dd MMM yyyy · hh:mm a', 'es');
+    final date = DateFormat('dd MMM yyyy · hh:mm a', 'es_DO');
     return Card(
       elevation: 0,
       margin: const EdgeInsets.only(bottom: 12),
