@@ -3,7 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:sgrv_frontend/shared/widgets/app_module_ui.dart';
 import '../models/vehiculo.dart';
 import '../providers/vehiculo_provider.dart';
-import '../widgets/vehiculo_feature_blocked.dart';
+import '../providers/vehiculo_media_provider.dart';
+import '../widgets/vehiculo_accesorios_section.dart';
+import '../widgets/vehiculo_galeria_section.dart';
 import '../widgets/vehiculo_financial_summary.dart';
 import 'vehiculo_form_page.dart';
 
@@ -20,9 +22,10 @@ class _VehiculoAdminPageState extends State<VehiculoAdminPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback(
-      (_) => context.read<VehiculoProvider>().cargarResumenFinanciero(
-        widget.vehiculo.idVehiculo,
-      ),
+      (_) {
+        context.read<VehiculoProvider>().cargarResumenFinanciero(widget.vehiculo.idVehiculo);
+        context.read<VehiculoMediaProvider>().cargar(widget.vehiculo.idVehiculo);
+      },
     );
   }
 
@@ -63,34 +66,9 @@ class _VehiculoAdminPageState extends State<VehiculoAdminPage> {
               child: TabBarView(
                 children: [
                   _GeneralSection(vehicle: vehicle),
-                  const VehiculoFeatureBlocked(
-                    icon: Icons.extension_rounded,
-                    title: 'Accesorios pendientes de persistencia',
-                    message:
-                        'El proyecto todavía no tiene una relación vehículo–accesorio. '
-                        'Esta sección se habilitará cuando se autoricen las tablas y endpoints correspondientes.',
-                    examples: [
-                      'GPS',
-                      'Música amplificada',
-                      'Luces LED',
-                      'Silla infantil',
-                      'Wi-Fi',
-                    ],
-                  ),
+                  VehiculoAccesoriosSection(idVehiculo: vehicle.idVehiculo),
                   _FinancialSection(idVehiculo: vehicle.idVehiculo),
-                  const VehiculoFeatureBlocked(
-                    icon: Icons.photo_library_rounded,
-                    title: 'Galería pendiente de almacenamiento',
-                    message:
-                        'Aún no existe una tabla de imágenes ni una estrategia de almacenamiento. '
-                        'No se cargarán archivos hasta definir URL, orden, portada y eliminación lógica.',
-                    examples: [
-                      'Portada',
-                      'Exterior',
-                      'Interior',
-                      'Documentación',
-                    ],
-                  ),
+                  VehiculoGaleriaSection(idVehiculo: vehicle.idVehiculo),
                 ],
               ),
             ),

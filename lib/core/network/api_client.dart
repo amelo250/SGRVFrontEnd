@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:sgrv_frontend/core/config/api_config.dart';
 import 'package:sgrv_frontend/core/network/api_exception.dart';
 import 'package:sgrv_frontend/core/storage/token_storage.dart';
@@ -74,6 +75,32 @@ class ApiClient {
     return _client
         .delete(Uri.parse(url), headers: await _buildHeaders())
         .timeout(ApiConfig.timeout);
+  }
+
+  Future<Map<String, dynamic>> multipart(
+    String url, {
+    required List<int> bytes,
+    required String fileName,
+    required String contentType,
+    Map<String, String> fields = const {},
+  }) async {
+    final request = http.MultipartRequest('POST', Uri.parse(url));
+    final token = await TokenStorage.getToken();
+    if (token != null && token.isNotEmpty) {
+      request.headers['Authorization'] = 'Bearer $token';
+    }
+    request.headers['Accept'] = 'application/json';
+    request.fields.addAll(fields);
+    request.files.add(
+      http.MultipartFile.fromBytes(
+        'archivo',
+        bytes,
+        filename: fileName,
+        contentType: MediaType.parse(contentType),
+      ),
+    );
+    final streamed = await _client.send(request).timeout(ApiConfig.timeout);
+    return _decode(await http.Response.fromStream(streamed));
   }
 
   Future<ApiJsonResult> getJsonResult(String url) async {
