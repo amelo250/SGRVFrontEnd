@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../shared/colors/app_colors.dart';
+import '../colors/app_colors.dart';
 
 class AppLogo extends StatelessWidget {
   final bool compact;
