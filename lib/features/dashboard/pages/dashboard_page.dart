@@ -12,6 +12,13 @@ import 'package:sgrv_frontend/features/clientes/pages/clientes_page.dart';
 import 'package:sgrv_frontend/features/rentas/pages/rentas_page.dart';
 import 'package:sgrv_frontend/features/pagos/pages/pagos_page.dart';
 import 'package:sgrv_frontend/features/gastos/pages/gastos_page.dart';
+import 'package:sgrv_frontend/features/reservaciones/pages/reservacion_form_page.dart';
+import 'package:sgrv_frontend/features/rentas/pages/renta_form_page.dart';
+import 'package:sgrv_frontend/features/pagos/pages/pago_form_page.dart';
+import 'package:sgrv_frontend/features/gastos/pages/gasto_form_page.dart';
+import 'package:sgrv_frontend/features/clientes/pages/cliente_form_page.dart';
+import 'package:sgrv_frontend/features/vehiculos/pages/vehiculo_form_page.dart';
+import 'package:sgrv_frontend/features/dashboard/widgets/dashboard_quick_actions.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -255,12 +262,28 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Widget _construirContenido() {
     if (_indiceSeleccionado == 0) {
-      return const _ContenidoDashboard();
+      return _ContenidoDashboard(
+        onNuevaReservacion: () => _openQuickAction(const ReservacionFormPage()),
+        onNuevaRenta: () => _openQuickAction(const RentaFormPage()),
+        onNuevoPago: () => _openQuickAction(const PagoFormPage()),
+        onNuevoGasto: () => _openQuickAction(const GastoFormPage()),
+        onNuevoCliente: () => _openQuickAction(const ClienteFormPage()),
+        onNuevoVehiculo: () => _openQuickAction(const VehiculoFormPage()),
+      );
     }
 
     final opcion = _opcionesMenu[_indiceSeleccionado];
 
     return _PaginaProximamente(titulo: opcion.titulo, icono: opcion.icono);
+  }
+
+  Future<void> _openQuickAction(Widget page) async {
+    await Navigator.push<void>(
+      context,
+      MaterialPageRoute(builder: (_) => page),
+    );
+    if (!mounted) return;
+    await context.read<ReservacionProvider>().loadDashboard();
   }
 }
 
@@ -553,7 +576,21 @@ class _TopBar extends StatelessWidget {
 }
 
 class _ContenidoDashboard extends StatelessWidget {
-  const _ContenidoDashboard();
+  const _ContenidoDashboard({
+    required this.onNuevaReservacion,
+    required this.onNuevaRenta,
+    required this.onNuevoPago,
+    required this.onNuevoGasto,
+    required this.onNuevoCliente,
+    required this.onNuevoVehiculo,
+  });
+
+  final VoidCallback onNuevaReservacion;
+  final VoidCallback onNuevaRenta;
+  final VoidCallback onNuevoPago;
+  final VoidCallback onNuevoGasto;
+  final VoidCallback onNuevoCliente;
+  final VoidCallback onNuevoVehiculo;
 
   @override
   Widget build(BuildContext context) {
@@ -618,6 +655,53 @@ class _ContenidoDashboard extends StatelessWidget {
                     icono: Icons.groups_rounded,
                     color: _DashboardPageState._primaryColor,
                   ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
+            DashboardQuickActions(
+              actions: [
+                DashboardQuickAction(
+                  title: 'Reservación',
+                  subtitle: 'Apartar un vehículo',
+                  icon: Icons.event_available_rounded,
+                  color: _DashboardPageState._secondaryColor,
+                  onTap: onNuevaReservacion,
+                ),
+                DashboardQuickAction(
+                  title: 'Renta',
+                  subtitle: 'Crear una renta',
+                  icon: Icons.key_rounded,
+                  color: _DashboardPageState._primaryColor,
+                  onTap: onNuevaRenta,
+                ),
+                DashboardQuickAction(
+                  title: 'Pago',
+                  subtitle: 'Registrar un cobro',
+                  icon: Icons.payments_rounded,
+                  color: _DashboardPageState._successColor,
+                  onTap: onNuevoPago,
+                ),
+                DashboardQuickAction(
+                  title: 'Gasto',
+                  subtitle: 'Registrar una salida',
+                  icon: Icons.receipt_long_rounded,
+                  color: _DashboardPageState._dangerColor,
+                  onTap: onNuevoGasto,
+                ),
+                DashboardQuickAction(
+                  title: 'Cliente',
+                  subtitle: 'Agregar un cliente',
+                  icon: Icons.person_add_alt_1_rounded,
+                  color: const Color(0xFF00A6A6),
+                  onTap: onNuevoCliente,
+                ),
+                DashboardQuickAction(
+                  title: 'Vehículo',
+                  subtitle: 'Agregar a la flota',
+                  icon: Icons.add_road_rounded,
+                  color: _DashboardPageState._warningColor,
+                  onTap: onNuevoVehiculo,
                 ),
               ],
             ),

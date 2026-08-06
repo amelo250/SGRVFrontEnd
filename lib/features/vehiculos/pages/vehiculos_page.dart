@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sgrv_frontend/features/vehiculos/models/vehiculo.dart';
 import 'package:sgrv_frontend/features/vehiculos/pages/vehiculo_form_page.dart';
+import 'package:sgrv_frontend/features/vehiculos/pages/vehiculo_admin_page.dart';
 import 'package:sgrv_frontend/features/vehiculos/providers/vehiculo_provider.dart';
 import 'package:sgrv_frontend/features/vehiculos/widgets/vehiculo_card.dart';
 import 'package:sgrv_frontend/shared/widgets/app_module_ui.dart';
@@ -94,6 +95,7 @@ class _VehiculosPageState extends State<VehiculosPage> {
           final vehicle = provider.vehiculos[index];
           return VehiculoCard(
             vehiculo: vehicle,
+            onAdministrar: () => _openAdministration(vehicle),
             onEditar: () => _openForm(vehicle),
             onDesactivar: () => _confirmDeactivation(vehicle),
           );
@@ -106,6 +108,14 @@ class _VehiculosPageState extends State<VehiculosPage> {
     await Navigator.push<void>(
       context,
       MaterialPageRoute(builder: (_) => VehiculoFormPage(vehiculo: vehicle)),
+    );
+    if (mounted) await context.read<VehiculoProvider>().cargar(refresh: true);
+  }
+
+  Future<void> _openAdministration(Vehiculo vehicle) async {
+    await Navigator.push<void>(
+      context,
+      MaterialPageRoute(builder: (_) => VehiculoAdminPage(vehiculo: vehicle)),
     );
     if (mounted) await context.read<VehiculoProvider>().cargar(refresh: true);
   }

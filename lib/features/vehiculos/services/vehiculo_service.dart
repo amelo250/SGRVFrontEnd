@@ -4,6 +4,7 @@ import 'package:sgrv_frontend/core/network/api_exception.dart';
 import 'package:sgrv_frontend/core/network/api_response.dart';
 import 'package:sgrv_frontend/features/vehiculos/models/vehiculo.dart';
 import 'package:sgrv_frontend/features/vehiculos/models/vehiculo_dto.dart';
+import 'package:sgrv_frontend/features/vehiculos/models/vehiculo_resumen_financiero.dart';
 
 class VehiculoService {
   VehiculoService({ApiClient? apiClient})
@@ -47,6 +48,18 @@ class VehiculoService {
 
   Future<void> desactivar(int id) async {
     await _apiClient.deleteJson('${ApiConfig.vehiculos}/$id');
+  }
+
+  Future<VehiculoResumenFinanciero> obtenerResumenFinanciero(int id) async {
+    final response = ApiResponse<VehiculoResumenFinanciero>.fromJson(
+      await _apiClient.getJson('${ApiConfig.vehiculos}/$id/resumen-financiero'),
+      (value) =>
+          VehiculoResumenFinanciero.fromJson(value as Map<String, dynamic>),
+    );
+    if (!response.success || response.data == null) {
+      throw ApiException(message: response.message);
+    }
+    return response.data!;
   }
 
   Vehiculo _parseVehiculo(Map<String, dynamic> json) {

@@ -4,12 +4,14 @@ import 'package:sgrv_frontend/features/vehiculos/models/vehiculo.dart';
 class VehiculoCard extends StatelessWidget {
   const VehiculoCard({
     required this.vehiculo,
+    required this.onAdministrar,
     required this.onEditar,
     required this.onDesactivar,
     super.key,
   });
 
   final Vehiculo vehiculo;
+  final VoidCallback onAdministrar;
   final VoidCallback onEditar;
   final VoidCallback onDesactivar;
 
@@ -20,7 +22,7 @@ class VehiculoCard extends StatelessWidget {
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: onEditar,
+        onTap: onAdministrar,
         child: Padding(
           padding: const EdgeInsets.all(18),
           child: Row(
@@ -67,13 +69,19 @@ class VehiculoCard extends StatelessWidget {
               ),
               PopupMenuButton<String>(
                 onSelected: (value) {
-                  if (value == 'editar') {
+                  if (value == 'administrar') {
+                    onAdministrar();
+                  } else if (value == 'editar') {
                     onEditar();
                   } else {
                     onDesactivar();
                   }
                 },
                 itemBuilder: (_) => const [
+                  PopupMenuItem(
+                    value: 'administrar',
+                    child: Text('Administrar'),
+                  ),
                   PopupMenuItem(value: 'editar', child: Text('Editar')),
                   PopupMenuItem(value: 'desactivar', child: Text('Desactivar')),
                 ],

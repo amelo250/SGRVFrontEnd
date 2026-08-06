@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:sgrv_frontend/core/network/api_exception.dart';
 import 'package:sgrv_frontend/features/vehiculos/models/vehiculo.dart';
 import 'package:sgrv_frontend/features/vehiculos/models/vehiculo_dto.dart';
+import 'package:sgrv_frontend/features/vehiculos/models/vehiculo_resumen_financiero.dart';
 import 'package:sgrv_frontend/features/vehiculos/services/vehiculo_service.dart';
 
 enum VehiculoStatus { initial, loading, success, empty, error }
@@ -16,12 +17,18 @@ class VehiculoProvider extends ChangeNotifier {
   String? _errorMessage;
   bool _isMutating = false;
   bool _incluirInactivos = false;
+  VehiculoResumenFinanciero? _resumenFinanciero;
+  bool _isLoadingSummary = false;
+  String? _summaryError;
 
   List<Vehiculo> get vehiculos => List.unmodifiable(_vehiculos);
   VehiculoStatus get status => _status;
   String? get errorMessage => _errorMessage;
   bool get isMutating => _isMutating;
   bool get incluirInactivos => _incluirInactivos;
+  VehiculoResumenFinanciero? get resumenFinanciero => _resumenFinanciero;
+  bool get isLoadingSummary => _isLoadingSummary;
+  String? get summaryError => _summaryError;
 
   Future<void> cargar({bool refresh = false}) async {
     if (!refresh) _status = VehiculoStatus.loading;
@@ -63,6 +70,23 @@ class VehiculoProvider extends ChangeNotifier {
     await _service.desactivar(id);
     return null;
   });
+
+  Future<void> cargarResumenFinanciero(int idVehiculo) async {
+    _isLoadingSummary = true;
+    _summaryError = null;
+    _resumenFinanciero = null;
+    notifyListeners();
+    try {
+      _resumenFinanciero = await _service.obtenerResumenFinanciero(idVehiculo);
+    } on ApiException catch (error) {
+      _summaryError = error.message;
+    } catch (_) {
+      _summaryError = 'No fue posible cargar el resumen financiero.';
+    } finally {
+      _isLoadingSummary = false;
+      notifyListeners();
+    }
+  }
 
   Future<bool> _mutar(Future<Object?> Function() operation) async {
     _isMutating = true;
