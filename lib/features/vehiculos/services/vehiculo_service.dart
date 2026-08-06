@@ -5,6 +5,7 @@ import 'package:sgrv_frontend/core/network/api_response.dart';
 import 'package:sgrv_frontend/features/vehiculos/models/vehiculo.dart';
 import 'package:sgrv_frontend/features/vehiculos/models/vehiculo_dto.dart';
 import 'package:sgrv_frontend/features/vehiculos/models/vehiculo_resumen_financiero.dart';
+import 'package:sgrv_frontend/features/vehiculos/models/vehiculo_filter.dart';
 
 class VehiculoService {
   VehiculoService({ApiClient? apiClient})
@@ -12,14 +13,30 @@ class VehiculoService {
 
   final ApiClient _apiClient;
 
-  Future<List<Vehiculo>> getVehiculos({bool incluirInactivos = false}) async {
-    final json = await _apiClient.getJson(
-      '${ApiConfig.vehiculos}?incluirInactivos=$incluirInactivos',
+  Future<List<Vehiculo>> getVehiculos({
+    bool incluirInactivos = false,
+    VehiculoFilter filter = const VehiculoFilter(),
+  }) async {
+    final uri = Uri.parse(ApiConfig.vehiculos).replace(
+      queryParameters: filter.toQueryParameters(
+        incluirInactivos: incluirInactivos,
+      ),
     );
+    final json = await _apiClient.getJson(uri.toString());
     final response = ApiResponse<List<Vehiculo>>.fromJson(
       json,
       (value) => (value as List<dynamic>)
           .map((item) => Vehiculo.fromJson(item as Map<String, dynamic>))
+          .toList(growable: false),
+    );
+    return response.data ?? const [];
+  }
+
+  Future<List<String>> getMarcas() async {
+    final response = ApiResponse<List<String>>.fromJson(
+      await _apiClient.getJson('${ApiConfig.vehiculos}/marcas'),
+      (value) => (value as List<dynamic>)
+          .map((item) => item.toString())
           .toList(growable: false),
     );
     return response.data ?? const [];

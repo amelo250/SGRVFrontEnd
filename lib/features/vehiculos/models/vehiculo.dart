@@ -33,6 +33,9 @@ class Vehiculo {
     this.vin,
     this.color,
     this.descripcion,
+    this.tipoNombre,
+    this.combustibleNombre,
+    this.fotoPortadaUrl,
   });
 
   final int idVehiculo;
@@ -53,6 +56,9 @@ class Vehiculo {
   final double precioPorDia;
   final double depositoCombustible;
   final String? descripcion;
+  final String? tipoNombre;
+  final String? combustibleNombre;
+  final String? fotoPortadaUrl;
   final bool activo;
   final DateTime fechaCreacion;
 
@@ -78,6 +84,9 @@ class Vehiculo {
       precioPorDia: (json['precioPorDia'] as num).toDouble(),
       depositoCombustible: (json['depositoCombustible'] as num).toDouble(),
       descripcion: json['descripcion']?.toString(),
+      tipoNombre: json['tipoNombre']?.toString(),
+      combustibleNombre: json['combustibleNombre']?.toString(),
+      fotoPortadaUrl: json['fotoPortadaUrl']?.toString(),
       activo: json['activo'] as bool? ?? false,
       fechaCreacion: DateTime.parse(json['fechaCreacion'] as String),
     );

@@ -4,6 +4,8 @@ import 'package:sgrv_frontend/features/vehiculos/models/vehiculo.dart';
 import 'package:sgrv_frontend/features/vehiculos/models/vehiculo_dto.dart';
 import 'package:sgrv_frontend/features/vehiculos/models/vehiculo_resumen_financiero.dart';
 import 'package:sgrv_frontend/features/vehiculos/services/vehiculo_service.dart';
+import 'package:sgrv_frontend/features/vehiculos/models/vehiculo_filter.dart';
+import 'package:sgrv_frontend/core/storage/token_storage.dart';
 
 enum VehiculoStatus { initial, loading, success, empty, error }
 
@@ -20,6 +22,9 @@ class VehiculoProvider extends ChangeNotifier {
   VehiculoResumenFinanciero? _resumenFinanciero;
   bool _isLoadingSummary = false;
   String? _summaryError;
+  VehiculoFilter _filter = const VehiculoFilter();
+  List<String> _marcas = const [];
+  Map<String, String>? _imageHeaders;
 
   List<Vehiculo> get vehiculos => List.unmodifiable(_vehiculos);
   VehiculoStatus get status => _status;
@@ -29,6 +34,10 @@ class VehiculoProvider extends ChangeNotifier {
   VehiculoResumenFinanciero? get resumenFinanciero => _resumenFinanciero;
   bool get isLoadingSummary => _isLoadingSummary;
   String? get summaryError => _summaryError;
+  VehiculoFilter get filter => _filter;
+  List<String> get marcas => List.unmodifiable(_marcas);
+  Map<String, String>? get imageHeaders => _imageHeaders;
+  bool get tieneFiltros => !_filter.isEmpty;
 
   Future<void> cargar({bool refresh = false}) async {
     if (!refresh) _status = VehiculoStatus.loading;
@@ -36,9 +45,21 @@ class VehiculoProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _vehiculos = await _service.getVehiculos(
-        incluirInactivos: _incluirInactivos,
-      );
+      final results = await Future.wait<Object>([
+        _service.getVehiculos(
+          incluirInactivos: _incluirInactivos,
+          filter: _filter,
+        ),
+        if (_marcas.isEmpty) _service.getMarcas(),
+      ]);
+      _vehiculos = results.first as List<Vehiculo>;
+      if (_marcas.isEmpty && results.length > 1) {
+        _marcas = results[1] as List<String>;
+      }
+      final token = await TokenStorage.getToken();
+      _imageHeaders = token == null || token.isEmpty
+          ? null
+          : {'Authorization': 'Bearer $token'};
       _status = _vehiculos.isEmpty
           ? VehiculoStatus.empty
           : VehiculoStatus.success;
@@ -51,6 +72,29 @@ class VehiculoProvider extends ChangeNotifier {
     }
 
     notifyListeners();
+  }
+
+  Future<void> establecerTipo(int? value) async {
+    _filter = _filter.copyWith(idTipo: value, clearTipo: value == null);
+    await cargar();
+  }
+
+  Future<void> establecerCombustible(int? value) async {
+    _filter = _filter.copyWith(
+      idCombustible: value,
+      clearCombustible: value == null,
+    );
+    await cargar();
+  }
+
+  Future<void> establecerMarca(String? value) async {
+    _filter = _filter.copyWith(marca: value, clearMarca: value == null);
+    await cargar();
+  }
+
+  Future<void> limpiarFiltros() async {
+    _filter = const VehiculoFilter();
+    await cargar();
   }
 
   Future<void> establecerIncluirInactivos(bool value) async {

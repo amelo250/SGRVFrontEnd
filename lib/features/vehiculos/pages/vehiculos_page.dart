@@ -6,6 +6,8 @@ import 'package:sgrv_frontend/features/vehiculos/pages/vehiculo_admin_page.dart'
 import 'package:sgrv_frontend/features/vehiculos/providers/vehiculo_provider.dart';
 import 'package:sgrv_frontend/features/vehiculos/widgets/vehiculo_card.dart';
 import 'package:sgrv_frontend/shared/widgets/app_module_ui.dart';
+import 'package:sgrv_frontend/features/vehiculos/providers/vehicle_catalog_provider.dart';
+import 'package:sgrv_frontend/features/vehiculos/widgets/vehiculo_filter_panel.dart';
 
 class VehiculosPage extends StatefulWidget {
   const VehiculosPage({super.key});
@@ -18,14 +20,16 @@ class _VehiculosPageState extends State<VehiculosPage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) => context.read<VehiculoProvider>().cargar(),
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<VehicleCatalogProvider>().load();
+      context.read<VehiculoProvider>().cargar();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<VehiculoProvider>();
+    final catalogs = context.watch<VehicleCatalogProvider>();
     return AppModuleScaffold(
       title: 'Vehículos',
       subtitle:
@@ -64,6 +68,17 @@ class _VehiculosPageState extends State<VehiculosPage> {
             ),
           ),
           const SizedBox(height: 16),
+          VehiculoFilterPanel(
+            filter: provider.filter,
+            types: catalogs.types,
+            fuels: catalogs.fuels,
+            brands: provider.marcas,
+            onTypeChanged: provider.establecerTipo,
+            onFuelChanged: provider.establecerCombustible,
+            onBrandChanged: provider.establecerMarca,
+            onClear: provider.limpiarFiltros,
+          ),
+          const SizedBox(height: 16),
           Expanded(child: _body(provider)),
         ],
       ),
@@ -79,27 +94,44 @@ class _VehiculosPageState extends State<VehiculosPage> {
       message: provider.errorMessage,
       onRetry: provider.cargar,
     ),
-    VehiculoStatus.empty => const AppStateView(
+    VehiculoStatus.empty => AppStateView(
       icon: Icons.directions_car_outlined,
-      title: 'No hay vehículos',
-      message: 'Agrega el primer vehículo de tu flota.',
+      title: provider.tieneFiltros
+          ? 'No hay vehículos con esos filtros'
+          : 'No hay vehículos',
+      message: provider.tieneFiltros
+          ? 'Limpia o cambia los filtros para ampliar los resultados.'
+          : 'Agrega el primer vehículo de tu flota.',
+      onRetry: provider.tieneFiltros ? provider.limpiarFiltros : null,
     ),
     VehiculoStatus.success => RefreshIndicator(
       onRefresh: () => provider.cargar(refresh: true),
-      child: ListView.separated(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.only(bottom: 90),
-        itemCount: provider.vehiculos.length,
-        separatorBuilder: (_, _) => const SizedBox(height: 10),
-        itemBuilder: (_, index) {
-          final vehicle = provider.vehiculos[index];
-          return VehiculoCard(
-            vehiculo: vehicle,
-            onAdministrar: () => _openAdministration(vehicle),
-            onEditar: () => _openForm(vehicle),
-            onDesactivar: () => _confirmDeactivation(vehicle),
-          );
-        },
+      child: LayoutBuilder(
+        builder: (context, constraints) => GridView.builder(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.only(bottom: 90),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: constraints.maxWidth >= 1050
+                ? 3
+                : constraints.maxWidth >= 650
+                ? 2
+                : 1,
+            crossAxisSpacing: 14,
+            mainAxisSpacing: 14,
+            childAspectRatio: constraints.maxWidth >= 650 ? .82 : 1.05,
+          ),
+          itemCount: provider.vehiculos.length,
+          itemBuilder: (_, index) {
+            final vehicle = provider.vehiculos[index];
+            return VehiculoCard(
+              vehiculo: vehicle,
+              imageHeaders: provider.imageHeaders,
+              onAdministrar: () => _openAdministration(vehicle),
+              onEditar: () => _openForm(vehicle),
+              onDesactivar: () => _confirmDeactivation(vehicle),
+            );
+          },
+        ),
       ),
     ),
   };
