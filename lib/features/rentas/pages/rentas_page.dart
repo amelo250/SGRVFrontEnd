@@ -7,6 +7,7 @@ import 'package:sgrv_frontend/features/rentas/pages/renta_detail_page.dart';
 import 'package:sgrv_frontend/features/rentas/pages/renta_form_page.dart';
 import 'package:sgrv_frontend/features/rentas/providers/renta_provider.dart';
 import 'package:sgrv_frontend/features/rentas/widgets/renta_card.dart';
+import 'package:sgrv_frontend/shared/widgets/app_module_ui.dart';
 
 class RentasPage extends StatefulWidget {
   const RentasPage({super.key});
@@ -35,32 +36,15 @@ class _RentasPageState extends State<RentasPage> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<RentaProvider>();
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FB),
-      appBar: AppBar(
-        title: const Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Rentas', style: TextStyle(fontWeight: FontWeight.w800)),
-            Text(
-              'Operaciones activas e historial',
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400),
-            ),
-          ],
-        ),
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.transparent,
-      ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1320),
-          child: Column(
-            children: [
-              _toolbar(context, provider),
-              Expanded(child: _body(provider)),
-            ],
-          ),
-        ),
+    return AppModuleScaffold(
+      title: 'Rentas',
+      subtitle:
+          'Gestiona operaciones activas, cierres e historial de alquileres.',
+      body: Column(
+        children: [
+          _toolbar(context, provider),
+          Expanded(child: _body(provider)),
+        ],
       ),
     );
   }

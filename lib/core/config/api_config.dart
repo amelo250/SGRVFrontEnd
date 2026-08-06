@@ -14,6 +14,7 @@ class ApiConfig {
   static const String reservaciones = '$baseUrl/api/reservaciones';
   static const String rentas = '$baseUrl/api/rentas';
   static const String pagos = '$baseUrl/api/pagos';
+  static const String gastos = '$baseUrl/api/gastos';
   static const String vehiculos = '$baseUrl/api/vehiculos';
   static const String catalogs = '$baseUrl/api/catalogos';
   static const String proveedoresVehiculos =

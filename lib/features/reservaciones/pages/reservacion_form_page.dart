@@ -6,6 +6,7 @@ import 'package:sgrv_frontend/features/reservaciones/models/reservacion.dart';
 import 'package:sgrv_frontend/features/reservaciones/models/reservacion_dto.dart';
 import 'package:sgrv_frontend/features/reservaciones/providers/reservacion_provider.dart';
 import 'package:sgrv_frontend/features/vehiculos/providers/vehiculo_provider.dart';
+import 'package:sgrv_frontend/shared/widgets/app_module_ui.dart';
 
 class ReservacionFormPage extends StatefulWidget {
   const ReservacionFormPage({this.reservacion, super.key});
@@ -66,107 +67,122 @@ class _ReservacionFormPageState extends State<ReservacionFormPage> {
       ),
       body: loadingDependencies
           ? const Center(child: CircularProgressIndicator())
-          : Form(
-              key: _formKey,
-              child: ListView(
-                padding: const EdgeInsets.all(20),
-                children: [
-                  Text(
-                    'Cliente y vehículo',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 14),
-                  DropdownButtonFormField<int>(
-                    initialValue: _availableValue(
-                      _idCliente,
-                      clients.clientes
+          : AppResponsiveContent(
+              maxWidth: 940,
+              child: Form(
+                key: _formKey,
+                child: ListView(
+                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  children: [
+                    AppPageHeader(
+                      title: widget.reservacion == null
+                          ? 'Nueva reservación'
+                          : 'Editar reservación',
+                      subtitle: 'Cliente, vehículo y período solicitado.',
+                      icon: Icons.event_available_rounded,
+                    ),
+                    const SizedBox(height: 22),
+                    Text(
+                      'Cliente y vehículo',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 14),
+                    DropdownButtonFormField<int>(
+                      initialValue: _availableValue(
+                        _idCliente,
+                        clients.clientes
+                            .where((x) => x.activo)
+                            .map((x) => x.idCliente),
+                      ),
+                      decoration: const InputDecoration(
+                        labelText: 'Cliente',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: clients.clientes
                           .where((x) => x.activo)
-                          .map((x) => x.idCliente),
-                    ),
-                    decoration: const InputDecoration(
-                      labelText: 'Cliente',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: clients.clientes
-                        .where((x) => x.activo)
-                        .map(
-                          (x) => DropdownMenuItem(
-                            value: x.idCliente,
-                            child: Text(x.nombreCompleto),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (value) => setState(() => _idCliente = value),
-                    validator: (value) =>
-                        value == null ? 'Selecciona un cliente' : null,
-                  ),
-                  const SizedBox(height: 12),
-                  DropdownButtonFormField<int>(
-                    initialValue: _availableValue(
-                      _idVehiculo,
-                      vehicles.vehiculos
-                          .where((x) => x.activo)
-                          .map((x) => x.idVehiculo),
-                    ),
-                    decoration: const InputDecoration(
-                      labelText: 'Vehículo',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: vehicles.vehiculos
-                        .where((x) => x.activo)
-                        .map(
-                          (x) => DropdownMenuItem(
-                            value: x.idVehiculo,
-                            child: Text('${x.marca} ${x.modelo} (${x.placa})'),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (value) => setState(() => _idVehiculo = value),
-                    validator: (value) =>
-                        value == null ? 'Selecciona un vehículo' : null,
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    'Periodo',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 14),
-                  _dateTimeField(
-                    'Inicio',
-                    _fechaInicio,
-                    (value) => setState(() => _fechaInicio = value),
-                  ),
-                  const SizedBox(height: 12),
-                  _dateTimeField(
-                    'Fin',
-                    _fechaFin,
-                    (value) => setState(() => _fechaFin = value),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _observationController,
-                    maxLength: 500,
-                    maxLines: 4,
-                    decoration: const InputDecoration(
-                      labelText: 'Observación',
-                      border: OutlineInputBorder(),
-                      alignLabelWithHint: true,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  FilledButton.icon(
-                    onPressed: reservationProvider.isMutating ? null : _save,
-                    icon: reservationProvider.isMutating
-                        ? const SizedBox.square(
-                            dimension: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                          .map(
+                            (x) => DropdownMenuItem(
+                              value: x.idCliente,
+                              child: Text(x.nombreCompleto),
+                            ),
                           )
-                        : const Icon(Icons.save),
-                    label: Text(
-                      reservationProvider.isMutating ? 'Guardando…' : 'Guardar',
+                          .toList(),
+                      onChanged: (value) => setState(() => _idCliente = value),
+                      validator: (value) =>
+                          value == null ? 'Selecciona un cliente' : null,
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<int>(
+                      initialValue: _availableValue(
+                        _idVehiculo,
+                        vehicles.vehiculos
+                            .where((x) => x.activo)
+                            .map((x) => x.idVehiculo),
+                      ),
+                      decoration: const InputDecoration(
+                        labelText: 'Vehículo',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: vehicles.vehiculos
+                          .where((x) => x.activo)
+                          .map(
+                            (x) => DropdownMenuItem(
+                              value: x.idVehiculo,
+                              child: Text(
+                                '${x.marca} ${x.modelo} (${x.placa})',
+                              ),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (value) => setState(() => _idVehiculo = value),
+                      validator: (value) =>
+                          value == null ? 'Selecciona un vehículo' : null,
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Periodo',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 14),
+                    _dateTimeField(
+                      'Inicio',
+                      _fechaInicio,
+                      (value) => setState(() => _fechaInicio = value),
+                    ),
+                    const SizedBox(height: 12),
+                    _dateTimeField(
+                      'Fin',
+                      _fechaFin,
+                      (value) => setState(() => _fechaFin = value),
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _observationController,
+                      maxLength: 500,
+                      maxLines: 4,
+                      decoration: const InputDecoration(
+                        labelText: 'Observación',
+                        border: OutlineInputBorder(),
+                        alignLabelWithHint: true,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    FilledButton.icon(
+                      onPressed: reservationProvider.isMutating ? null : _save,
+                      icon: reservationProvider.isMutating
+                          ? const SizedBox.square(
+                              dimension: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.save),
+                      label: Text(
+                        reservationProvider.isMutating
+                            ? 'Guardando…'
+                            : 'Guardar',
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
     );

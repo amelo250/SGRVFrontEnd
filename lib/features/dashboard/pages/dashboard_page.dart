@@ -11,6 +11,7 @@ import 'package:sgrv_frontend/features/vehiculos/pages/vehiculos_page.dart';
 import 'package:sgrv_frontend/features/clientes/pages/clientes_page.dart';
 import 'package:sgrv_frontend/features/rentas/pages/rentas_page.dart';
 import 'package:sgrv_frontend/features/pagos/pages/pagos_page.dart';
+import 'package:sgrv_frontend/features/gastos/pages/gastos_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -50,6 +51,7 @@ class _DashboardPageState extends State<DashboardPage> {
     _MenuItem(titulo: 'Vehículos', icono: Icons.directions_car_rounded),
     _MenuItem(titulo: 'Clientes', icono: Icons.people_alt_rounded),
     _MenuItem(titulo: 'Pagos', icono: Icons.payments_rounded),
+    _MenuItem(titulo: 'Gastos', icono: Icons.receipt_long_rounded),
     _MenuItem(
       titulo: 'Calendario',
       icono: Icons.calendar_month_rounded,
@@ -137,7 +139,16 @@ class _DashboardPageState extends State<DashboardPage> {
       return;
     }
 
-    if (indice == 8) {
+    if (indice == 6) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const GastosPage()),
+      );
+
+      return;
+    }
+
+    if (indice == 9) {
       Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => const EmpresasPage()),
@@ -146,7 +157,7 @@ class _DashboardPageState extends State<DashboardPage> {
       return;
     }
 
-    if (indice == 9) {
+    if (indice == 10) {
       Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => const ProveedoresVehiculosPage()),

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:sgrv_frontend/features/clientes/models/cliente.dart';
 import 'package:sgrv_frontend/features/clientes/models/cliente_dto.dart';
 import 'package:sgrv_frontend/features/clientes/providers/cliente_provider.dart';
+import 'package:sgrv_frontend/shared/widgets/app_module_ui.dart';
 
 class ClienteFormPage extends StatefulWidget {
   const ClienteFormPage({this.cliente, super.key});
@@ -56,68 +57,117 @@ class _ClienteFormPageState extends State<ClienteFormPage> {
           widget.cliente == null ? 'Nuevo cliente' : 'Editar cliente',
         ),
       ),
-      body: SafeArea(
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            padding: const EdgeInsets.all(20),
-            children: [
-              _section(context, 'Información personal'),
-              const SizedBox(height: 14),
-              _row(_field('nombre', 'Nombre'), _field('apellido', 'Apellido')),
-              _row(
-                _field('documento', 'Cédula o pasaporte'),
-                _dateField(
-                  'Fecha de nacimiento',
-                  _fechaNacimiento,
-                  (value) => setState(() => _fechaNacimiento = value),
-                  lastDate: DateTime.now(),
+      body: AppResponsiveContent(
+        maxWidth: 1050,
+        child: SafeArea(
+          child: Form(
+            key: _formKey,
+            child: ListView(
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              children: [
+                AppPageHeader(
+                  title: widget.cliente == null
+                      ? 'Nuevo cliente'
+                      : 'Editar cliente',
+                  subtitle:
+                      'Perfil, contacto y vigencia de la licencia de conducir.',
+                  icon: Icons.person_rounded,
                 ),
-              ),
-              _row(
-                _field('telefono', 'Teléfono', required: false),
-                _field(
-                  'email',
-                  'Correo electrónico',
-                  required: false,
-                  email: true,
+                const SizedBox(height: 22),
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _section(context, 'Información personal'),
+                        const SizedBox(height: 14),
+                        _row(
+                          _field('nombre', 'Nombre'),
+                          _field('apellido', 'Apellido'),
+                        ),
+                        _row(
+                          _field('documento', 'Cédula o pasaporte'),
+                          _dateField(
+                            'Fecha de nacimiento',
+                            _fechaNacimiento,
+                            (value) => setState(() => _fechaNacimiento = value),
+                            lastDate: DateTime.now(),
+                          ),
+                        ),
+                        _row(
+                          _field('telefono', 'Teléfono', required: false),
+                          _field(
+                            'email',
+                            'Correo electrónico',
+                            required: false,
+                            email: true,
+                          ),
+                        ),
+                        _row(
+                          _field(
+                            'nacionalidad',
+                            'Nacionalidad',
+                            required: false,
+                          ),
+                          _field('direccion', 'Dirección', required: false),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
-              _row(
-                _field('nacionalidad', 'Nacionalidad', required: false),
-                _field('direccion', 'Dirección', required: false),
-              ),
-              const SizedBox(height: 18),
-              _section(context, 'Licencia de conducir'),
-              const SizedBox(height: 14),
-              _field('licencia', 'Número de licencia'),
-              _row(
-                _dateField(
-                  'Fecha de expedición',
-                  _fechaExpLicencia,
-                  (value) => setState(() => _fechaExpLicencia = value),
-                  lastDate: DateTime.now(),
+                const SizedBox(height: 18),
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _section(context, 'Licencia de conducir'),
+                        const SizedBox(height: 14),
+                        _field('licencia', 'Número de licencia'),
+                        _row(
+                          _dateField(
+                            'Fecha de expedición',
+                            _fechaExpLicencia,
+                            (value) =>
+                                setState(() => _fechaExpLicencia = value),
+                            lastDate: DateTime.now(),
+                          ),
+                          _dateField(
+                            'Fecha de vencimiento',
+                            _fechaVencLicencia,
+                            (value) =>
+                                setState(() => _fechaVencLicencia = value),
+                            firstDate: DateTime.now(),
+                            lastDate: DateTime.now().add(
+                              const Duration(days: 3650),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                _dateField(
-                  'Fecha de vencimiento',
-                  _fechaVencLicencia,
-                  (value) => setState(() => _fechaVencLicencia = value),
-                  firstDate: DateTime.now(),
-                  lastDate: DateTime.now().add(const Duration(days: 3650)),
+                const SizedBox(height: 20),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: FilledButton.icon(
+                    onPressed: provider.isMutating ? null : _guardar,
+                    icon: provider.isMutating
+                        ? const SizedBox.square(
+                            dimension: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.save),
+                    label: Text(
+                      provider.isMutating ? 'Guardando…' : 'Guardar cliente',
+                    ),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 20),
-              FilledButton.icon(
-                onPressed: provider.isMutating ? null : _guardar,
-                icon: provider.isMutating
-                    ? const SizedBox.square(
-                        dimension: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.save),
-                label: Text(provider.isMutating ? 'Guardando…' : 'Guardar'),
-              ),
-            ],
+                const SizedBox(height: 32),
+              ],
+            ),
           ),
         ),
       ),

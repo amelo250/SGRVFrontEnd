@@ -4,6 +4,7 @@ import 'package:sgrv_frontend/features/vehiculos/models/vehiculo.dart';
 import 'package:sgrv_frontend/features/vehiculos/pages/vehiculo_form_page.dart';
 import 'package:sgrv_frontend/features/vehiculos/providers/vehiculo_provider.dart';
 import 'package:sgrv_frontend/features/vehiculos/widgets/vehiculo_card.dart';
+import 'package:sgrv_frontend/shared/widgets/app_module_ui.dart';
 
 class VehiculosPage extends StatefulWidget {
   const VehiculosPage({super.key});
@@ -24,77 +25,96 @@ class _VehiculosPageState extends State<VehiculosPage> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<VehiculoProvider>();
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Vehículos'),
-        actions: [
-          FilterChip(
-            label: const Text('Incluir inactivos'),
-            selected: provider.incluirInactivos,
-            onSelected: provider.establecerIncluirInactivos,
-          ),
-          const SizedBox(width: 12),
-        ],
-      ),
+    return AppModuleScaffold(
+      title: 'Vehículos',
+      subtitle:
+          'Controla disponibilidad, tarifas y características de la flota.',
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _abrirFormulario(context),
-        icon: const Icon(Icons.add),
+        onPressed: () => _openForm(),
+        icon: const Icon(Icons.add_rounded),
         label: const Text('Nuevo vehículo'),
       ),
-      body: switch (provider.status) {
-        VehiculoStatus.initial || VehiculoStatus.loading => const Center(
-          child: CircularProgressIndicator(),
-        ),
-        VehiculoStatus.error => _ErrorState(
-          message: provider.errorMessage ?? 'No fue posible cargar.',
-          onRetry: provider.cargar,
-        ),
-        VehiculoStatus.empty => RefreshIndicator(
-          onRefresh: () => provider.cargar(refresh: true),
-          child: const CustomScrollView(
-            physics: AlwaysScrollableScrollPhysics(),
-            slivers: [
-              SliverFillRemaining(
-                child: Center(child: Text('No hay vehículos registrados.')),
+      body: Column(
+        children: [
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.directions_car_rounded,
+                    color: Color(0xFF3867F4),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      '${provider.vehiculos.length} vehículos visibles',
+                      style: const TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                  ),
+                  FilterChip(
+                    avatar: const Icon(Icons.visibility_outlined, size: 18),
+                    label: const Text('Inactivos'),
+                    selected: provider.incluirInactivos,
+                    onSelected: provider.establecerIncluirInactivos,
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-        VehiculoStatus.success => RefreshIndicator(
-          onRefresh: () => provider.cargar(refresh: true),
-          child: ListView.separated(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-            itemCount: provider.vehiculos.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 8),
-            itemBuilder: (_, index) {
-              final vehicle = provider.vehiculos[index];
-              return VehiculoCard(
-                vehiculo: vehicle,
-                onEditar: () => _abrirFormulario(context, vehicle),
-                onDesactivar: () => _confirmarDesactivacion(context, vehicle),
-              );
-            },
-          ),
-        ),
-      },
+          const SizedBox(height: 16),
+          Expanded(child: _body(provider)),
+        ],
+      ),
     );
   }
 
-  Future<void> _abrirFormulario(BuildContext context, [Vehiculo? vehicle]) {
-    return Navigator.push<void>(
+  Widget _body(VehiculoProvider provider) => switch (provider.status) {
+    VehiculoStatus.initial ||
+    VehiculoStatus.loading => const Center(child: CircularProgressIndicator()),
+    VehiculoStatus.error => AppStateView(
+      icon: Icons.cloud_off_rounded,
+      title: 'No pudimos cargar la flota',
+      message: provider.errorMessage,
+      onRetry: provider.cargar,
+    ),
+    VehiculoStatus.empty => const AppStateView(
+      icon: Icons.directions_car_outlined,
+      title: 'No hay vehículos',
+      message: 'Agrega el primer vehículo de tu flota.',
+    ),
+    VehiculoStatus.success => RefreshIndicator(
+      onRefresh: () => provider.cargar(refresh: true),
+      child: ListView.separated(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.only(bottom: 90),
+        itemCount: provider.vehiculos.length,
+        separatorBuilder: (_, _) => const SizedBox(height: 10),
+        itemBuilder: (_, index) {
+          final vehicle = provider.vehiculos[index];
+          return VehiculoCard(
+            vehiculo: vehicle,
+            onEditar: () => _openForm(vehicle),
+            onDesactivar: () => _confirmDeactivation(vehicle),
+          );
+        },
+      ),
+    ),
+  };
+
+  Future<void> _openForm([Vehiculo? vehicle]) async {
+    await Navigator.push<void>(
       context,
       MaterialPageRoute(builder: (_) => VehiculoFormPage(vehiculo: vehicle)),
     );
+    if (mounted) await context.read<VehiculoProvider>().cargar(refresh: true);
   }
 
-  Future<void> _confirmarDesactivacion(
-    BuildContext context,
-    Vehiculo vehicle,
-  ) async {
+  Future<void> _confirmDeactivation(Vehiculo vehicle) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
+        icon: const Icon(Icons.warning_amber_rounded),
         title: const Text('Desactivar vehículo'),
         content: Text('¿Deseas desactivar ${vehicle.marca} ${vehicle.modelo}?'),
         actions: [
@@ -109,47 +129,14 @@ class _VehiculosPageState extends State<VehiculosPage> {
         ],
       ),
     );
-
-    if (confirmed != true || !context.mounted) return;
-    final success = await context.read<VehiculoProvider>().desactivar(
-      vehicle.idVehiculo,
-    );
-    if (!context.mounted || success) return;
-
+    if (confirmed != true || !mounted) return;
+    final provider = context.read<VehiculoProvider>();
+    final success = await provider.desactivar(vehicle.idVehiculo);
+    if (!mounted || success) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          context.read<VehiculoProvider>().errorMessage ??
-              'No fue posible desactivar el vehículo.',
-        ),
-      ),
-    );
-  }
-}
-
-class _ErrorState extends StatelessWidget {
-  const _ErrorState({required this.message, required this.onRetry});
-  final String message;
-  final Future<void> Function() onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.cloud_off, size: 56),
-            const SizedBox(height: 16),
-            Text(message, textAlign: TextAlign.center),
-            const SizedBox(height: 16),
-            FilledButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Reintentar'),
-            ),
-          ],
+          provider.errorMessage ?? 'No fue posible desactivar el vehículo.',
         ),
       ),
     );
