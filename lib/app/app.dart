@@ -14,6 +14,7 @@ import 'package:sgrv_frontend/features/pagos/providers/pago_form_provider.dart';
 import 'package:sgrv_frontend/features/pagos/providers/pago_provider.dart';
 import 'package:sgrv_frontend/features/gastos/providers/gasto_provider.dart';
 import 'package:sgrv_frontend/features/vehiculos/providers/vehiculo_media_provider.dart';
+import 'package:sgrv_frontend/features/configuracion/providers/configuracion_provider.dart';
 
 class SgrvApp extends StatelessWidget {
   const SgrvApp({super.key});
@@ -34,6 +35,7 @@ class SgrvApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => PagoFormProvider()),
         ChangeNotifierProvider(create: (_) => GastoProvider()),
         ChangeNotifierProvider(create: (_) => VehiculoMediaProvider()),
+        ChangeNotifierProvider(create: (_) => ConfiguracionProvider()),
       ],
       child: MaterialApp(
         title: 'SGRV',
