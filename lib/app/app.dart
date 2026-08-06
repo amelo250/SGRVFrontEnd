@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sgrv_frontend/features/auth/pages/auth_gate.dart';
 import 'package:sgrv_frontend/features/auth/providers/auth_provider.dart';
+import 'package:sgrv_frontend/features/calendario/providers/calendario_provider.dart';
 import 'package:sgrv_frontend/features/empresas/providers/empresa_provider.dart';
 import 'package:sgrv_frontend/features/proveedores/providers/proveedor_vehiculo_provider.dart';
 import 'package:sgrv_frontend/features/reservaciones/providers/reservacion_provider.dart';
@@ -38,6 +39,7 @@ class SgrvApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => VehiculoMediaProvider()),
         ChangeNotifierProvider(create: (_) => ConfiguracionProvider()),
         ChangeNotifierProvider(create: (_) => DocumentoClienteProvider()),
+        ChangeNotifierProvider(create: (_) => CalendarioProvider()),
       ],
       child: MaterialApp(
         title: 'SGRV',

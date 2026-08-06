@@ -20,6 +20,7 @@ import 'package:sgrv_frontend/features/clientes/pages/cliente_form_page.dart';
 import 'package:sgrv_frontend/features/vehiculos/pages/vehiculo_form_page.dart';
 import 'package:sgrv_frontend/features/dashboard/widgets/dashboard_quick_actions.dart';
 import 'package:sgrv_frontend/features/configuracion/pages/configuracion_page.dart';
+import 'package:sgrv_frontend/features/calendario/pages/calendario_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -65,11 +66,7 @@ class _DashboardPageState extends State<DashboardPage> {
       icono: Icons.calendar_month_rounded,
       proximamente: true,
     ),
-    _MenuItem(
-      titulo: 'Reportes',
-      icono: Icons.bar_chart_rounded,
-      proximamente: true,
-    ),
+    _MenuItem(titulo: 'Reportes', icono: Icons.bar_chart_rounded),
     _MenuItem(titulo: 'Empresas', icono: Icons.business_rounded),
     _MenuItem(titulo: 'Proveedores', icono: Icons.handshake_rounded),
     _MenuItem(titulo: 'Configuración', icono: Icons.settings_rounded),
@@ -156,6 +153,14 @@ class _DashboardPageState extends State<DashboardPage> {
       Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => const EmpresasPage()),
+      );
+
+      return;
+    }
+    if (indice == 7) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const CalendarioPage()),
       );
 
       return;
