@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sgrv_frontend/features/clientes/models/cliente.dart';
 import 'package:sgrv_frontend/features/clientes/pages/cliente_form_page.dart';
+import 'package:sgrv_frontend/features/clientes/pages/cliente_documentos_page.dart';
 import 'package:sgrv_frontend/features/clientes/providers/cliente_provider.dart';
 import 'package:sgrv_frontend/features/clientes/widgets/cliente_card.dart';
 import 'package:sgrv_frontend/shared/widgets/app_module_ui.dart';
@@ -102,6 +103,7 @@ class _ClientesPageState extends State<ClientesPage> {
                   onEditar: () => _openForm(client),
                   onDesactivar: () => _confirmStatus(client, restore: false),
                   onRestaurar: () => _confirmStatus(client, restore: true),
+                  onDocumentos: () => _openDocuments(client),
                 );
               },
             ),
@@ -130,6 +132,13 @@ class _ClientesPageState extends State<ClientesPage> {
       MaterialPageRoute(builder: (_) => ClienteFormPage(cliente: client)),
     );
     if (mounted) await context.read<ClienteProvider>().cargar(refresh: true);
+  }
+
+  Future<void> _openDocuments(Cliente client) async {
+    await Navigator.push<void>(
+      context,
+      MaterialPageRoute(builder: (_) => ClienteDocumentosPage(cliente: client)),
+    );
   }
 
   Future<void> _confirmStatus(Cliente client, {required bool restore}) async {

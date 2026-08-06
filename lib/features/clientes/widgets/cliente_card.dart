@@ -7,6 +7,7 @@ class ClienteCard extends StatelessWidget {
     required this.onEditar,
     required this.onDesactivar,
     required this.onRestaurar,
+    required this.onDocumentos,
     super.key,
   });
 
@@ -14,6 +15,7 @@ class ClienteCard extends StatelessWidget {
   final VoidCallback onEditar;
   final VoidCallback onDesactivar;
   final VoidCallback onRestaurar;
+  final VoidCallback onDocumentos;
 
   @override
   Widget build(BuildContext context) {
@@ -72,12 +74,18 @@ class ClienteCard extends StatelessWidget {
               PopupMenuButton<String>(
                 onSelected: (value) {
                   if (value == 'editar') onEditar();
+                  if (value == 'documentos') onDocumentos();
                   if (value == 'desactivar') onDesactivar();
                   if (value == 'restaurar') onRestaurar();
                 },
                 itemBuilder: (_) => [
                   if (cliente.activo)
                     const PopupMenuItem(value: 'editar', child: Text('Editar')),
+                  if (cliente.activo)
+                    const PopupMenuItem(
+                      value: 'documentos',
+                      child: Text('Documentos'),
+                    ),
                   PopupMenuItem(
                     value: cliente.activo ? 'desactivar' : 'restaurar',
                     child: Text(cliente.activo ? 'Desactivar' : 'Restaurar'),
