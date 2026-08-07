@@ -1,0 +1,19 @@
+class RentaFilters {
+  const RentaFilters({
+    this.idCliente,
+    this.idVehiculo,
+    this.fechaDesde,
+    this.fechaHasta,
+  });
+
+  final int? idCliente;
+  final int? idVehiculo;
+  final DateTime? fechaDesde;
+  final DateTime? fechaHasta;
+
+  bool get isEmpty =>
+      idCliente == null &&
+      idVehiculo == null &&
+      fechaDesde == null &&
+      fechaHasta == null;
+}

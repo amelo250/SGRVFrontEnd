@@ -4,6 +4,7 @@ class RentaCreateDto {
     required this.idVehiculo,
     required this.fechaInicio,
     required this.fechaFin,
+    this.precioPorDiaPactado,
     required this.impuestos,
     required this.descuentos,
     required this.deposito,
@@ -15,6 +16,7 @@ class RentaCreateDto {
   final int idVehiculo;
   final DateTime fechaInicio;
   final DateTime fechaFin;
+  final double? precioPorDiaPactado;
   final double impuestos;
   final double descuentos;
   final double deposito;
@@ -26,6 +28,7 @@ class RentaCreateDto {
     'idVehiculo': idVehiculo,
     'fechaInicio': fechaInicio.toUtc().toIso8601String(),
     'fechaFin': fechaFin.toUtc().toIso8601String(),
+    'precioPorDiaPactado': precioPorDiaPactado,
     'impuestos': impuestos,
     'descuentos': descuentos,
     'deposito': deposito,
@@ -40,6 +43,7 @@ class RentaUpdateDto extends RentaCreateDto {
     required super.idVehiculo,
     required super.fechaInicio,
     required super.fechaFin,
+    super.precioPorDiaPactado,
     required super.impuestos,
     required super.descuentos,
     required super.deposito,
@@ -59,12 +63,15 @@ class RentaUpdateDto extends RentaCreateDto {
 
 class ConvertirReservacionRentaDto {
   const ConvertirReservacionRentaDto({
+    this.precioPorDiaPactado,
     required this.impuestos,
     required this.descuentos,
     required this.deposito,
     required this.tasaCambioAplicada,
     this.observaciones,
   });
+
+  final double? precioPorDiaPactado;
 
   final double impuestos;
   final double descuentos;
@@ -73,6 +80,7 @@ class ConvertirReservacionRentaDto {
   final String? observaciones;
 
   Map<String, dynamic> toJson() => {
+    'precioPorDiaPactado': precioPorDiaPactado,
     'impuestos': impuestos,
     'descuentos': descuentos,
     'deposito': deposito,

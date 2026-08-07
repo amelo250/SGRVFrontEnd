@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:sgrv_frontend/features/clientes/providers/cliente_provider.dart';
 import 'package:sgrv_frontend/features/rentas/models/renta.dart';
 import 'package:sgrv_frontend/features/rentas/models/renta_dto.dart';
+import 'package:sgrv_frontend/features/rentas/models/renta_pricing_preview.dart';
 import 'package:sgrv_frontend/features/rentas/providers/renta_provider.dart';
 import 'package:sgrv_frontend/features/vehiculos/providers/vehiculo_provider.dart';
 
@@ -19,6 +20,7 @@ class RentaFormPage extends StatefulWidget {
 class _RentaFormPageState extends State<RentaFormPage> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _taxController;
+  late final TextEditingController _priceController;
   late final TextEditingController _discountController;
   late final TextEditingController _depositController;
   late final TextEditingController _rateController;
@@ -42,10 +44,18 @@ class _RentaFormPageState extends State<RentaFormPage> {
         rental?.fechaFin ??
         DateTime.now().add(const Duration(days: 1, hours: 1));
     _taxController = _money(rental?.impuestos);
+    _priceController = _money(rental?.precioPorDia);
     _discountController = _money(rental?.descuentos);
     _depositController = _money(rental?.deposito);
     _rateController = _money(rental?.tasaCambioAplicada ?? 1);
     _notesController = TextEditingController(text: rental?.observaciones);
+    for (final controller in [
+      _priceController,
+      _taxController,
+      _discountController,
+    ]) {
+      controller.addListener(_refreshPreview);
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ClienteProvider>().cargarParaSelector();
       context.read<VehiculoProvider>().cargar(refresh: true);
@@ -55,9 +65,21 @@ class _RentaFormPageState extends State<RentaFormPage> {
   static TextEditingController _money(double? value) =>
       TextEditingController(text: value == null ? '0' : '$value');
 
+  void _refreshPreview() {
+    if (mounted) setState(() {});
+  }
+
   @override
   void dispose() {
+    for (final controller in [
+      _priceController,
+      _taxController,
+      _discountController,
+    ]) {
+      controller.removeListener(_refreshPreview);
+    }
     _taxController.dispose();
+    _priceController.dispose();
     _discountController.dispose();
     _depositController.dispose();
     _rateController.dispose();
@@ -143,8 +165,18 @@ class _RentaFormPageState extends State<RentaFormPage> {
                               ),
                             )
                             .toList(growable: false),
-                        onChanged: (value) =>
-                            setState(() => _vehicleId = value),
+                        onChanged: (value) {
+                          setState(() {
+                            _vehicleId = value;
+                            if (!_editing && value != null) {
+                              final selected = vehicles.firstWhere(
+                                (item) => item.idVehiculo == value,
+                              );
+                              _priceController.text = selected.precioPorDia
+                                  .toStringAsFixed(2);
+                            }
+                          });
+                        },
                         validator: (value) =>
                             value == null ? 'Selecciona un vehículo' : null,
                       ),
@@ -180,6 +212,14 @@ class _RentaFormPageState extends State<RentaFormPage> {
                   child: LayoutBuilder(
                     builder: (context, constraints) => Column(
                       children: [
+                        _numberField(
+                          'Precio diario pactado',
+                          _priceController,
+                          positive: true,
+                        ),
+                        const SizedBox(height: 12),
+                        _pricingPreview(context, vehicles),
+                        const SizedBox(height: 14),
                         _responsive(
                           constraints.maxWidth,
                           _numberField('Impuestos', _taxController),
@@ -253,7 +293,7 @@ class _RentaFormPageState extends State<RentaFormPage> {
         ),
         const SizedBox(height: 6),
         const Text(
-          'La tarifa, moneda y totales definitivos serán calculados por el servidor.',
+          'La tarifa del vehículo es una referencia. Puedes pactar otro precio; el servidor conservará ese valor en la renta y calculará los totales definitivos.',
           style: TextStyle(color: Color(0xFFDDE5FF)),
         ),
       ],
@@ -322,7 +362,7 @@ class _RentaFormPageState extends State<RentaFormPage> {
     keyboardType: const TextInputType.numberWithOptions(decimal: true),
     decoration: _decoration(label, Icons.attach_money_rounded),
     validator: (value) {
-      final number = double.tryParse(value?.trim() ?? '');
+      final number = _parseDecimal(value);
       if (number == null) return 'Introduce un número válido';
       if (positive ? number <= 0 : number < 0) {
         return positive ? 'Debe ser mayor que cero' : 'No puede ser negativo';
@@ -330,6 +370,78 @@ class _RentaFormPageState extends State<RentaFormPage> {
       return null;
     },
   );
+
+  Widget _pricingPreview(BuildContext context, List<dynamic> vehicles) {
+    final reference = _referencePrice(vehicles);
+    final agreed = _parseDecimal(_priceController.text) ?? 0;
+    final taxes = _parseDecimal(_taxController.text) ?? 0;
+    final discounts = _parseDecimal(_discountController.text) ?? 0;
+    final preview = RentaPricingPreview.calculate(
+      fechaInicio: _start,
+      fechaFin: _end,
+      precioPactado: agreed,
+      precioReferencia: reference,
+      impuestos: taxes,
+      descuentos: discounts,
+    );
+    final color = preview.diferenciaTarifaDiaria >= 0
+        ? const Color(0xFF137A50)
+        : const Color(0xFFB54708);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF1F5FF),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFD9E2FF)),
+      ),
+      child: Wrap(
+        spacing: 24,
+        runSpacing: 10,
+        children: [
+          _previewValue('Tarifa de referencia', reference.toStringAsFixed(2)),
+          _previewValue('Días estimados', '${preview.cantidadDias}'),
+          _previewValue(
+            'Subtotal estimado',
+            preview.subtotal.toStringAsFixed(2),
+          ),
+          _previewValue('Total estimado', preview.total.toStringAsFixed(2)),
+          if (reference > 0 && agreed > 0)
+            _previewValue(
+              preview.diferenciaTarifaDiaria >= 0
+                  ? 'Ajuste diario a favor'
+                  : 'Incremento diario',
+              preview.diferenciaTarifaDiaria.abs().toStringAsFixed(2),
+              color: color,
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _previewValue(String label, String value, {Color? color}) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Text(label, style: const TextStyle(color: Color(0xFF6F788C))),
+      const SizedBox(height: 2),
+      Text(
+        value,
+        style: TextStyle(fontWeight: FontWeight.w800, color: color),
+      ),
+    ],
+  );
+
+  double _referencePrice(List<dynamic> vehicles) {
+    if (_vehicleId == null) return widget.renta?.precioPorDia ?? 0;
+    for (final vehicle in vehicles) {
+      if (vehicle.idVehiculo == _vehicleId) return vehicle.precioPorDia;
+    }
+    return widget.renta?.precioPorDia ?? 0;
+  }
+
+  static double? _parseDecimal(String? value) =>
+      double.tryParse((value ?? '').trim().replaceAll(',', '.'));
 
   InputDecoration _decoration(String label, IconData icon) => InputDecoration(
     labelText: label,
@@ -384,10 +496,11 @@ class _RentaFormPageState extends State<RentaFormPage> {
       idVehiculo: _vehicleId!,
       fechaInicio: _start,
       fechaFin: _end,
-      impuestos: double.parse(_taxController.text.trim()),
-      descuentos: double.parse(_discountController.text.trim()),
-      deposito: double.parse(_depositController.text.trim()),
-      tasaCambioAplicada: double.parse(_rateController.text.trim()),
+      precioPorDiaPactado: _parseDecimal(_priceController.text)!,
+      impuestos: _parseDecimal(_taxController.text)!,
+      descuentos: _parseDecimal(_discountController.text)!,
+      deposito: _parseDecimal(_depositController.text)!,
+      tasaCambioAplicada: _parseDecimal(_rateController.text)!,
       observaciones: _notesController.text,
     );
     final success = _editing
@@ -398,6 +511,7 @@ class _RentaFormPageState extends State<RentaFormPage> {
               idVehiculo: common.idVehiculo,
               fechaInicio: common.fechaInicio,
               fechaFin: common.fechaFin,
+              precioPorDiaPactado: common.precioPorDiaPactado,
               impuestos: common.impuestos,
               descuentos: common.descuentos,
               deposito: common.deposito,

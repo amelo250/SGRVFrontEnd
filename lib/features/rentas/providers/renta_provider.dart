@@ -2,7 +2,9 @@ import 'package:flutter/foundation.dart';
 import 'package:sgrv_frontend/core/network/api_exception.dart';
 import 'package:sgrv_frontend/features/rentas/models/renta.dart';
 import 'package:sgrv_frontend/features/rentas/models/renta_dto.dart';
+import 'package:sgrv_frontend/features/rentas/models/renta_filters.dart';
 import 'package:sgrv_frontend/features/rentas/models/renta_summary.dart';
+import 'package:sgrv_frontend/features/rentas/models/renta_entrega.dart';
 import 'package:sgrv_frontend/features/rentas/services/renta_service.dart';
 
 enum RentaStatus { initial, loading, success, empty, error }
@@ -23,6 +25,9 @@ class RentaProvider extends ChangeNotifier {
   int _requestVersion = 0;
   Renta? _selected;
   RentaSummary? _summary;
+  RentaEntrega? _entrega;
+  bool _loadingEntrega = false;
+  RentaFilters _filters = const RentaFilters();
 
   List<Renta> get items => List.unmodifiable(_items);
   RentaStatus get status => _status;
@@ -35,6 +40,30 @@ class RentaProvider extends ChangeNotifier {
   bool get hasNextPage => _pageNumber < _totalPages;
   Renta? get selected => _selected;
   RentaSummary? get summary => _summary;
+  RentaEntrega? get entrega => _entrega;
+  bool get loadingEntrega => _loadingEntrega;
+  RentaFilters get filters => _filters;
+  bool get hasFilters => !_filters.isEmpty;
+
+  Future<bool> loadEntrega(int id) async {
+    _loadingEntrega = true;
+    _entrega = null;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      _entrega = await _service.getEntrega(id);
+      return true;
+    } on ApiException catch (error) {
+      _errorMessage = error.message;
+      return false;
+    } catch (_) {
+      _errorMessage = 'No fue posible generar el formulario de entrega.';
+      return false;
+    } finally {
+      _loadingEntrega = false;
+      notifyListeners();
+    }
+  }
 
   Future<void> load({bool refresh = false}) async {
     final version = ++_requestVersion;
@@ -46,6 +75,10 @@ class RentaProvider extends ChangeNotifier {
         pageNumber: _pageNumber,
         pageSize: _pageSize,
         search: _search,
+        idCliente: _filters.idCliente,
+        idVehiculo: _filters.idVehiculo,
+        fechaDesde: _filters.fechaDesde,
+        fechaHasta: _filters.fechaHasta,
       );
       if (version != _requestVersion) return;
       _items = page.items;
@@ -71,6 +104,14 @@ class RentaProvider extends ChangeNotifier {
     _pageNumber = 1;
     await load();
   }
+
+  Future<void> applyFilters(RentaFilters value) async {
+    _filters = value;
+    _pageNumber = 1;
+    await load();
+  }
+
+  Future<void> clearFilters() => applyFilters(const RentaFilters());
 
   Future<void> previousPage() async {
     if (!hasPreviousPage) return;
