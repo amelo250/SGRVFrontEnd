@@ -106,9 +106,6 @@ class _RentaDetailPageState extends State<RentaDetailPage> {
 
   Widget _hero(BuildContext context, RentaProvider provider) {
     final rental = provider.selected!;
-    final hasPayments = (provider.summary?.totalPagadoMonedaLocal ?? 0) > 0.005;
-    final hasPendingBalance =
-        (provider.summary?.balancePendienteMonedaLocal ?? 0) > 0.005;
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -156,9 +153,9 @@ class _RentaDetailPageState extends State<RentaDetailPage> {
               foregroundColor: Colors.white,
               side: const BorderSide(color: Colors.white54),
             ),
-            onPressed: _openDeliveryForm,
-            icon: const Icon(Icons.description_outlined),
-            label: const Text('Formulario de entrega'),
+            onPressed: _openDelivery,
+            icon: const Icon(Icons.assignment_outlined),
+            label: const Text('Entrega y firmas'),
           ),
           if (rental.activa)
             FilledButton.icon(
@@ -167,46 +164,29 @@ class _RentaDetailPageState extends State<RentaDetailPage> {
               label: const Text('Registrar pago'),
             ),
           if (rental.puedeEditar)
-            Tooltip(
-              message: hasPayments
-                  ? 'No se puede modificar una renta con pagos activos.'
-                  : 'Modificar renta',
-              child: OutlinedButton.icon(
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  side: const BorderSide(color: Colors.white54),
-                ),
-                onPressed: provider.isMutating || hasPayments ? null : _edit,
-                icon: const Icon(Icons.edit_outlined),
-                label: const Text('Editar'),
+            OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.white,
+                side: const BorderSide(color: Colors.white54),
               ),
+              onPressed: provider.isMutating ? null : _edit,
+              icon: const Icon(Icons.edit_outlined),
+              label: const Text('Editar'),
             ),
           if (rental.puedeFinalizar)
-            Tooltip(
-              message: hasPendingBalance
-                  ? 'Debes saldar el balance antes de finalizar.'
-                  : 'Finalizar renta',
-              child: FilledButton.icon(
-                onPressed: provider.isMutating || hasPendingBalance
-                    ? null
-                    : _complete,
-                icon: const Icon(Icons.assignment_turned_in_outlined),
-                label: const Text('Finalizar'),
-              ),
+            FilledButton.icon(
+              onPressed: provider.isMutating ? null : _complete,
+              icon: const Icon(Icons.assignment_turned_in_outlined),
+              label: const Text('Finalizar'),
             ),
           if (rental.puedeCancelar)
-            Tooltip(
-              message: hasPayments
-                  ? 'Anula los pagos activos antes de cancelar.'
-                  : 'Cancelar renta',
-              child: TextButton.icon(
-                style: TextButton.styleFrom(
-                  foregroundColor: const Color(0xFFFFD5D2),
-                ),
-                onPressed: provider.isMutating || hasPayments ? null : _cancel,
-                icon: const Icon(Icons.cancel_outlined),
-                label: const Text('Cancelar'),
+            TextButton.icon(
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFFFFD5D2),
               ),
+              onPressed: provider.isMutating ? null : _cancel,
+              icon: const Icon(Icons.cancel_outlined),
+              label: const Text('Cancelar'),
             ),
         ],
       ),
@@ -354,7 +334,7 @@ class _RentaDetailPageState extends State<RentaDetailPage> {
     if (mounted) await _load();
   }
 
-  Future<void> _openDeliveryForm() => Navigator.push<void>(
+  Future<void> _openDelivery() => Navigator.push<void>(
     context,
     MaterialPageRoute(
       builder: (_) => RentaEntregaPage(rentaId: widget.rentaId),

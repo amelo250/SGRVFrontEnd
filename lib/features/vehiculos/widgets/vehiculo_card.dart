@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sgrv_frontend/core/config/api_config.dart';
+import 'package:sgrv_frontend/core/utils/money_formatter.dart';
 import 'package:sgrv_frontend/features/vehiculos/models/vehiculo.dart';
 
 class VehiculoCard extends StatelessWidget {
@@ -140,7 +141,11 @@ class VehiculoCard extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          'RD\$ ${vehiculo.precioPorDia.toStringAsFixed(2)}',
+                          MoneyFormatter.format(
+                            vehiculo.precioPorDia,
+                            currencyCode: vehiculo.monedaCodigo,
+                            currencySymbol: vehiculo.monedaSimbolo,
+                          ),
                           style: TextStyle(
                             color: colors.primary,
                             fontSize: 18,

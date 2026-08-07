@@ -20,6 +20,8 @@ class Vehiculo {
     required this.idTipo,
     required this.tipoPropiedad,
     required this.idMonedaTarifa,
+    required this.monedaCodigo,
+    required this.monedaSimbolo,
     required this.marca,
     required this.modelo,
     required this.anio,
@@ -46,6 +48,8 @@ class Vehiculo {
   final TipoPropiedadVehiculo tipoPropiedad;
   final int? idProveedorVehiculo;
   final int idMonedaTarifa;
+  final String monedaCodigo;
+  final String monedaSimbolo;
   final String marca;
   final String modelo;
   final int anio;
@@ -74,6 +78,8 @@ class Vehiculo {
       ),
       idProveedorVehiculo: (json['idProveedorVehiculo'] as num?)?.toInt(),
       idMonedaTarifa: (json['idMonedaTarifa'] as num).toInt(),
+      monedaCodigo: json['monedaCodigo']?.toString() ?? '',
+      monedaSimbolo: json['monedaSimbolo']?.toString() ?? '',
       marca: json['marca']?.toString() ?? '',
       modelo: json['modelo']?.toString() ?? '',
       anio: (json['anio'] as num).toInt(),

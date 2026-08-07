@@ -4,9 +4,10 @@ import 'package:provider/provider.dart';
 import 'package:sgrv_frontend/features/clientes/providers/cliente_provider.dart';
 import 'package:sgrv_frontend/features/rentas/models/renta.dart';
 import 'package:sgrv_frontend/features/rentas/models/renta_dto.dart';
-import 'package:sgrv_frontend/features/rentas/models/renta_pricing_preview.dart';
 import 'package:sgrv_frontend/features/rentas/providers/renta_provider.dart';
 import 'package:sgrv_frontend/features/vehiculos/providers/vehiculo_provider.dart';
+import 'package:sgrv_frontend/core/utils/money_formatter.dart';
+import 'package:sgrv_frontend/features/vehiculos/models/vehiculo.dart';
 
 class RentaFormPage extends StatefulWidget {
   const RentaFormPage({this.renta, super.key});
@@ -20,7 +21,6 @@ class RentaFormPage extends StatefulWidget {
 class _RentaFormPageState extends State<RentaFormPage> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _taxController;
-  late final TextEditingController _priceController;
   late final TextEditingController _discountController;
   late final TextEditingController _depositController;
   late final TextEditingController _rateController;
@@ -31,6 +31,13 @@ class _RentaFormPageState extends State<RentaFormPage> {
   late DateTime _end;
 
   bool get _editing => widget.renta != null;
+
+  Vehiculo? _selectedVehicle(List<Vehiculo> vehicles) {
+    for (final vehicle in vehicles) {
+      if (vehicle.idVehiculo == _vehicleId) return vehicle;
+    }
+    return null;
+  }
 
   @override
   void initState() {
@@ -44,18 +51,10 @@ class _RentaFormPageState extends State<RentaFormPage> {
         rental?.fechaFin ??
         DateTime.now().add(const Duration(days: 1, hours: 1));
     _taxController = _money(rental?.impuestos);
-    _priceController = _money(rental?.precioPorDia);
     _discountController = _money(rental?.descuentos);
     _depositController = _money(rental?.deposito);
     _rateController = _money(rental?.tasaCambioAplicada ?? 1);
     _notesController = TextEditingController(text: rental?.observaciones);
-    for (final controller in [
-      _priceController,
-      _taxController,
-      _discountController,
-    ]) {
-      controller.addListener(_refreshPreview);
-    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ClienteProvider>().cargarParaSelector();
       context.read<VehiculoProvider>().cargar(refresh: true);
@@ -65,21 +64,9 @@ class _RentaFormPageState extends State<RentaFormPage> {
   static TextEditingController _money(double? value) =>
       TextEditingController(text: value == null ? '0' : '$value');
 
-  void _refreshPreview() {
-    if (mounted) setState(() {});
-  }
-
   @override
   void dispose() {
-    for (final controller in [
-      _priceController,
-      _taxController,
-      _discountController,
-    ]) {
-      controller.removeListener(_refreshPreview);
-    }
     _taxController.dispose();
-    _priceController.dispose();
     _discountController.dispose();
     _depositController.dispose();
     _rateController.dispose();
@@ -166,14 +153,16 @@ class _RentaFormPageState extends State<RentaFormPage> {
                             )
                             .toList(growable: false),
                         onChanged: (value) {
+                          final vehicle = vehicles
+                              .where((item) => item.idVehiculo == value)
+                              .firstOrNull;
                           setState(() {
                             _vehicleId = value;
-                            if (!_editing && value != null) {
-                              final selected = vehicles.firstWhere(
-                                (item) => item.idVehiculo == value,
-                              );
-                              _priceController.text = selected.precioPorDia
-                                  .toStringAsFixed(2);
+                            if (vehicle != null &&
+                                MoneyFormatter.isLocal(vehicle.monedaCodigo)) {
+                              _rateController.text = '1';
+                            } else if (!_editing) {
+                              _rateController.clear();
                             }
                           });
                         },
@@ -210,43 +199,57 @@ class _RentaFormPageState extends State<RentaFormPage> {
                   title: 'Condiciones financieras',
                   icon: Icons.payments_outlined,
                   child: LayoutBuilder(
-                    builder: (context, constraints) => Column(
-                      children: [
-                        _numberField(
-                          'Precio diario pactado',
-                          _priceController,
-                          positive: true,
-                        ),
-                        const SizedBox(height: 12),
-                        _pricingPreview(context, vehicles),
-                        const SizedBox(height: 14),
-                        _responsive(
-                          constraints.maxWidth,
-                          _numberField('Impuestos', _taxController),
-                          _numberField('Descuentos', _discountController),
-                        ),
-                        const SizedBox(height: 14),
-                        _responsive(
-                          constraints.maxWidth,
-                          _numberField('Depósito', _depositController),
-                          _numberField(
-                            'Tasa de cambio',
-                            _rateController,
-                            positive: true,
+                    builder: (context, constraints) {
+                      final vehicle = _selectedVehicle(vehicles);
+                      final currencyCode =
+                          vehicle?.monedaCodigo ??
+                          widget.renta?.monedaCodigo ??
+                          '';
+                      final isLocal = MoneyFormatter.isLocal(currencyCode);
+                      final rate = isLocal
+                          ? 1.0
+                          : _parseDecimal(_rateController.text);
+                      final localDaily = vehicle == null || rate == null
+                          ? null
+                          : MoneyFormatter.toLocal(vehicle.precioPorDia, rate);
+                      return Column(
+                        children: [
+                          if (vehicle != null) ...[
+                            _currencyNotice(vehicle, rate, localDaily),
+                            const SizedBox(height: 14),
+                          ],
+                          _responsive(
+                            constraints.maxWidth,
+                            _numberField('Impuestos', _taxController),
+                            _numberField('Descuentos', _discountController),
                           ),
-                        ),
-                        const SizedBox(height: 14),
-                        TextFormField(
-                          controller: _notesController,
-                          maxLines: 4,
-                          maxLength: 500,
-                          decoration: _decoration(
-                            'Observaciones',
-                            Icons.notes_outlined,
+                          const SizedBox(height: 14),
+                          _responsive(
+                            constraints.maxWidth,
+                            _numberField('Depósito', _depositController),
+                            _numberField(
+                              isLocal
+                                  ? 'Tasa de cambio (DOP)'
+                                  : 'Tasa DOP por 1 $currencyCode',
+                              _rateController,
+                              positive: true,
+                              enabled: !isLocal,
+                              onChanged: (_) => setState(() {}),
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
+                          const SizedBox(height: 14),
+                          TextFormField(
+                            controller: _notesController,
+                            maxLines: 4,
+                            maxLength: 500,
+                            decoration: _decoration(
+                              'Observaciones',
+                              Icons.notes_outlined,
+                            ),
+                          ),
+                        ],
+                      );
+                    },
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -293,7 +296,7 @@ class _RentaFormPageState extends State<RentaFormPage> {
         ),
         const SizedBox(height: 6),
         const Text(
-          'La tarifa del vehículo es una referencia. Puedes pactar otro precio; el servidor conservará ese valor en la renta y calculará los totales definitivos.',
+          'La tarifa, moneda y totales definitivos serán calculados por el servidor.',
           style: TextStyle(color: Color(0xFFDDE5FF)),
         ),
       ],
@@ -357,8 +360,11 @@ class _RentaFormPageState extends State<RentaFormPage> {
     String label,
     TextEditingController controller, {
     bool positive = false,
+    bool enabled = true,
+    ValueChanged<String>? onChanged,
   }) => TextFormField(
     controller: controller,
+    enabled: enabled,
     keyboardType: const TextInputType.numberWithOptions(decimal: true),
     decoration: _decoration(label, Icons.attach_money_rounded),
     validator: (value) {
@@ -369,76 +375,29 @@ class _RentaFormPageState extends State<RentaFormPage> {
       }
       return null;
     },
+    onChanged: onChanged,
   );
 
-  Widget _pricingPreview(BuildContext context, List<dynamic> vehicles) {
-    final reference = _referencePrice(vehicles);
-    final agreed = _parseDecimal(_priceController.text) ?? 0;
-    final taxes = _parseDecimal(_taxController.text) ?? 0;
-    final discounts = _parseDecimal(_discountController.text) ?? 0;
-    final preview = RentaPricingPreview.calculate(
-      fechaInicio: _start,
-      fechaFin: _end,
-      precioPactado: agreed,
-      precioReferencia: reference,
-      impuestos: taxes,
-      descuentos: discounts,
-    );
-    final color = preview.diferenciaTarifaDiaria >= 0
-        ? const Color(0xFF137A50)
-        : const Color(0xFFB54708);
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF1F5FF),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFD9E2FF)),
-      ),
-      child: Wrap(
-        spacing: 24,
-        runSpacing: 10,
-        children: [
-          _previewValue('Tarifa de referencia', reference.toStringAsFixed(2)),
-          _previewValue('Días estimados', '${preview.cantidadDias}'),
-          _previewValue(
-            'Subtotal estimado',
-            preview.subtotal.toStringAsFixed(2),
-          ),
-          _previewValue('Total estimado', preview.total.toStringAsFixed(2)),
-          if (reference > 0 && agreed > 0)
-            _previewValue(
-              preview.diferenciaTarifaDiaria >= 0
-                  ? 'Ajuste diario a favor'
-                  : 'Incremento diario',
-              preview.diferenciaTarifaDiaria.abs().toStringAsFixed(2),
-              color: color,
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _previewValue(String label, String value, {Color? color}) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      Text(label, style: const TextStyle(color: Color(0xFF6F788C))),
-      const SizedBox(height: 2),
-      Text(
-        value,
-        style: TextStyle(fontWeight: FontWeight.w800, color: color),
-      ),
-    ],
+  Widget _currencyNotice(
+    Vehiculo vehicle,
+    double? rate,
+    double? localDaily,
+  ) => Container(
+    width: double.infinity,
+    padding: const EdgeInsets.all(14),
+    decoration: BoxDecoration(
+      color: const Color(0xFFF1F5FF),
+      borderRadius: BorderRadius.circular(14),
+      border: Border.all(color: const Color(0xFFD9E2FF)),
+    ),
+    child: Text(
+      MoneyFormatter.isLocal(vehicle.monedaCodigo)
+          ? 'Tarifa del vehículo: ${MoneyFormatter.format(vehicle.precioPorDia, currencyCode: vehicle.monedaCodigo, currencySymbol: vehicle.monedaSimbolo)}. Al ser DOP, la tasa se fija en 1.'
+          : 'Tarifa del vehículo: ${MoneyFormatter.format(vehicle.precioPorDia, currencyCode: vehicle.monedaCodigo, currencySymbol: vehicle.monedaSimbolo)}. '
+                '${rate == null || localDaily == null ? 'Indica cuántos DOP equivalen a 1 ${vehicle.monedaCodigo}.' : 'Con tasa ${rate.toStringAsFixed(4)}, equivale a RD\$ ${localDaily.toStringAsFixed(2)} por día.'}',
+      style: const TextStyle(fontWeight: FontWeight.w700),
+    ),
   );
-
-  double _referencePrice(List<dynamic> vehicles) {
-    if (_vehicleId == null) return widget.renta?.precioPorDia ?? 0;
-    for (final vehicle in vehicles) {
-      if (vehicle.idVehiculo == _vehicleId) return vehicle.precioPorDia;
-    }
-    return widget.renta?.precioPorDia ?? 0;
-  }
 
   static double? _parseDecimal(String? value) =>
       double.tryParse((value ?? '').trim().replaceAll(',', '.'));
@@ -496,11 +455,19 @@ class _RentaFormPageState extends State<RentaFormPage> {
       idVehiculo: _vehicleId!,
       fechaInicio: _start,
       fechaFin: _end,
-      precioPorDiaPactado: _parseDecimal(_priceController.text)!,
       impuestos: _parseDecimal(_taxController.text)!,
       descuentos: _parseDecimal(_discountController.text)!,
       deposito: _parseDecimal(_depositController.text)!,
-      tasaCambioAplicada: _parseDecimal(_rateController.text)!,
+      tasaCambioAplicada:
+          MoneyFormatter.isLocal(
+            _selectedVehicle(
+                  context.read<VehiculoProvider>().vehiculos,
+                )?.monedaCodigo ??
+                widget.renta?.monedaCodigo ??
+                '',
+          )
+          ? 1
+          : _parseDecimal(_rateController.text)!,
       observaciones: _notesController.text,
     );
     final success = _editing
@@ -511,7 +478,6 @@ class _RentaFormPageState extends State<RentaFormPage> {
               idVehiculo: common.idVehiculo,
               fechaInicio: common.fechaInicio,
               fechaFin: common.fechaFin,
-              precioPorDiaPactado: common.precioPorDiaPactado,
               impuestos: common.impuestos,
               descuentos: common.descuentos,
               deposito: common.deposito,

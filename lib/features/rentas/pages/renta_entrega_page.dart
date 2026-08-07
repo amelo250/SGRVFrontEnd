@@ -1,11 +1,18 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 import 'package:sgrv_frontend/features/rentas/models/renta_entrega.dart';
+import 'package:sgrv_frontend/features/rentas/models/renta_entrega_document.dart';
 import 'package:sgrv_frontend/features/rentas/providers/renta_provider.dart';
+import 'package:sgrv_frontend/features/rentas/services/renta_entrega_pdf_service.dart';
+import 'package:sgrv_frontend/features/rentas/widgets/signature_pad.dart';
 
 class RentaEntregaPage extends StatefulWidget {
   const RentaEntregaPage({required this.rentaId, super.key});
+
   final int rentaId;
 
   @override
@@ -13,7 +20,13 @@ class RentaEntregaPage extends StatefulWidget {
 }
 
 class _RentaEntregaPageState extends State<RentaEntregaPage> {
-  final Set<int> _confirmedAccessories = {};
+  final _agentController = TextEditingController();
+  final _notesController = TextEditingController();
+  final _clientSignatureKey = GlobalKey<SignaturePadState>();
+  final _agentSignatureKey = GlobalKey<SignaturePadState>();
+  final _selectedAccessories = <int>{};
+  final _pdfService = RentaEntregaPdfService();
+  bool _working = false;
 
   @override
   void initState() {
@@ -24,19 +37,26 @@ class _RentaEntregaPageState extends State<RentaEntregaPage> {
   }
 
   @override
+  void dispose() {
+    _agentController.dispose();
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final provider = context.watch<RentaProvider>();
     final data = provider.entrega;
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FB),
       appBar: AppBar(
-        title: const Text('Formulario de entrega'),
+        title: const Text('Entrega del vehículo'),
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
         actions: [
           IconButton(
             tooltip: 'Actualizar',
-            onPressed: provider.loadingEntrega
+            onPressed: provider.loadingEntrega || _working
                 ? null
                 : () => provider.loadEntrega(widget.rentaId),
             icon: const Icon(Icons.refresh_rounded),
@@ -47,54 +67,30 @@ class _RentaEntregaPageState extends State<RentaEntregaPage> {
           ? const Center(child: CircularProgressIndicator())
           : data == null
           ? _error(provider)
-          : SelectionArea(
-              child: ListView(
-                padding: const EdgeInsets.all(24),
-                children: [
-                  Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 1100),
-                      child: Column(
-                        children: [
-                          _header(context, data),
-                          const SizedBox(height: 16),
-                          _notice(),
-                          const SizedBox(height: 16),
-                          LayoutBuilder(
-                            builder: (context, constraints) {
-                              final client = _client(context, data);
-                              final vehicle = _vehicle(context, data);
-                              return constraints.maxWidth >= 760
-                                  ? Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Expanded(child: client),
-                                        const SizedBox(width: 16),
-                                        Expanded(child: vehicle),
-                                      ],
-                                    )
-                                  : Column(
-                                      children: [
-                                        client,
-                                        const SizedBox(height: 16),
-                                        vehicle,
-                                      ],
-                                    );
-                            },
-                          ),
-                          const SizedBox(height: 16),
-                          _financial(context, data),
-                          const SizedBox(height: 16),
-                          _accessories(context, data),
-                          const SizedBox(height: 16),
-                          _signatures(context),
-                        ],
-                      ),
+          : ListView(
+              padding: const EdgeInsets.all(24),
+              children: [
+                Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1100),
+                    child: Column(
+                      children: [
+                        _header(context, data),
+                        const SizedBox(height: 16),
+                        _notice(),
+                        const SizedBox(height: 16),
+                        _summary(context, data),
+                        const SizedBox(height: 16),
+                        _accessories(context, data),
+                        const SizedBox(height: 16),
+                        _signatures(context, data),
+                        const SizedBox(height: 22),
+                        _actions(data),
+                      ],
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
     );
   }
@@ -126,10 +122,6 @@ class _RentaEntregaPageState extends State<RentaEntregaPage> {
               'RNC ${data.empresa.rnc} · ${data.empresa.telefono}',
               style: const TextStyle(color: Color(0xFFDCE5FF)),
             ),
-            Text(
-              data.empresa.direccion,
-              style: const TextStyle(color: Color(0xFFDCE5FF)),
-            ),
           ],
         ),
         Chip(
@@ -142,126 +134,157 @@ class _RentaEntregaPageState extends State<RentaEntregaPage> {
 
   Widget _notice() => const Card(
     child: ListTile(
-      leading: Icon(Icons.info_outline_rounded, color: Color(0xFF3867F4)),
-      title: Text('Constancia generada desde los datos actuales del sistema'),
+      leading: Icon(Icons.verified_user_outlined, color: Color(0xFF3867F4)),
+      title: Text('Documento generado desde la renta registrada'),
       subtitle: Text(
-        'La selección de accesorios y las firmas de esta pantalla todavía no se almacenan como inspección histórica.',
+        'Las firmas se incorporarán al PDF. En esta versión no se almacenan en el servidor.',
       ),
     ),
   );
 
-  Widget _client(BuildContext context, RentaEntrega data) =>
-      _section(context, 'Datos del cliente', Icons.person_outline_rounded, [
-        _line('Nombre', data.cliente.nombreCompleto),
-        _line('Dirección', data.cliente.direccion),
-        _line('Teléfono', data.cliente.telefono),
-        _line('Nacionalidad', data.cliente.nacionalidad),
-        _line('Cédula/Pasaporte', data.cliente.cedulaPasaporte),
-        _line('Licencia', data.cliente.licenciaConducir),
-        _line(
-          'Vence licencia',
-          data.cliente.fechaVencimientoLicencia == null
-              ? 'No registrado'
-              : _date(data.cliente.fechaVencimientoLicencia!),
-        ),
-      ]);
-
-  Widget _vehicle(
-    BuildContext context,
-    RentaEntrega data,
-  ) => _section(context, 'Datos del vehículo', Icons.directions_car_outlined, [
-    _line(
-      'Vehículo',
-      '${data.vehiculo.marca} ${data.vehiculo.modelo} ${data.vehiculo.anio}',
-    ),
-    _line('Tipo', data.vehiculo.tipo),
-    _line('Placa', data.vehiculo.placa),
-    _line('VIN', data.vehiculo.vin),
-    _line('Color', data.vehiculo.color),
-    _line(
-      'Kilometraje',
-      NumberFormat.decimalPattern('es_DO').format(data.vehiculo.kilometraje),
-    ),
-    _line('Salida', _dateTime(data.fechaInicio)),
-    _line('Retorno previsto', _dateTime(data.fechaFin)),
-  ]);
-
-  Widget _financial(BuildContext context, RentaEntrega data) {
-    final money = NumberFormat.currency(
-      locale: 'es_DO',
-      symbol: '${data.monedaSimbolo} ',
-    );
-    return _section(context, 'Condiciones pactadas', Icons.payments_outlined, [
-      Wrap(
-        spacing: 34,
-        runSpacing: 12,
+  Widget _summary(BuildContext context, RentaEntrega data) {
+    final date = DateFormat('dd/MM/yyyy hh:mm a');
+    return _section(
+      context,
+      title: 'Resumen de la entrega',
+      icon: Icons.assignment_outlined,
+      child: Wrap(
+        spacing: 28,
+        runSpacing: 16,
         children: [
-          _metric('Precio por día', money.format(data.precioPorDiaPactado)),
-          _metric('Días rentados', '${data.cantidadDias}'),
-          _metric('Subtotal', money.format(data.subtotal)),
-          _metric('Descuento', money.format(data.descuentos)),
-          _metric('Depósito', money.format(data.deposito)),
-          _metric('Total', money.format(data.total)),
-          _metric(
-            'Abonos registrados (DOP)',
-            NumberFormat.currency(
-              locale: 'es_DO',
-              symbol: r'RD$ ',
-            ).format(data.totalAbonadoLocal),
+          _value('Cliente', data.cliente.nombreCompleto),
+          _value(
+            'Vehículo',
+            '${data.vehiculo.marca} ${data.vehiculo.modelo} ${data.vehiculo.anio}',
+          ),
+          _value('Placa', data.vehiculo.placa),
+          _value('Color', data.vehiculo.color),
+          _value('Salida', date.format(data.fechaInicio)),
+          _value('Retorno', date.format(data.fechaFin)),
+          _value(
+            'Precio diario',
+            '${data.monedaCodigo} ${data.precioPorDiaPactado.toStringAsFixed(2)}',
+          ),
+          _value(
+            'Total',
+            '${data.monedaCodigo} ${data.total.toStringAsFixed(2)}',
           ),
         ],
       ),
-      if (data.observaciones?.trim().isNotEmpty == true)
-        _line('Observaciones', data.observaciones!),
-    ]);
+    );
   }
 
   Widget _accessories(BuildContext context, RentaEntrega data) => _section(
     context,
-    'Accesorios entregados',
-    Icons.checklist_rounded,
-    data.accesorios.isEmpty
-        ? [const Text('El vehículo no tiene accesorios activos registrados.')]
-        : data.accesorios
-              .map(
-                (item) => CheckboxListTile(
-                  contentPadding: EdgeInsets.zero,
-                  value: _confirmedAccessories.contains(item.idAccesorio),
-                  title: Text(item.nombre),
-                  subtitle: item.observaciones == null
-                      ? null
-                      : Text(item.observaciones!),
-                  onChanged: (value) => setState(() {
-                    if (value == true) {
-                      _confirmedAccessories.add(item.idAccesorio);
-                    } else {
-                      _confirmedAccessories.remove(item.idAccesorio);
-                    }
-                  }),
-                ),
-              )
-              .toList(),
+    title: 'Accesorios entregados',
+    icon: Icons.checklist_rounded,
+    child: data.accesorios.isEmpty
+        ? const Text('El vehículo no tiene accesorios activos registrados.')
+        : Wrap(
+            spacing: 10,
+            runSpacing: 8,
+            children: data.accesorios
+                .map(
+                  (item) => FilterChip(
+                    selected: _selectedAccessories.contains(item.idAccesorio),
+                    label: Text(item.nombre),
+                    onSelected: (selected) => setState(() {
+                      if (selected) {
+                        _selectedAccessories.add(item.idAccesorio);
+                      } else {
+                        _selectedAccessories.remove(item.idAccesorio);
+                      }
+                    }),
+                  ),
+                )
+                .toList(growable: false),
+          ),
   );
 
-  Widget _signatures(BuildContext context) =>
-      _section(context, 'Conformidad de entrega', Icons.draw_outlined, const [
-        SizedBox(height: 30),
-        Row(
-          children: [
-            Expanded(child: _SignatureLine('Cliente')),
-            SizedBox(width: 24),
-            Expanded(child: _SignatureLine('Agente de renta')),
-          ],
+  Widget _signatures(BuildContext context, RentaEntrega data) => _section(
+    context,
+    title: 'Conformidad y firmas',
+    icon: Icons.draw_outlined,
+    child: Column(
+      children: [
+        TextFormField(
+          controller: _agentController,
+          maxLength: 120,
+          decoration: const InputDecoration(
+            labelText: 'Nombre de quien entrega',
+            prefixIcon: Icon(Icons.badge_outlined),
+            border: OutlineInputBorder(),
+          ),
         ),
-        SizedBox(height: 20),
-      ]);
+        const SizedBox(height: 12),
+        TextFormField(
+          controller: _notesController,
+          maxLength: 500,
+          maxLines: 3,
+          decoration: const InputDecoration(
+            labelText: 'Observaciones de entrega',
+            prefixIcon: Icon(Icons.notes_outlined),
+            border: OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: 12),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final client = SignaturePad(
+              key: _clientSignatureKey,
+              label: 'Firma del cliente - ${data.cliente.nombreCompleto}',
+            );
+            final agent = SignaturePad(
+              key: _agentSignatureKey,
+              label: 'Firma de quien entrega',
+            );
+            return constraints.maxWidth >= 760
+                ? Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: client),
+                      const SizedBox(width: 16),
+                      Expanded(child: agent),
+                    ],
+                  )
+                : Column(children: [client, const SizedBox(height: 16), agent]);
+          },
+        ),
+      ],
+    ),
+  );
+
+  Widget _actions(RentaEntrega data) => Align(
+    alignment: Alignment.centerRight,
+    child: Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      children: [
+        OutlinedButton.icon(
+          onPressed: _working ? null : () => _print(data),
+          icon: const Icon(Icons.picture_as_pdf_outlined),
+          label: const Text('Vista previa / imprimir'),
+        ),
+        FilledButton.icon(
+          onPressed: _working ? null : () => _share(data),
+          icon: _working
+              ? const SizedBox.square(
+                  dimension: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.share_outlined),
+          label: const Text('Compartir PDF'),
+        ),
+      ],
+    ),
+  );
 
   Widget _section(
-    BuildContext context,
-    String title,
-    IconData icon,
-    List<Widget> children,
-  ) => Card(
+    BuildContext context, {
+    required String title,
+    required IconData icon,
+    required Widget child,
+  }) => Card(
     child: Padding(
       padding: const EdgeInsets.all(22),
       child: Column(
@@ -280,39 +303,23 @@ class _RentaEntregaPageState extends State<RentaEntregaPage> {
             ],
           ),
           const SizedBox(height: 18),
-          ...children,
+          child,
         ],
       ),
     ),
   );
 
-  Widget _line(String label, String value) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 6),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: 145,
-          child: Text(label, style: const TextStyle(color: Color(0xFF6F788C))),
-        ),
-        Expanded(
-          child: Text(
-            value.isEmpty ? 'No registrado' : value,
-            style: const TextStyle(fontWeight: FontWeight.w700),
-          ),
-        ),
-      ],
-    ),
-  );
-
-  Widget _metric(String label, String value) => SizedBox(
-    width: 185,
+  Widget _value(String label, String value) => SizedBox(
+    width: 225,
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(color: Color(0xFF6F788C))),
+        Text(label, style: const TextStyle(color: Color(0xFF7B8498))),
         const SizedBox(height: 4),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.w900)),
+        Text(
+          value.trim().isEmpty ? 'No registrado' : value,
+          style: const TextStyle(fontWeight: FontWeight.w800),
+        ),
       ],
     ),
   );
@@ -323,7 +330,7 @@ class _RentaEntregaPageState extends State<RentaEntregaPage> {
       children: [
         const Icon(Icons.cloud_off_outlined, size: 52),
         const SizedBox(height: 12),
-        Text(provider.errorMessage ?? 'No fue posible generar el formulario.'),
+        Text(provider.errorMessage ?? 'No fue posible cargar la entrega.'),
         const SizedBox(height: 14),
         FilledButton.icon(
           onPressed: () => provider.loadEntrega(widget.rentaId),
@@ -334,20 +341,58 @@ class _RentaEntregaPageState extends State<RentaEntregaPage> {
     ),
   );
 
-  String _date(DateTime value) => DateFormat('dd/MM/yyyy').format(value);
-  String _dateTime(DateTime value) =>
-      DateFormat('dd/MM/yyyy · hh:mm a').format(value);
-}
+  Future<RentaEntregaDocument?> _captureDocument() async {
+    final agent = _agentController.text.trim();
+    if (agent.isEmpty) {
+      _message('Indica el nombre de quien entrega el vehículo.');
+      return null;
+    }
+    final clientSignature = await _clientSignatureKey.currentState?.exportPng();
+    final agentSignature = await _agentSignatureKey.currentState?.exportPng();
+    if (clientSignature == null || agentSignature == null) {
+      _message('Se requieren la firma del cliente y de quien entrega.');
+      return null;
+    }
+    return RentaEntregaDocument(
+      nombreAgente: agent,
+      accesoriosConfirmados: Set.unmodifiable(_selectedAccessories),
+      firmaCliente: clientSignature,
+      firmaAgente: agentSignature,
+      fechaFirma: DateTime.now(),
+      observaciones: _notesController.text.trim(),
+    );
+  }
 
-class _SignatureLine extends StatelessWidget {
-  const _SignatureLine(this.label);
-  final String label;
-  @override
-  Widget build(BuildContext context) => Column(
-    children: [
-      const Divider(color: Color(0xFF172033)),
-      const SizedBox(height: 6),
-      Text(label),
-    ],
-  );
+  Future<Uint8List?> _generate(RentaEntrega data) async {
+    setState(() => _working = true);
+    try {
+      final document = await _captureDocument();
+      if (document == null) return null;
+      return await _pdfService.generate(data, document);
+    } catch (_) {
+      _message('No fue posible generar el PDF.');
+      return null;
+    } finally {
+      if (mounted) setState(() => _working = false);
+    }
+  }
+
+  Future<void> _print(RentaEntrega data) async {
+    final bytes = await _generate(data);
+    if (bytes == null) return;
+    await Printing.layoutPdf(onLayout: (_) async => bytes);
+  }
+
+  Future<void> _share(RentaEntrega data) async {
+    final bytes = await _generate(data);
+    if (bytes == null) return;
+    await Printing.sharePdf(
+      bytes: bytes,
+      filename: 'entrega-${data.numeroContrato}.pdf',
+    );
+  }
+
+  void _message(String value) => ScaffoldMessenger.of(
+    context,
+  ).showSnackBar(SnackBar(content: Text(value)));
 }

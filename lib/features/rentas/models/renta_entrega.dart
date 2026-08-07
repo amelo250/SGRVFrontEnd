@@ -1,7 +1,6 @@
 class RentaEntrega {
   const RentaEntrega({
     required this.idRenta,
-    required this.idVehiculo,
     required this.numeroContrato,
     required this.empresa,
     required this.cliente,
@@ -23,11 +22,10 @@ class RentaEntrega {
   });
 
   final int idRenta;
-  final int idVehiculo;
   final String numeroContrato;
-  final RentaEntregaEmpresa empresa;
-  final RentaEntregaCliente cliente;
-  final RentaEntregaVehiculo vehiculo;
+  final EntregaEmpresa empresa;
+  final EntregaCliente cliente;
+  final EntregaVehiculo vehiculo;
   final DateTime fechaInicio;
   final DateTime fechaFin;
   final double precioPorDiaPactado;
@@ -40,19 +38,20 @@ class RentaEntrega {
   final String monedaCodigo;
   final String monedaSimbolo;
   final String? observaciones;
-  final List<RentaEntregaPago> pagos;
-  final List<RentaEntregaAccesorio> accesorios;
+  final List<EntregaPago> pagos;
+  final List<EntregaAccesorio> accesorios;
 
   double get totalAbonadoLocal =>
       pagos.fold(0, (total, payment) => total + payment.montoMonedaLocal);
 
   factory RentaEntrega.fromJson(Map<String, dynamic> json) => RentaEntrega(
     idRenta: _int(json['idRenta']),
-    idVehiculo: _int(json['idVehiculo']),
-    numeroContrato: _text(json['numeroContrato']),
-    empresa: RentaEntregaEmpresa.fromJson(_map(json['empresa'])),
-    cliente: RentaEntregaCliente.fromJson(_map(json['cliente'])),
-    vehiculo: RentaEntregaVehiculo.fromJson(_map(json['vehiculo'])),
+    numeroContrato: json['numeroContrato']?.toString() ?? '',
+    empresa: EntregaEmpresa.fromJson(json['empresa'] as Map<String, dynamic>),
+    cliente: EntregaCliente.fromJson(json['cliente'] as Map<String, dynamic>),
+    vehiculo: EntregaVehiculo.fromJson(
+      json['vehiculo'] as Map<String, dynamic>,
+    ),
     fechaInicio: _date(json['fechaInicio']),
     fechaFin: _date(json['fechaFin']),
     precioPorDiaPactado: _double(json['precioPorDiaPactado']),
@@ -62,20 +61,20 @@ class RentaEntrega {
     descuentos: _double(json['descuentos']),
     deposito: _double(json['deposito']),
     total: _double(json['total']),
-    monedaCodigo: _text(json['monedaCodigo']),
-    monedaSimbolo: _text(json['monedaSimbolo']),
-    observaciones: _nullableText(json['observaciones']),
-    pagos: _list(json['pagos'])
-        .map((item) => RentaEntregaPago.fromJson(_map(item)))
+    monedaCodigo: json['monedaCodigo']?.toString() ?? '',
+    monedaSimbolo: json['monedaSimbolo']?.toString() ?? '',
+    observaciones: json['observaciones']?.toString(),
+    pagos: (json['pagos'] as List? ?? const [])
+        .map((x) => EntregaPago.fromJson(x as Map<String, dynamic>))
         .toList(growable: false),
-    accesorios: _list(json['accesorios'])
-        .map((item) => RentaEntregaAccesorio.fromJson(_map(item)))
+    accesorios: (json['accesorios'] as List? ?? const [])
+        .map((x) => EntregaAccesorio.fromJson(x as Map<String, dynamic>))
         .toList(growable: false),
   );
 }
 
-class RentaEntregaEmpresa {
-  const RentaEntregaEmpresa({
+class EntregaEmpresa {
+  const EntregaEmpresa({
     required this.nombreComercial,
     required this.rnc,
     required this.telefono,
@@ -83,60 +82,46 @@ class RentaEntregaEmpresa {
     required this.direccion,
     this.logoUrl,
   });
-
-  final String nombreComercial;
-  final String rnc;
-  final String telefono;
-  final String email;
-  final String direccion;
+  final String nombreComercial, rnc, telefono, email, direccion;
   final String? logoUrl;
-
-  factory RentaEntregaEmpresa.fromJson(Map<String, dynamic> json) =>
-      RentaEntregaEmpresa(
-        nombreComercial: _text(json['nombreComercial']),
-        rnc: _text(json['rnc']),
-        telefono: _text(json['telefono']),
-        email: _text(json['email']),
-        direccion: _text(json['direccion']),
-        logoUrl: _nullableText(json['logoUrl']),
-      );
+  factory EntregaEmpresa.fromJson(Map<String, dynamic> json) => EntregaEmpresa(
+    nombreComercial: json['nombreComercial']?.toString() ?? '',
+    rnc: json['rnc']?.toString() ?? '',
+    telefono: json['telefono']?.toString() ?? '',
+    email: json['email']?.toString() ?? '',
+    direccion: json['direccion']?.toString() ?? '',
+    logoUrl: json['logoUrl']?.toString(),
+  );
 }
 
-class RentaEntregaCliente {
-  const RentaEntregaCliente({
+class EntregaCliente {
+  const EntregaCliente({
     required this.nombreCompleto,
     required this.direccion,
     required this.telefono,
     required this.nacionalidad,
     required this.cedulaPasaporte,
     required this.licenciaConducir,
-    this.fechaVencimientoLicencia,
+    required this.fechaVencimientoLicencia,
   });
-
-  final String nombreCompleto;
-  final String direccion;
-  final String telefono;
-  final String nacionalidad;
-  final String cedulaPasaporte;
-  final String licenciaConducir;
+  final String nombreCompleto, direccion, telefono, nacionalidad;
+  final String cedulaPasaporte, licenciaConducir;
   final DateTime? fechaVencimientoLicencia;
-
-  factory RentaEntregaCliente.fromJson(Map<String, dynamic> json) =>
-      RentaEntregaCliente(
-        nombreCompleto: _text(json['nombreCompleto']),
-        direccion: _text(json['direccion']),
-        telefono: _text(json['telefono']),
-        nacionalidad: _text(json['nacionalidad']),
-        cedulaPasaporte: _text(json['cedulaPasaporte']),
-        licenciaConducir: _text(json['licenciaConducir']),
-        fechaVencimientoLicencia: _nullableDate(
-          json['fechaVencimientoLicencia'],
-        ),
-      );
+  factory EntregaCliente.fromJson(Map<String, dynamic> json) => EntregaCliente(
+    nombreCompleto: json['nombreCompleto']?.toString() ?? '',
+    direccion: json['direccion']?.toString() ?? '',
+    telefono: json['telefono']?.toString() ?? '',
+    nacionalidad: json['nacionalidad']?.toString() ?? '',
+    cedulaPasaporte: json['cedulaPasaporte']?.toString() ?? '',
+    licenciaConducir: json['licenciaConducir']?.toString() ?? '',
+    fechaVencimientoLicencia: json['fechaVencimientoLicencia'] == null
+        ? null
+        : _date(json['fechaVencimientoLicencia']),
+  );
 }
 
-class RentaEntregaVehiculo {
-  const RentaEntregaVehiculo({
+class EntregaVehiculo {
+  const EntregaVehiculo({
     required this.marca,
     required this.modelo,
     required this.anio,
@@ -146,85 +131,58 @@ class RentaEntregaVehiculo {
     required this.tipo,
     required this.kilometraje,
   });
-
-  final String marca;
-  final String modelo;
-  final int anio;
-  final String placa;
-  final String vin;
-  final String color;
-  final String tipo;
-  final int kilometraje;
-
-  factory RentaEntregaVehiculo.fromJson(Map<String, dynamic> json) =>
-      RentaEntregaVehiculo(
-        marca: _text(json['marca']),
-        modelo: _text(json['modelo']),
+  final String marca, modelo, placa, vin, color, tipo;
+  final int anio, kilometraje;
+  factory EntregaVehiculo.fromJson(Map<String, dynamic> json) =>
+      EntregaVehiculo(
+        marca: json['marca']?.toString() ?? '',
+        modelo: json['modelo']?.toString() ?? '',
         anio: _int(json['anio']),
-        placa: _text(json['placa']),
-        vin: _text(json['vin']),
-        color: _text(json['color']),
-        tipo: _text(json['tipo']),
+        placa: json['placa']?.toString() ?? '',
+        vin: json['vin']?.toString() ?? '',
+        color: json['color']?.toString() ?? '',
+        tipo: json['tipo']?.toString() ?? '',
         kilometraje: _int(json['kilometraje']),
       );
 }
 
-class RentaEntregaPago {
-  const RentaEntregaPago({
+class EntregaPago {
+  const EntregaPago({
     required this.fechaPago,
     required this.metodo,
     required this.monto,
     required this.monedaCodigo,
     required this.montoMonedaLocal,
   });
-
   final DateTime fechaPago;
-  final String metodo;
-  final double monto;
-  final String monedaCodigo;
-  final double montoMonedaLocal;
-
-  factory RentaEntregaPago.fromJson(Map<String, dynamic> json) =>
-      RentaEntregaPago(
-        fechaPago: _date(json['fechaPago']),
-        metodo: _text(json['metodo']),
-        monto: _double(json['monto']),
-        monedaCodigo: _text(json['monedaCodigo']),
-        montoMonedaLocal: _double(json['montoMonedaLocal']),
-      );
+  final String metodo, monedaCodigo;
+  final double monto, montoMonedaLocal;
+  factory EntregaPago.fromJson(Map<String, dynamic> json) => EntregaPago(
+    fechaPago: _date(json['fechaPago']),
+    metodo: json['metodo']?.toString() ?? '',
+    monto: _double(json['monto']),
+    monedaCodigo: json['monedaCodigo']?.toString() ?? '',
+    montoMonedaLocal: _double(json['montoMonedaLocal']),
+  );
 }
 
-class RentaEntregaAccesorio {
-  const RentaEntregaAccesorio({
+class EntregaAccesorio {
+  const EntregaAccesorio({
     required this.idAccesorio,
     required this.nombre,
     this.observaciones,
   });
-
   final int idAccesorio;
   final String nombre;
   final String? observaciones;
-
-  factory RentaEntregaAccesorio.fromJson(Map<String, dynamic> json) =>
-      RentaEntregaAccesorio(
+  factory EntregaAccesorio.fromJson(Map<String, dynamic> json) =>
+      EntregaAccesorio(
         idAccesorio: _int(json['idAccesorio']),
-        nombre: _text(json['nombre']),
-        observaciones: _nullableText(json['observaciones']),
+        nombre: json['nombre']?.toString() ?? '',
+        observaciones: json['observaciones']?.toString(),
       );
 }
 
-Map<String, dynamic> _map(Object? value) =>
-    value is Map<String, dynamic> ? value : const <String, dynamic>{};
-List<dynamic> _list(Object? value) => value is List<dynamic> ? value : const [];
 int _int(Object? value) => (value as num?)?.toInt() ?? 0;
 double _double(Object? value) => (value as num?)?.toDouble() ?? 0;
-String _text(Object? value) => value?.toString() ?? '';
-String? _nullableText(Object? value) {
-  final text = value?.toString().trim();
-  return text == null || text.isEmpty ? null : text;
-}
-
-DateTime _date(Object? value) =>
-    DateTime.tryParse(value?.toString() ?? '')?.toLocal() ?? DateTime(1900);
-DateTime? _nullableDate(Object? value) =>
-    value == null ? null : DateTime.tryParse(value.toString())?.toLocal();
+DateTime _date(Object? value) => DateTime.parse(value.toString()).toLocal();

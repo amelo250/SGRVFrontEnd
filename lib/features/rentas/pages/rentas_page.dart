@@ -3,14 +3,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sgrv_frontend/features/rentas/models/renta_dto.dart';
-import 'package:sgrv_frontend/features/rentas/models/renta_filters.dart';
 import 'package:sgrv_frontend/features/rentas/pages/renta_detail_page.dart';
 import 'package:sgrv_frontend/features/rentas/pages/renta_form_page.dart';
 import 'package:sgrv_frontend/features/rentas/providers/renta_provider.dart';
 import 'package:sgrv_frontend/features/rentas/widgets/renta_card.dart';
 import 'package:sgrv_frontend/shared/widgets/app_module_ui.dart';
-import 'package:sgrv_frontend/features/clientes/providers/cliente_provider.dart';
-import 'package:sgrv_frontend/features/vehiculos/providers/vehiculo_provider.dart';
 
 class RentasPage extends StatefulWidget {
   const RentasPage({super.key});
@@ -27,8 +24,6 @@ class _RentasPageState extends State<RentasPage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<RentaProvider>().load();
-      context.read<ClienteProvider>().cargarParaSelector();
-      context.read<VehiculoProvider>().cargar(refresh: true);
     });
   }
 
@@ -75,15 +70,6 @@ class _RentasPageState extends State<RentasPage> {
           spacing: 10,
           runSpacing: 10,
           children: [
-            OutlinedButton.icon(
-              onPressed: provider.isMutating ? null : _showFilters,
-              icon: Icon(
-                provider.hasFilters
-                    ? Icons.filter_alt
-                    : Icons.filter_alt_outlined,
-              ),
-              label: Text(provider.hasFilters ? 'Filtros activos' : 'Filtrar'),
-            ),
             OutlinedButton.icon(
               onPressed: provider.isMutating ? null : _convertReservation,
               icon: const Icon(Icons.event_repeat_outlined),
@@ -248,16 +234,6 @@ class _RentasPageState extends State<RentasPage> {
     });
   }
 
-  Future<void> _showFilters() async {
-    final provider = context.read<RentaProvider>();
-    final result = await showModalBottomSheet<RentaFilters>(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => _RentaFilterSheet(initial: provider.filters),
-    );
-    if (result != null && mounted) await provider.applyFilters(result);
-  }
-
   Future<void> _create() async {
     await Navigator.push<bool>(
       context,
@@ -313,7 +289,6 @@ class _ConvertReservationDialog extends StatefulWidget {
 class _ConvertReservationDialogState extends State<_ConvertReservationDialog> {
   final _key = GlobalKey<FormState>();
   final _reservation = TextEditingController();
-  final _agreedPrice = TextEditingController();
   final _taxes = TextEditingController(text: '0');
   final _discounts = TextEditingController(text: '0');
   final _deposit = TextEditingController(text: '0');
@@ -323,7 +298,6 @@ class _ConvertReservationDialogState extends State<_ConvertReservationDialog> {
   @override
   void dispose() {
     _reservation.dispose();
-    _agreedPrice.dispose();
     _taxes.dispose();
     _discounts.dispose();
     _deposit.dispose();
@@ -351,28 +325,21 @@ class _ConvertReservationDialogState extends State<_ConvertReservationDialog> {
                 positive: true,
               ),
               const SizedBox(height: 12),
-              _field(
-                _agreedPrice,
-                'Precio diario pactado (opcional)',
-                positive: true,
-                optional: true,
-              ),
-              const SizedBox(height: 6),
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Si lo dejas vacío, el backend usará la tarifa vigente del vehículo.',
-                  style: TextStyle(color: Color(0xFF6F788C), fontSize: 12),
-                ),
-              ),
-              const SizedBox(height: 12),
               _field(_taxes, 'Impuestos'),
               const SizedBox(height: 12),
               _field(_discounts, 'Descuentos'),
               const SizedBox(height: 12),
               _field(_deposit, 'Depósito'),
               const SizedBox(height: 12),
-              _field(_rate, 'Tasa de cambio', positive: true),
+              _field(_rate, 'Tasa DOP por 1 unidad de moneda', positive: true),
+              const SizedBox(height: 6),
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Para rentas en DOP el backend aplicará tasa 1.',
+                  style: TextStyle(color: Color(0xFF6F788C), fontSize: 12),
+                ),
+              ),
               const SizedBox(height: 12),
               TextField(
                 controller: _notes,
@@ -402,7 +369,6 @@ class _ConvertReservationDialogState extends State<_ConvertReservationDialog> {
     String label, {
     bool integer = false,
     bool positive = false,
-    bool optional = false,
   }) => TextFormField(
     controller: controller,
     keyboardType: TextInputType.numberWithOptions(decimal: !integer),
@@ -411,7 +377,6 @@ class _ConvertReservationDialogState extends State<_ConvertReservationDialog> {
       border: const OutlineInputBorder(),
     ),
     validator: (value) {
-      if (optional && (value == null || value.trim().isEmpty)) return null;
       if (integer && int.tryParse(value?.trim() ?? '') == null) {
         return 'Introduce un número entero válido';
       }
@@ -431,20 +396,16 @@ class _ConvertReservationDialogState extends State<_ConvertReservationDialog> {
       _ConversionData(
         reservationId: int.parse(_reservation.text.trim()),
         dto: ConvertirReservacionRentaDto(
-          precioPorDiaPactado: _decimalOrNull(_agreedPrice.text),
-          impuestos: _decimalOrNull(_taxes.text)!,
-          descuentos: _decimalOrNull(_discounts.text)!,
-          deposito: _decimalOrNull(_deposit.text)!,
-          tasaCambioAplicada: _decimalOrNull(_rate.text)!,
+          impuestos: double.parse(_taxes.text.trim().replaceAll(',', '.')),
+          descuentos: double.parse(_discounts.text.trim().replaceAll(',', '.')),
+          deposito: double.parse(_deposit.text.trim().replaceAll(',', '.')),
+          tasaCambioAplicada: double.parse(
+            _rate.text.trim().replaceAll(',', '.'),
+          ),
           observaciones: _notes.text,
         ),
       ),
     );
-  }
-
-  static double? _decimalOrNull(String value) {
-    final normalized = value.trim().replaceAll(',', '.');
-    return normalized.isEmpty ? null : double.tryParse(normalized);
   }
 }
 
@@ -452,157 +413,4 @@ class _ConversionData {
   const _ConversionData({required this.reservationId, required this.dto});
   final int reservationId;
   final ConvertirReservacionRentaDto dto;
-}
-
-class _RentaFilterSheet extends StatefulWidget {
-  const _RentaFilterSheet({required this.initial});
-
-  final RentaFilters initial;
-
-  @override
-  State<_RentaFilterSheet> createState() => _RentaFilterSheetState();
-}
-
-class _RentaFilterSheetState extends State<_RentaFilterSheet> {
-  int? _clientId;
-  int? _vehicleId;
-  DateTimeRange? _range;
-
-  @override
-  void initState() {
-    super.initState();
-    _clientId = widget.initial.idCliente;
-    _vehicleId = widget.initial.idVehiculo;
-    if (widget.initial.fechaDesde != null &&
-        widget.initial.fechaHasta != null) {
-      _range = DateTimeRange(
-        start: widget.initial.fechaDesde!,
-        end: widget.initial.fechaHasta!,
-      );
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final clients = context.watch<ClienteProvider>().clientes;
-    final vehicles = context.watch<VehiculoProvider>().vehiculos;
-    return SafeArea(
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(
-          24,
-          20,
-          24,
-          20 + MediaQuery.viewInsetsOf(context).bottom,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'Filtrar rentas',
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 18),
-            DropdownButtonFormField<int>(
-              initialValue: clients.any((x) => x.idCliente == _clientId)
-                  ? _clientId
-                  : null,
-              decoration: const InputDecoration(
-                labelText: 'Cliente',
-                border: OutlineInputBorder(),
-              ),
-              items: clients
-                  .where((x) => x.activo)
-                  .map(
-                    (x) => DropdownMenuItem(
-                      value: x.idCliente,
-                      child: Text(x.nombreCompleto),
-                    ),
-                  )
-                  .toList(growable: false),
-              onChanged: (value) => setState(() => _clientId = value),
-            ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<int>(
-              initialValue: vehicles.any((x) => x.idVehiculo == _vehicleId)
-                  ? _vehicleId
-                  : null,
-              decoration: const InputDecoration(
-                labelText: 'Vehículo',
-                border: OutlineInputBorder(),
-              ),
-              items: vehicles
-                  .where((x) => x.activo)
-                  .map(
-                    (x) => DropdownMenuItem(
-                      value: x.idVehiculo,
-                      child: Text('${x.marca} ${x.modelo} · ${x.placa}'),
-                    ),
-                  )
-                  .toList(growable: false),
-              onChanged: (value) => setState(() => _vehicleId = value),
-            ),
-            const SizedBox(height: 12),
-            OutlinedButton.icon(
-              onPressed: _selectRange,
-              icon: const Icon(Icons.date_range_outlined),
-              label: Text(
-                _range == null
-                    ? 'Seleccionar periodo'
-                    : '${_short(_range!.start)} - ${_short(_range!.end)}',
-              ),
-            ),
-            const SizedBox(height: 18),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, const RentaFilters()),
-                  child: const Text('Limpiar'),
-                ),
-                const SizedBox(width: 10),
-                FilledButton(
-                  onPressed: () => Navigator.pop(
-                    context,
-                    RentaFilters(
-                      idCliente: _clientId,
-                      idVehiculo: _vehicleId,
-                      fechaDesde: _range?.start,
-                      fechaHasta: _range == null
-                          ? null
-                          : DateTime(
-                              _range!.end.year,
-                              _range!.end.month,
-                              _range!.end.day,
-                              23,
-                              59,
-                              59,
-                            ),
-                    ),
-                  ),
-                  child: const Text('Aplicar'),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _selectRange() async {
-    final now = DateTime.now();
-    final value = await showDateRangePicker(
-      context: context,
-      firstDate: DateTime(now.year - 5),
-      lastDate: DateTime(now.year + 10),
-      initialDateRange: _range,
-    );
-    if (value != null) setState(() => _range = value);
-  }
-
-  static String _short(DateTime value) =>
-      '${value.day.toString().padLeft(2, '0')}/${value.month.toString().padLeft(2, '0')}/${value.year}';
 }

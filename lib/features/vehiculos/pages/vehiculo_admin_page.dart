@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sgrv_frontend/shared/widgets/app_module_ui.dart';
+import 'package:sgrv_frontend/core/utils/money_formatter.dart';
 import '../models/vehiculo.dart';
 import '../providers/vehiculo_provider.dart';
 import '../providers/vehiculo_media_provider.dart';
@@ -21,12 +22,12 @@ class _VehiculoAdminPageState extends State<VehiculoAdminPage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) {
-        context.read<VehiculoProvider>().cargarResumenFinanciero(widget.vehiculo.idVehiculo);
-        context.read<VehiculoMediaProvider>().cargar(widget.vehiculo.idVehiculo);
-      },
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<VehiculoProvider>().cargarResumenFinanciero(
+        widget.vehiculo.idVehiculo,
+      );
+      context.read<VehiculoMediaProvider>().cargar(widget.vehiculo.idVehiculo);
+    });
   }
 
   @override
@@ -123,7 +124,11 @@ class _GeneralSection extends StatelessWidget {
           children: [
             _Detail(
               label: 'Precio por día',
-              value: vehicle.precioPorDia.toStringAsFixed(2),
+              value: MoneyFormatter.format(
+                vehicle.precioPorDia,
+                currencyCode: vehicle.monedaCodigo,
+                currencySymbol: vehicle.monedaSimbolo,
+              ),
             ),
             _Detail(
               label: 'Depósito de combustible',
