@@ -21,6 +21,7 @@ import 'package:sgrv_frontend/features/vehiculos/pages/vehiculo_form_page.dart';
 import 'package:sgrv_frontend/features/dashboard/widgets/dashboard_quick_actions.dart';
 import 'package:sgrv_frontend/features/configuracion/pages/configuracion_page.dart';
 import 'package:sgrv_frontend/features/calendario/pages/calendario_page.dart';
+import 'package:sgrv_frontend/features/mantenimientos/pages/mantenimientos_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -70,6 +71,7 @@ class _DashboardPageState extends State<DashboardPage> {
     _MenuItem(titulo: 'Empresas', icono: Icons.business_rounded),
     _MenuItem(titulo: 'Proveedores', icono: Icons.handshake_rounded),
     _MenuItem(titulo: 'Configuración', icono: Icons.settings_rounded),
+    _MenuItem(titulo: 'Mantenimientos', icono: Icons.build_circle_rounded),
   ];
 
   Future<void> _cerrarSesion(BuildContext context) async {
@@ -179,6 +181,14 @@ class _DashboardPageState extends State<DashboardPage> {
       Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => const ConfiguracionPage()),
+      );
+
+      return;
+    }
+    if (indice == 12) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const MantenimientosPage()),
       );
 
       return;

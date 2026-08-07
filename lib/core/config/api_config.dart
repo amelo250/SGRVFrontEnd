@@ -23,4 +23,5 @@ class ApiConfig {
   static const String catalogs = '$baseUrl/api/catalogos';
   static const String proveedoresVehiculos =
       '$baseUrl/api/proveedoresvehiculos';
+  static const String mantenimientos = '$baseUrl/api/mantenimientos';
 }
