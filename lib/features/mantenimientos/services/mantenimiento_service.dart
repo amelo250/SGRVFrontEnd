@@ -33,21 +33,28 @@ class MantenimientoService {
   Future<List<MantenimientoCatalogo>> tipos() => _catalogo('tipos');
   Future<List<MantenimientoCatalogo>> vehiculos() => _catalogo('vehiculos');
 
-  Future<Mantenimiento> create(MantenimientoDto dto) =>
-      _parse(await _client.postJson(ApiConfig.mantenimientos, dto.toJson()));
+  Future<Mantenimiento> create(MantenimientoDto dto) async {
+    final json = await _client.postJson(ApiConfig.mantenimientos, dto.toJson());
 
-  Future<Mantenimiento> update(int id, MantenimientoDto dto) => _parse(
-    await _client.putJson('${ApiConfig.mantenimientos}/$id', dto.toJson()),
-  );
+    return _parse(json);
+  }
+
+  Future<Mantenimiento> update(int id, MantenimientoDto dto) async {
+    final json = await _client.putJson(
+      '${ApiConfig.mantenimientos}/$id',
+      dto.toJson(),
+    );
+
+    return _parse(json);
+  }
 
   Future<List<MantenimientoCatalogo>> _catalogo(String path) async {
     final response = ApiResponse<List<MantenimientoCatalogo>>.fromJson(
       await _client.getJson('${ApiConfig.mantenimientos}/$path'),
       (value) => (value as List<dynamic>)
           .map(
-            (item) => MantenimientoCatalogo.fromJson(
-              item as Map<String, dynamic>,
-            ),
+            (item) =>
+                MantenimientoCatalogo.fromJson(item as Map<String, dynamic>),
           )
           .toList(growable: false),
     );

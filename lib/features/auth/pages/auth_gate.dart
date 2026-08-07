@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:sgrv_frontend/core/storage/token_storage.dart';
 import 'package:sgrv_frontend/features/auth/pages/login_page.dart';
 import 'package:sgrv_frontend/features/dashboard/pages/dashboard_page.dart';
+import 'package:provider/provider.dart';
+import 'package:sgrv_frontend/features/dashboard/providers/dashboard_task_provider.dart';
 
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
@@ -22,7 +24,10 @@ class AuthGate extends StatelessWidget {
         }
 
         if (snapshot.data == true) {
-          return const DashboardPage();
+          return ChangeNotifierProvider(
+            create: (_) => DashboardTaskProvider(),
+            child: const DashboardPage(),
+          );
         }
 
         return const LoginPage();

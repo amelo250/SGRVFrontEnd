@@ -22,6 +22,8 @@ import 'package:sgrv_frontend/features/dashboard/widgets/dashboard_quick_actions
 import 'package:sgrv_frontend/features/configuracion/pages/configuracion_page.dart';
 import 'package:sgrv_frontend/features/calendario/pages/calendario_page.dart';
 import 'package:sgrv_frontend/features/mantenimientos/pages/mantenimientos_page.dart';
+import 'package:sgrv_frontend/features/dashboard/providers/dashboard_task_provider.dart';
+import 'package:sgrv_frontend/features/dashboard/widgets/dashboard_tasks_section.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -51,6 +53,7 @@ class _DashboardPageState extends State<DashboardPage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ReservacionProvider>().loadDashboard();
+      context.read<DashboardTaskProvider>().load();
     });
   }
 
@@ -727,6 +730,10 @@ class _ContenidoDashboard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 18),
+            const DashboardTasksSection(),
+            const SizedBox(height: 18),
+            const SizedBox(height: 18),
+
             if (ancho >= 970)
               const Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
