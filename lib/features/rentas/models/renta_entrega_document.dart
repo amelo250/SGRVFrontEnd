@@ -7,6 +7,7 @@ class RentaEntregaDocument {
     required this.firmaCliente,
     required this.firmaAgente,
     required this.fechaFirma,
+    required this.nivelCombustible,
     this.observaciones,
   });
 
@@ -15,5 +16,6 @@ class RentaEntregaDocument {
   final Uint8List firmaCliente;
   final Uint8List firmaAgente;
   final DateTime fechaFirma;
+  final int nivelCombustible;
   final String? observaciones;
 }

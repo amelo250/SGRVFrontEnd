@@ -9,6 +9,7 @@ import 'package:sgrv_frontend/features/rentas/pages/renta_form_page.dart';
 import 'package:sgrv_frontend/features/rentas/providers/renta_provider.dart';
 import 'package:sgrv_frontend/features/rentas/widgets/renta_card.dart';
 import 'package:sgrv_frontend/features/rentas/widgets/renta_history_card.dart';
+import 'package:sgrv_frontend/features/rentas/widgets/renta_date_filter_bar.dart';
 import 'package:sgrv_frontend/shared/widgets/app_module_ui.dart';
 
 class RentasPage extends StatefulWidget {
@@ -47,6 +48,11 @@ class _RentasPageState extends State<RentasPage> {
         body: Column(
           children: [
             _toolbar(context, provider),
+            RentaDateFilterBar(
+              from: provider.filters.fechaDesde,
+              to: provider.filters.fechaHasta,
+              onChanged: provider.applyDateRange,
+            ),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
               child: Card(

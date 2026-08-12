@@ -8,6 +8,7 @@ import 'package:sgrv_frontend/features/rentas/widgets/renta_financial_summary.da
 import 'package:sgrv_frontend/features/rentas/widgets/renta_status_chip.dart';
 import 'package:sgrv_frontend/features/pagos/pages/pago_form_page.dart';
 import 'package:sgrv_frontend/features/rentas/pages/renta_entrega_page.dart';
+import 'package:sgrv_frontend/features/rentas/pages/renta_recepcion_page.dart';
 
 class RentaDetailPage extends StatefulWidget {
   const RentaDetailPage({required this.rentaId, super.key});
@@ -157,6 +158,16 @@ class _RentaDetailPageState extends State<RentaDetailPage> {
             icon: const Icon(Icons.assignment_outlined),
             label: const Text('Entrega y firmas'),
           ),
+          if (rental.finalizada)
+            OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.white,
+                side: const BorderSide(color: Colors.white54),
+              ),
+              onPressed: _openReception,
+              icon: const Icon(Icons.assignment_turned_in_outlined),
+              label: const Text('Documento de recepción'),
+            ),
           if (rental.activa)
             FilledButton.icon(
               onPressed: provider.isMutating ? null : _registerPayment,
@@ -341,6 +352,13 @@ class _RentaDetailPageState extends State<RentaDetailPage> {
     ),
   );
 
+  Future<void> _openReception() => Navigator.push<void>(
+    context,
+    MaterialPageRoute(
+      builder: (_) => RentaRecepcionPage(rentaId: widget.rentaId),
+    ),
+  );
+
   Future<void> _registerPayment() async {
     final rental = context.read<RentaProvider>().selected!;
     final created = await Navigator.push<bool>(
@@ -397,7 +415,10 @@ class _RentaDetailPageState extends State<RentaDetailPage> {
     if (!mounted) return;
     if (!success) {
       _message(provider.errorMessage ?? 'No fue posible finalizar la renta.');
+      return;
     }
+    await _load();
+    if (mounted) await _openReception();
   }
 
   Future<void> _cancel() async {

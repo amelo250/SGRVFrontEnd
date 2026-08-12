@@ -28,6 +28,7 @@ class RentaProvider extends ChangeNotifier {
   RentaEntrega? _entrega;
   bool _loadingEntrega = false;
   RentaListScope _scope = RentaListScope.active;
+  RentaFilters _filters = const RentaFilters();
 
   List<Renta> get items => List.unmodifiable(_items);
   RentaStatus get status => _status;
@@ -43,6 +44,7 @@ class RentaProvider extends ChangeNotifier {
   RentaEntrega? get entrega => _entrega;
   bool get loadingEntrega => _loadingEntrega;
   RentaListScope get scope => _scope;
+  RentaFilters get filters => _filters;
 
   Future<bool> loadEntrega(int id) async {
     _loadingEntrega = true;
@@ -75,6 +77,8 @@ class RentaProvider extends ChangeNotifier {
         pageNumber: _pageNumber,
         pageSize: _pageSize,
         search: _search,
+        fechaDesde: _filters.fechaDesde,
+        fechaHasta: _filters.fechaHasta,
       );
       if (version != _requestVersion) return;
       _items = page.items;
@@ -104,6 +108,12 @@ class RentaProvider extends ChangeNotifier {
 
   Future<void> search(String value) async {
     _search = value.trim();
+    _pageNumber = 1;
+    await load();
+  }
+
+  Future<void> applyDateRange(DateTime? from, DateTime? to) async {
+    _filters = RentaFilters(fechaDesde: from, fechaHasta: to);
     _pageNumber = 1;
     await load();
   }

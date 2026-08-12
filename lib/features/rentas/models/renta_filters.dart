@@ -18,4 +18,12 @@ class RentaFilters {
       idVehiculo == null &&
       fechaDesde == null &&
       fechaHasta == null;
+
+  RentaFilters copyWith({DateTime? fechaDesde, DateTime? fechaHasta}) =>
+      RentaFilters(
+        idCliente: idCliente,
+        idVehiculo: idVehiculo,
+        fechaDesde: fechaDesde,
+        fechaHasta: fechaHasta,
+      );
 }

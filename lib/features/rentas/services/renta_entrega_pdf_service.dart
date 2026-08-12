@@ -70,6 +70,8 @@ class RentaEntregaPdfService {
             _item('Salida', dateTime.format(data.fechaInicio)),
             _item('Retorno previsto', dateTime.format(data.fechaFin)),
           ]),
+          _title('NIVEL DE COMBUSTIBLE AL ENTREGAR'),
+          _fuelGauge(document.nivelCombustible),
           _title('CONDICIONES ECONÓMICAS'),
           _twoColumns([
             _item(
@@ -210,6 +212,32 @@ class RentaEntregaPdfService {
         ),
       ],
     ),
+  );
+
+  pw.Widget _fuelGauge(int level) => pw.Row(
+    children: [
+      pw.Expanded(
+        child: pw.Container(
+          height: 14,
+          decoration: pw.BoxDecoration(
+            border: pw.Border.all(color: PdfColors.grey500),
+          ),
+          child: pw.Row(
+            children: [
+              if (level > 0)
+                pw.Expanded(
+                  flex: level,
+                  child: pw.Container(color: PdfColors.green600),
+                ),
+              if (level < 100)
+                pw.Expanded(flex: 100 - level, child: pw.SizedBox()),
+            ],
+          ),
+        ),
+      ),
+      pw.SizedBox(width: 10),
+      pw.Text('$level%', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+    ],
   );
 
   pw.Widget _title(String value) => pw.Container(

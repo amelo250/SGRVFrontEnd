@@ -20,6 +20,8 @@ class RentaService {
     int pageSize = 20,
     String? search,
     int? idEstado,
+    DateTime? fechaDesde,
+    DateTime? fechaHasta,
   }) async {
     final path = switch (scope) {
       RentaListScope.active => 'activas',
@@ -31,6 +33,10 @@ class RentaService {
         'pageSize': '$pageSize',
         if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
         if (idEstado != null) 'idEstado': '$idEstado',
+        if (fechaDesde != null)
+          'fechaDesde': fechaDesde.toUtc().toIso8601String(),
+        if (fechaHasta != null)
+          'fechaHasta': fechaHasta.toUtc().toIso8601String(),
       },
     );
     final result = await _apiClient.getJsonResult(uri.toString());

@@ -9,6 +9,7 @@ import 'package:sgrv_frontend/features/rentas/models/renta_entrega_document.dart
 import 'package:sgrv_frontend/features/rentas/providers/renta_provider.dart';
 import 'package:sgrv_frontend/features/rentas/services/renta_entrega_pdf_service.dart';
 import 'package:sgrv_frontend/features/rentas/widgets/signature_pad.dart';
+import 'package:sgrv_frontend/features/rentas/widgets/fuel_level_selector.dart';
 
 class RentaEntregaPage extends StatefulWidget {
   const RentaEntregaPage({required this.rentaId, super.key});
@@ -27,6 +28,7 @@ class _RentaEntregaPageState extends State<RentaEntregaPage> {
   final _selectedAccessories = <int>{};
   final _pdfService = RentaEntregaPdfService();
   bool _working = false;
+  int _fuelLevel = 100;
 
   @override
   void initState() {
@@ -81,6 +83,8 @@ class _RentaEntregaPageState extends State<RentaEntregaPage> {
                         const SizedBox(height: 16),
                         _summary(context, data),
                         const SizedBox(height: 16),
+                        _fuel(context),
+                        const SizedBox(height: 16),
                         _accessories(context, data),
                         const SizedBox(height: 16),
                         _signatures(context, data),
@@ -94,6 +98,16 @@ class _RentaEntregaPageState extends State<RentaEntregaPage> {
             ),
     );
   }
+
+  Widget _fuel(BuildContext context) => _section(
+    context,
+    title: 'Combustible al entregar',
+    icon: Icons.local_gas_station_outlined,
+    child: FuelLevelSelector(
+      value: _fuelLevel,
+      onChanged: (value) => setState(() => _fuelLevel = value),
+    ),
+  );
 
   Widget _header(BuildContext context, RentaEntrega data) => Container(
     width: double.infinity,
@@ -359,6 +373,7 @@ class _RentaEntregaPageState extends State<RentaEntregaPage> {
       firmaCliente: clientSignature,
       firmaAgente: agentSignature,
       fechaFirma: DateTime.now(),
+      nivelCombustible: _fuelLevel,
       observaciones: _notesController.text.trim(),
     );
   }
