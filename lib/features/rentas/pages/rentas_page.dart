@@ -3,10 +3,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sgrv_frontend/features/rentas/models/renta_dto.dart';
+import 'package:sgrv_frontend/features/rentas/models/renta_filters.dart';
 import 'package:sgrv_frontend/features/rentas/pages/renta_detail_page.dart';
 import 'package:sgrv_frontend/features/rentas/pages/renta_form_page.dart';
 import 'package:sgrv_frontend/features/rentas/providers/renta_provider.dart';
 import 'package:sgrv_frontend/features/rentas/widgets/renta_card.dart';
+import 'package:sgrv_frontend/features/rentas/widgets/renta_history_card.dart';
 import 'package:sgrv_frontend/shared/widgets/app_module_ui.dart';
 
 class RentasPage extends StatefulWidget {
@@ -36,15 +38,35 @@ class _RentasPageState extends State<RentasPage> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<RentaProvider>();
-    return AppModuleScaffold(
-      title: 'Rentas',
-      subtitle:
-          'Gestiona operaciones activas, cierres e historial de alquileres.',
-      body: Column(
-        children: [
-          _toolbar(context, provider),
-          Expanded(child: _body(provider)),
-        ],
+    return DefaultTabController(
+      length: 2,
+      child: AppModuleScaffold(
+        title: 'Rentas',
+        subtitle:
+            'Gestiona operaciones activas, cierres e historial de alquileres.',
+        body: Column(
+          children: [
+            _toolbar(context, provider),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+              child: Card(
+                child: TabBar(
+                  onTap: (index) => provider.changeScope(
+                    index == 0 ? RentaListScope.active : RentaListScope.history,
+                  ),
+                  tabs: const [
+                    Tab(icon: Icon(Icons.key_rounded), text: 'Rentas activas'),
+                    Tab(
+                      icon: Icon(Icons.history_rounded),
+                      text: 'Rentas pasadas',
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Expanded(child: _body(provider)),
+          ],
+        ),
       ),
     );
   }
@@ -119,9 +141,12 @@ class _RentasPageState extends State<RentasPage> {
           SliverFillRemaining(
             child: _state(
               icon: Icons.key_off_outlined,
-              title: 'No hay rentas para mostrar',
-              message:
-                  'Crea una renta directa o convierte una reservación confirmada.',
+              title: provider.scope == RentaListScope.active
+                  ? 'No hay rentas activas'
+                  : 'No hay rentas pasadas',
+              message: provider.scope == RentaListScope.active
+                  ? 'Crea una renta directa o convierte una reservación confirmada.'
+                  : 'Las rentas finalizadas o canceladas aparecerán aquí.',
             ),
           ),
         ],
@@ -144,7 +169,15 @@ class _RentasPageState extends State<RentasPage> {
             onRefresh: () => provider.load(refresh: true),
             child: LayoutBuilder(
               builder: (context, constraints) {
-                final columns = constraints.maxWidth >= 1050
+                final columns = provider.scope == RentaListScope.history
+                    ? constraints.maxWidth >= 1180
+                          ? 4
+                          : constraints.maxWidth >= 860
+                          ? 3
+                          : constraints.maxWidth >= 560
+                          ? 2
+                          : 1
+                    : constraints.maxWidth >= 1050
                     ? 3
                     : constraints.maxWidth >= 680
                     ? 2
@@ -156,15 +189,22 @@ class _RentasPageState extends State<RentasPage> {
                     crossAxisCount: columns,
                     crossAxisSpacing: 14,
                     mainAxisSpacing: 14,
-                    mainAxisExtent: 260,
+                    mainAxisExtent: provider.scope == RentaListScope.active
+                        ? 260
+                        : 176,
                   ),
                   itemCount: provider.items.length,
                   itemBuilder: (_, index) {
                     final item = provider.items[index];
-                    return RentaCard(
-                      renta: item,
-                      onOpen: () => _open(item.idRenta),
-                    );
+                    return provider.scope == RentaListScope.active
+                        ? RentaCard(
+                            renta: item,
+                            onOpen: () => _open(item.idRenta),
+                          )
+                        : RentaHistoryCard(
+                            renta: item,
+                            onOpen: () => _open(item.idRenta),
+                          );
                   },
                 );
               },

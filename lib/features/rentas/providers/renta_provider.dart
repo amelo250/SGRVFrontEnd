@@ -4,6 +4,7 @@ import 'package:sgrv_frontend/features/rentas/models/renta.dart';
 import 'package:sgrv_frontend/features/rentas/models/renta_dto.dart';
 import 'package:sgrv_frontend/features/rentas/models/renta_summary.dart';
 import 'package:sgrv_frontend/features/rentas/models/renta_entrega.dart';
+import 'package:sgrv_frontend/features/rentas/models/renta_filters.dart';
 import 'package:sgrv_frontend/features/rentas/services/renta_service.dart';
 
 enum RentaStatus { initial, loading, success, empty, error }
@@ -26,6 +27,7 @@ class RentaProvider extends ChangeNotifier {
   RentaSummary? _summary;
   RentaEntrega? _entrega;
   bool _loadingEntrega = false;
+  RentaListScope _scope = RentaListScope.active;
 
   List<Renta> get items => List.unmodifiable(_items);
   RentaStatus get status => _status;
@@ -40,6 +42,7 @@ class RentaProvider extends ChangeNotifier {
   RentaSummary? get summary => _summary;
   RentaEntrega? get entrega => _entrega;
   bool get loadingEntrega => _loadingEntrega;
+  RentaListScope get scope => _scope;
 
   Future<bool> loadEntrega(int id) async {
     _loadingEntrega = true;
@@ -68,6 +71,7 @@ class RentaProvider extends ChangeNotifier {
     notifyListeners();
     try {
       final page = await _service.getAll(
+        scope: _scope,
         pageNumber: _pageNumber,
         pageSize: _pageSize,
         search: _search,
@@ -89,6 +93,13 @@ class RentaProvider extends ChangeNotifier {
       _status = RentaStatus.error;
     }
     if (version == _requestVersion) notifyListeners();
+  }
+
+  Future<void> changeScope(RentaListScope value) async {
+    if (_scope == value && _status != RentaStatus.initial) return;
+    _scope = value;
+    _pageNumber = 1;
+    await load();
   }
 
   Future<void> search(String value) async {

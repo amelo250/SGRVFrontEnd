@@ -1,3 +1,5 @@
+enum RentaListScope { active, history }
+
 class RentaFilters {
   const RentaFilters({
     this.idCliente,

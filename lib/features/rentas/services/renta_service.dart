@@ -7,6 +7,7 @@ import 'package:sgrv_frontend/features/rentas/models/renta_dto.dart';
 import 'package:sgrv_frontend/features/rentas/models/renta_page_result.dart';
 import 'package:sgrv_frontend/features/rentas/models/renta_summary.dart';
 import 'package:sgrv_frontend/features/rentas/models/renta_entrega.dart';
+import 'package:sgrv_frontend/features/rentas/models/renta_filters.dart';
 
 class RentaService {
   RentaService({ApiClient? apiClient}) : _apiClient = apiClient ?? ApiClient();
@@ -14,12 +15,17 @@ class RentaService {
   final ApiClient _apiClient;
 
   Future<RentaPageResult> getAll({
+    RentaListScope scope = RentaListScope.active,
     int pageNumber = 1,
     int pageSize = 20,
     String? search,
     int? idEstado,
   }) async {
-    final uri = Uri.parse(ApiConfig.rentas).replace(
+    final path = switch (scope) {
+      RentaListScope.active => 'activas',
+      RentaListScope.history => 'historicas',
+    };
+    final uri = Uri.parse('${ApiConfig.rentas}/$path').replace(
       queryParameters: {
         'pageNumber': '$pageNumber',
         'pageSize': '$pageSize',
