@@ -116,6 +116,24 @@ class ApiClient {
     return _decode(await get(url));
   }
 
+  Future<List<int>> getBytes(String url) async {
+    final response = await get(url);
+    if (response.statusCode == 401) {
+      await TokenStorage.deleteToken();
+      throw const ApiException(
+        message: 'La sesión expiró. Inicia sesión nuevamente.',
+        statusCode: 401,
+      );
+    }
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw ApiException(
+        message: 'No fue posible recuperar el archivo.',
+        statusCode: response.statusCode,
+      );
+    }
+    return response.bodyBytes;
+  }
+
   Future<Map<String, dynamic>> postJson(String url, Object body) async {
     return _decode(await post(url, body: body));
   }

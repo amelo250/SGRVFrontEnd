@@ -5,6 +5,7 @@ import 'package:sgrv_frontend/features/rentas/models/renta_dto.dart';
 import 'package:sgrv_frontend/features/rentas/models/renta_summary.dart';
 import 'package:sgrv_frontend/features/rentas/models/renta_entrega.dart';
 import 'package:sgrv_frontend/features/rentas/models/renta_filters.dart';
+import 'package:sgrv_frontend/features/rentas/models/renta_entrega_archivo.dart';
 import 'package:sgrv_frontend/features/rentas/services/renta_service.dart';
 
 enum RentaStatus { initial, loading, success, empty, error }
@@ -27,6 +28,7 @@ class RentaProvider extends ChangeNotifier {
   RentaSummary? _summary;
   RentaEntrega? _entrega;
   bool _loadingEntrega = false;
+  RentaEntregaArchivo? _entregaArchivo;
   RentaListScope _scope = RentaListScope.active;
   RentaFilters _filters = const RentaFilters();
 
@@ -43,6 +45,7 @@ class RentaProvider extends ChangeNotifier {
   RentaSummary? get summary => _summary;
   RentaEntrega? get entrega => _entrega;
   bool get loadingEntrega => _loadingEntrega;
+  RentaEntregaArchivo? get entregaArchivo => _entregaArchivo;
   RentaListScope get scope => _scope;
   RentaFilters get filters => _filters;
 
@@ -52,7 +55,12 @@ class RentaProvider extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
     try {
-      _entrega = await _service.getEntrega(id);
+      final results = await Future.wait<Object?>([
+        _service.getEntrega(id),
+        _service.getEntregaDocument(id),
+      ]);
+      _entrega = results[0] as RentaEntrega;
+      _entregaArchivo = results[1] as RentaEntregaArchivo?;
       return true;
     } on ApiException catch (error) {
       _errorMessage = error.message;
@@ -63,6 +71,44 @@ class RentaProvider extends ChangeNotifier {
     } finally {
       _loadingEntrega = false;
       notifyListeners();
+    }
+  }
+
+  Future<bool> saveEntregaDocument({
+    required int id,
+    required List<int> bytes,
+    required String nombreAgente,
+    required int nivelCombustible,
+    required DateTime fechaFirma,
+    required Set<int> accesoriosConfirmados,
+    String? observaciones,
+  }) async {
+    try {
+      _entregaArchivo = await _service.saveEntregaDocument(
+        id: id,
+        bytes: bytes,
+        nombreAgente: nombreAgente,
+        nivelCombustible: nivelCombustible,
+        fechaFirma: fechaFirma,
+        accesoriosConfirmados: accesoriosConfirmados,
+        observaciones: observaciones,
+      );
+      notifyListeners();
+      return true;
+    } on ApiException catch (error) {
+      _errorMessage = error.message;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<List<int>?> getEntregaDocumentBytes(int id) async {
+    try {
+      return await _service.getEntregaDocumentBytes(id);
+    } on ApiException catch (error) {
+      _errorMessage = error.message;
+      notifyListeners();
+      return null;
     }
   }
 

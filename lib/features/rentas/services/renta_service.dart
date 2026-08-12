@@ -8,6 +8,7 @@ import 'package:sgrv_frontend/features/rentas/models/renta_page_result.dart';
 import 'package:sgrv_frontend/features/rentas/models/renta_summary.dart';
 import 'package:sgrv_frontend/features/rentas/models/renta_entrega.dart';
 import 'package:sgrv_frontend/features/rentas/models/renta_filters.dart';
+import 'package:sgrv_frontend/features/rentas/models/renta_entrega_archivo.dart';
 
 class RentaService {
   RentaService({ApiClient? apiClient}) : _apiClient = apiClient ?? ApiClient();
@@ -69,6 +70,56 @@ class RentaService {
     }
     return response.data!;
   }
+
+  Future<RentaEntregaArchivo> saveEntregaDocument({
+    required int id,
+    required List<int> bytes,
+    required String nombreAgente,
+    required int nivelCombustible,
+    required DateTime fechaFirma,
+    required Set<int> accesoriosConfirmados,
+    String? observaciones,
+  }) async {
+    final json = await _apiClient.multipart(
+      '${ApiConfig.rentas}/$id/documento-entrega',
+      bytes: bytes,
+      fileName: 'entrega-R-${id.toString().padLeft(6, '0')}.pdf',
+      contentType: 'application/pdf',
+      fields: {
+        'nombreAgente': nombreAgente,
+        'nivelCombustible': '$nivelCombustible',
+        'fechaFirma': fechaFirma.toUtc().toIso8601String(),
+        'accesoriosConfirmados': accesoriosConfirmados.join(','),
+        if (observaciones?.trim().isNotEmpty == true)
+          'observaciones': observaciones!.trim(),
+      },
+    );
+    final response = ApiResponse<RentaEntregaArchivo>.fromJson(
+      json,
+      (value) => RentaEntregaArchivo.fromJson(value as Map<String, dynamic>),
+    );
+    if (!response.success || response.data == null) {
+      throw ApiException(message: _message(response.message));
+    }
+    return response.data!;
+  }
+
+  Future<RentaEntregaArchivo?> getEntregaDocument(int id) async {
+    try {
+      final response = ApiResponse<RentaEntregaArchivo>.fromJson(
+        await _apiClient.getJson('${ApiConfig.rentas}/$id/documento-entrega'),
+        (value) => RentaEntregaArchivo.fromJson(value as Map<String, dynamic>),
+      );
+      return response.data;
+    } on ApiException catch (error) {
+      if (error.statusCode == 404) return null;
+      rethrow;
+    }
+  }
+
+  Future<List<int>> getEntregaDocumentBytes(int id) => _apiClient.getBytes(
+    '${ApiConfig.rentas}/$id/documento-entrega/contenido',
+  );
 
   Future<Renta> create(RentaCreateDto dto) =>
       _parseRenta(_apiClient.postJson(ApiConfig.rentas, dto.toJson()));

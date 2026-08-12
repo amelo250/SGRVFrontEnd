@@ -29,6 +29,7 @@ class _RentaEntregaPageState extends State<RentaEntregaPage> {
   final _pdfService = RentaEntregaPdfService();
   bool _working = false;
   int _fuelLevel = 100;
+  RentaEntregaDocument? _lastDocument;
 
   @override
   void initState() {
@@ -80,6 +81,10 @@ class _RentaEntregaPageState extends State<RentaEntregaPage> {
                         _header(context, data),
                         const SizedBox(height: 16),
                         _notice(),
+                        if (provider.entregaArchivo != null) ...[
+                          const SizedBox(height: 12),
+                          _savedDocument(provider),
+                        ],
                         const SizedBox(height: 16),
                         _summary(context, data),
                         const SizedBox(height: 16),
@@ -151,10 +156,33 @@ class _RentaEntregaPageState extends State<RentaEntregaPage> {
       leading: Icon(Icons.verified_user_outlined, color: Color(0xFF3867F4)),
       title: Text('Documento generado desde la renta registrada'),
       subtitle: Text(
-        'Las firmas se incorporarán al PDF. En esta versión no se almacenan en el servidor.',
+        'Las firmas se incorporan al PDF. Usa “Guardar formulario” para conservar el documento y sus datos en el servidor de archivos.',
       ),
     ),
   );
+
+  Widget _savedDocument(RentaProvider provider) {
+    final saved = provider.entregaArchivo!;
+    return Card(
+      color: const Color(0xFFEAF7EF),
+      child: ListTile(
+        leading: const Icon(
+          Icons.cloud_done_outlined,
+          color: Color(0xFF278455),
+        ),
+        title: const Text('Formulario firmado guardado'),
+        subtitle: Text(
+          'Guardado ${DateFormat('dd/MM/yyyy hh:mm a').format(saved.fechaGuardado)} · '
+          '${(saved.tamanoBytes / 1024).toStringAsFixed(1)} KB · Combustible ${saved.nivelCombustible}%',
+        ),
+        trailing: OutlinedButton.icon(
+          onPressed: _working ? null : () => _openSaved(provider),
+          icon: const Icon(Icons.download_outlined),
+          label: const Text('Recuperar'),
+        ),
+      ),
+    );
+  }
 
   Widget _summary(BuildContext context, RentaEntrega data) {
     final date = DateFormat('dd/MM/yyyy hh:mm a');
@@ -274,6 +302,11 @@ class _RentaEntregaPageState extends State<RentaEntregaPage> {
       spacing: 10,
       runSpacing: 10,
       children: [
+        FilledButton.icon(
+          onPressed: _working ? null : () => _save(data),
+          icon: const Icon(Icons.cloud_upload_outlined),
+          label: const Text('Guardar formulario'),
+        ),
         OutlinedButton.icon(
           onPressed: _working ? null : () => _print(data),
           icon: const Icon(Icons.picture_as_pdf_outlined),
@@ -383,6 +416,7 @@ class _RentaEntregaPageState extends State<RentaEntregaPage> {
     try {
       final document = await _captureDocument();
       if (document == null) return null;
+      _lastDocument = document;
       return await _pdfService.generate(data, document);
     } catch (_) {
       _message('No fue posible generar el PDF.');
@@ -405,6 +439,38 @@ class _RentaEntregaPageState extends State<RentaEntregaPage> {
       bytes: bytes,
       filename: 'entrega-${data.numeroContrato}.pdf',
     );
+  }
+
+  Future<void> _save(RentaEntrega data) async {
+    final bytes = await _generate(data);
+    final document = _lastDocument;
+    if (bytes == null || document == null || !mounted) return;
+    setState(() => _working = true);
+    final provider = context.read<RentaProvider>();
+    final saved = await provider.saveEntregaDocument(
+      id: data.idRenta,
+      bytes: bytes,
+      nombreAgente: document.nombreAgente,
+      nivelCombustible: document.nivelCombustible,
+      fechaFirma: document.fechaFirma,
+      accesoriosConfirmados: document.accesoriosConfirmados,
+      observaciones: document.observaciones,
+    );
+    if (mounted) setState(() => _working = false);
+    if (!mounted) return;
+    _message(
+      saved
+          ? 'Formulario de entrega guardado correctamente.'
+          : provider.errorMessage ?? 'No fue posible guardar el formulario.',
+    );
+  }
+
+  Future<void> _openSaved(RentaProvider provider) async {
+    setState(() => _working = true);
+    final bytes = await provider.getEntregaDocumentBytes(widget.rentaId);
+    if (mounted) setState(() => _working = false);
+    if (bytes == null || !mounted) return;
+    await Printing.layoutPdf(onLayout: (_) async => Uint8List.fromList(bytes));
   }
 
   void _message(String value) => ScaffoldMessenger.of(
