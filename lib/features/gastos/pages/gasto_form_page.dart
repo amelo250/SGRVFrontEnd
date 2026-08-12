@@ -70,8 +70,11 @@ class _GastoFormPageState extends State<GastoFormPage> {
   }
 
   Future<void> _save() async {
-    if (!_formKey.currentState!.validate() || _tipo == null || _moneda == null)
+    if (!_formKey.currentState!.validate() ||
+        _tipo == null ||
+        _moneda == null) {
       return;
+    }
     final dto = GastoDto(
       idTipoGasto: _tipo!,
       idMoneda: _moneda!,
@@ -90,12 +93,13 @@ class _GastoFormPageState extends State<GastoFormPage> {
     final provider = context.read<GastoProvider>();
     final ok = await provider.save(dto, id: widget.gasto?.idGasto);
     if (!mounted) return;
-    if (ok)
+    if (ok) {
       Navigator.pop(context, true);
-    else
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(provider.error ?? 'No fue posible guardar.')),
       );
+    }
   }
 
   @override
@@ -267,8 +271,9 @@ class _GastoFormPageState extends State<GastoFormPage> {
                                     firstDate: DateTime(2020),
                                     lastDate: DateTime.now(),
                                   );
-                                  if (value != null)
+                                  if (value != null) {
                                     setState(() => _fecha = value);
+                                  }
                                 },
                                 child: InputDecorator(
                                   decoration: const InputDecoration(

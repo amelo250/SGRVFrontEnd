@@ -9,10 +9,11 @@ class MantenimientoService {
   MantenimientoService({ApiClient? client}) : _client = client ?? ApiClient();
   final ApiClient _client;
 
-  Future<List<Mantenimiento>> getAll({String? search}) async {
+  Future<List<Mantenimiento>> getAll({String? search, int? idVehiculo}) async {
     final uri = Uri.parse(ApiConfig.mantenimientos).replace(
       queryParameters: {
         'pageSize': '100',
+        if (idVehiculo != null) 'idVehiculo': '$idVehiculo',
         if (search?.trim().isNotEmpty == true) 'search': search!.trim(),
       },
     );

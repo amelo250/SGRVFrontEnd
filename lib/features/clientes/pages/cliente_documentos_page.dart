@@ -73,8 +73,9 @@ class _ClienteDocumentosPageState extends State<ClienteDocumentosPage> {
   }
 
   Widget _body(DocumentoClienteProvider provider) {
-    if (provider.loading)
+    if (provider.loading) {
       return const Center(child: CircularProgressIndicator());
+    }
     if (provider.error != null) {
       return AppStateView(
         icon: Icons.cloud_off_rounded,
@@ -153,8 +154,9 @@ class _ClienteDocumentosPageState extends State<ClienteDocumentosPage> {
       fileName: file.name,
       contentType: contentType,
     );
-    if (!success && mounted)
+    if (!success && mounted) {
       _message(provider.error ?? 'No fue posible cargar.');
+    }
   }
 
   void _view(DocumentoCliente documento, Map<String, String>? headers) {
@@ -211,8 +213,9 @@ class _ClienteDocumentosPageState extends State<ClienteDocumentosPage> {
       widget.cliente.idCliente,
       documento.idDocumentoCliente,
     );
-    if (!success && mounted)
+    if (!success && mounted) {
       _message(provider.error ?? 'No fue posible eliminar.');
+    }
   }
 
   void _message(String message) {

@@ -62,8 +62,9 @@ class GastoService {
       await _client.getJson('${ApiConfig.gastos}/resumen'),
       (value) => GastoSummary.fromJson(value as Map<String, dynamic>),
     );
-    if (!response.success || response.data == null)
+    if (!response.success || response.data == null) {
       throw ApiException(message: response.message);
+    }
     return response.data!;
   }
 
@@ -108,8 +109,9 @@ class GastoService {
       await request,
       (value) => Gasto.fromJson(value as Map<String, dynamic>),
     );
-    if (!response.success || response.data == null)
+    if (!response.success || response.data == null) {
       throw ApiException(message: response.message);
+    }
     return response.data!;
   }
 

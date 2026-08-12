@@ -8,6 +8,7 @@ import '../providers/vehiculo_media_provider.dart';
 import '../widgets/vehiculo_accesorios_section.dart';
 import '../widgets/vehiculo_galeria_section.dart';
 import '../widgets/vehiculo_financial_summary.dart';
+import '../widgets/vehiculo_mantenimientos_section.dart';
 import 'vehiculo_form_page.dart';
 
 class VehiculoAdminPage extends StatefulWidget {
@@ -34,7 +35,7 @@ class _VehiculoAdminPageState extends State<VehiculoAdminPage> {
   Widget build(BuildContext context) {
     final vehicle = widget.vehiculo;
     return DefaultTabController(
-      length: 4,
+      length: 5,
       child: AppModuleScaffold(
         title: '${vehicle.marca} ${vehicle.modelo}',
         subtitle:
@@ -55,6 +56,7 @@ class _VehiculoAdminPageState extends State<VehiculoAdminPage> {
                   Tab(icon: Icon(Icons.info_outline_rounded), text: 'General'),
                   Tab(icon: Icon(Icons.extension_rounded), text: 'Accesorios'),
                   Tab(icon: Icon(Icons.insights_rounded), text: 'Finanzas'),
+                  Tab(icon: Icon(Icons.build_rounded), text: 'Mantenimiento'),
                   Tab(
                     icon: Icon(Icons.photo_library_outlined),
                     text: 'Galería',
@@ -69,6 +71,7 @@ class _VehiculoAdminPageState extends State<VehiculoAdminPage> {
                   _GeneralSection(vehicle: vehicle),
                   VehiculoAccesoriosSection(idVehiculo: vehicle.idVehiculo),
                   _FinancialSection(idVehiculo: vehicle.idVehiculo),
+                  VehiculoMantenimientosSection(vehiculo: vehicle),
                   VehiculoGaleriaSection(idVehiculo: vehicle.idVehiculo),
                 ],
               ),

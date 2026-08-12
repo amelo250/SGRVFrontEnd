@@ -114,8 +114,9 @@ class _PagosPageState extends State<PagosPage> {
       context,
       MaterialPageRoute(builder: (_) => const PagoFormPage()),
     );
-    if (created == true && mounted)
+    if (created == true && mounted) {
       await context.read<PagoProvider>().load(refresh: true);
+    }
   }
 
   Future<void> _open(int id) async {

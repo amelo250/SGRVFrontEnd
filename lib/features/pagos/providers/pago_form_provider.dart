@@ -49,8 +49,9 @@ class PagoFormProvider extends ChangeNotifier {
           .toList(growable: false);
       _methods = results[1] as List<PagoCatalogOption>;
       _currencies = results[2] as List<PagoCurrencyOption>;
-      if (preferredRentalId != null)
+      if (preferredRentalId != null) {
         await selectRental(preferredRentalId, notify: false);
+      }
     } on ApiException catch (error) {
       _errorMessage = error.message;
     } catch (_) {

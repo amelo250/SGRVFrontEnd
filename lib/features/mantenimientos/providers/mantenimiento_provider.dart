@@ -17,6 +17,7 @@ class MantenimientoProvider extends ChangeNotifier {
   MantenimientoStatus _status = MantenimientoStatus.initial;
   String? _error;
   bool _saving = false;
+  int? _idVehiculoFilter;
 
   List<Mantenimiento> get items => List.unmodifiable(_items);
   List<MantenimientoCatalogo> get tipos => List.unmodifiable(_tipos);
@@ -26,13 +27,18 @@ class MantenimientoProvider extends ChangeNotifier {
   String? get error => _error;
   bool get saving => _saving;
 
-  Future<void> load({String? search, bool refresh = false}) async {
+  Future<void> load({
+    String? search,
+    int? idVehiculo,
+    bool refresh = false,
+  }) async {
+    if (idVehiculo != null) _idVehiculoFilter = idVehiculo;
     if (!refresh) _status = MantenimientoStatus.loading;
     _error = null;
     notifyListeners();
     try {
       final result = await Future.wait<Object>([
-        _service.getAll(search: search),
+        _service.getAll(search: search, idVehiculo: _idVehiculoFilter),
         _service.resumen(),
       ]);
       _items = result[0] as List<Mantenimiento>;
@@ -51,10 +57,7 @@ class MantenimientoProvider extends ChangeNotifier {
   }
 
   Future<void> loadCatalogs() async {
-    final result = await Future.wait([
-      _service.tipos(),
-      _service.vehiculos(),
-    ]);
+    final result = await Future.wait([_service.tipos(), _service.vehiculos()]);
     _tipos = result[0];
     _vehiculos = result[1];
     notifyListeners();

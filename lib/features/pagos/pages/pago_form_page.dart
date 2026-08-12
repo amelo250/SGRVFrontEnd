@@ -374,7 +374,7 @@ class _PagoFormPageState extends State<PagoFormPage> {
       firstDate: DateTime.now().subtract(const Duration(days: 365)),
       lastDate: DateTime.now(),
     );
-    if (selected != null && mounted)
+    if (selected != null && mounted) {
       setState(
         () => _date = DateTime(
           selected.year,
@@ -384,6 +384,7 @@ class _PagoFormPageState extends State<PagoFormPage> {
           DateTime.now().minute,
         ),
       );
+    }
   }
 
   Future<void> _save(PagoFormProvider form, double localAmount) async {
@@ -414,9 +415,9 @@ class _PagoFormPageState extends State<PagoFormPage> {
       ),
     );
     if (!mounted) return;
-    if (ok)
+    if (ok) {
       Navigator.pop(context, true);
-    else
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -425,5 +426,6 @@ class _PagoFormPageState extends State<PagoFormPage> {
           ),
         ),
       );
+    }
   }
 }

@@ -166,8 +166,9 @@ class _ConfiguracionPageState extends State<ConfiguracionPage> {
   }
 
   Widget _state(ConfiguracionProvider provider) {
-    if (provider.loading)
+    if (provider.loading) {
       return const Center(child: CircularProgressIndicator());
+    }
     if (provider.error != null) {
       return AppStateView(
         icon: Icons.cloud_off_rounded,
@@ -197,8 +198,9 @@ class _ConfiguracionPageState extends State<ConfiguracionPage> {
     ConfiguracionProvider provider, [
     ConfiguracionCatalogoItem? item,
   ]) async {
-    if (item?.esGlobal == true && provider.selected?.esAccesorio == true)
+    if (item?.esGlobal == true && provider.selected?.esAccesorio == true) {
       return;
+    }
     final draft = await showDialog<ConfiguracionCatalogoDraft>(
       context: context,
       builder: (_) =>

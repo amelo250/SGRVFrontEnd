@@ -6,8 +6,15 @@ import 'package:sgrv_frontend/features/mantenimientos/providers/mantenimiento_pr
 import 'package:sgrv_frontend/shared/widgets/app_module_ui.dart';
 
 class MantenimientoFormPage extends StatefulWidget {
-  const MantenimientoFormPage({this.mantenimiento, super.key});
+  const MantenimientoFormPage({
+    this.mantenimiento,
+    this.idVehiculo,
+    this.vehiculoNombre,
+    super.key,
+  });
   final Mantenimiento? mantenimiento;
+  final int? idVehiculo;
+  final String? vehiculoNombre;
   @override
   State<MantenimientoFormPage> createState() => _MantenimientoFormPageState();
 }
@@ -26,7 +33,7 @@ class _MantenimientoFormPageState extends State<MantenimientoFormPage> {
   void initState() {
     super.initState();
     final item = widget.mantenimiento;
-    _vehiculo = item?.idVehiculo;
+    _vehiculo = widget.idVehiculo ?? item?.idVehiculo;
     _tipo = item?.idTipoMantenimiento;
     _fecha = item?.fecha ?? DateTime.now();
     _taller.text = item?.taller ?? '';
@@ -53,24 +60,44 @@ class _MantenimientoFormPageState extends State<MantenimientoFormPage> {
               icon: Icons.build_circle_outlined,
               child: Column(
                 children: [
-                  DropdownButtonFormField<int>(
-                    initialValue: _vehiculo,
-                    decoration: const InputDecoration(labelText: 'Vehículo'),
-                    items: provider.vehiculos
-                        .map(
-                          (item) => DropdownMenuItem(
-                            value: item.id,
-                            child: Text(item.nombre),
+                  if (widget.idVehiculo != null)
+                    InputDecorator(
+                      decoration: const InputDecoration(labelText: 'Vehículo'),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.directions_car_outlined),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              widget.vehiculoNombre ??
+                                  'Vehículo #${widget.idVehiculo}',
+                            ),
                           ),
-                        )
-                        .toList(),
-                    onChanged: (value) => setState(() => _vehiculo = value),
-                    validator: (value) => value == null ? 'Selecciona un vehículo.' : null,
-                  ),
+                        ],
+                      ),
+                    )
+                  else
+                    DropdownButtonFormField<int>(
+                      initialValue: _vehiculo,
+                      decoration: const InputDecoration(labelText: 'Vehículo'),
+                      items: provider.vehiculos
+                          .map(
+                            (item) => DropdownMenuItem(
+                              value: item.id,
+                              child: Text(item.nombre),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (value) => setState(() => _vehiculo = value),
+                      validator: (value) =>
+                          value == null ? 'Selecciona un vehículo.' : null,
+                    ),
                   const SizedBox(height: 14),
                   DropdownButtonFormField<int>(
                     initialValue: _tipo,
-                    decoration: const InputDecoration(labelText: 'Tipo de mantenimiento'),
+                    decoration: const InputDecoration(
+                      labelText: 'Tipo de mantenimiento',
+                    ),
                     items: provider.tipos
                         .map(
                           (item) => DropdownMenuItem(
@@ -80,7 +107,8 @@ class _MantenimientoFormPageState extends State<MantenimientoFormPage> {
                         )
                         .toList(),
                     onChanged: (value) => setState(() => _tipo = value),
-                    validator: (value) => value == null ? 'Selecciona un tipo.' : null,
+                    validator: (value) =>
+                        value == null ? 'Selecciona un tipo.' : null,
                   ),
                   const SizedBox(height: 14),
                   ListTile(
@@ -90,7 +118,9 @@ class _MantenimientoFormPageState extends State<MantenimientoFormPage> {
                     ),
                     leading: const Icon(Icons.calendar_month_rounded),
                     title: const Text('Fecha del mantenimiento'),
-                    subtitle: Text('${_fecha.day}/${_fecha.month}/${_fecha.year}'),
+                    subtitle: Text(
+                      '${_fecha.day}/${_fecha.month}/${_fecha.year}',
+                    ),
                     onTap: _pickDate,
                   ),
                   const SizedBox(height: 14),
@@ -105,14 +135,18 @@ class _MantenimientoFormPageState extends State<MantenimientoFormPage> {
                         child: TextFormField(
                           controller: _km,
                           keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(labelText: 'Kilometraje'),
+                          decoration: const InputDecoration(
+                            labelText: 'Kilometraje',
+                          ),
                         ),
                       ),
                       const SizedBox(width: 14),
                       Expanded(
                         child: TextFormField(
                           controller: _costo,
-                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
                           decoration: const InputDecoration(labelText: 'Costo'),
                           validator: (value) {
                             final amount = double.tryParse(value ?? '');
@@ -128,7 +162,9 @@ class _MantenimientoFormPageState extends State<MantenimientoFormPage> {
                   TextFormField(
                     controller: _observacion,
                     maxLines: 4,
-                    decoration: const InputDecoration(labelText: 'Observaciones'),
+                    decoration: const InputDecoration(
+                      labelText: 'Observaciones',
+                    ),
                   ),
                 ],
               ),

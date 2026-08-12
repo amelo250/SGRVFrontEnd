@@ -31,8 +31,9 @@ class _EmpresasPageState extends State<EmpresasPage> {
   }
 
   Widget _body(EmpresaProvider provider) {
-    if (provider.isLoading)
+    if (provider.isLoading) {
       return const Center(child: CircularProgressIndicator());
+    }
     if (provider.errorMessage != null) {
       return AppStateView(
         icon: Icons.cloud_off_rounded,

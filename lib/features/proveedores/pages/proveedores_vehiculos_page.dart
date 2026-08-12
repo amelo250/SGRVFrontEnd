@@ -118,8 +118,9 @@ class _ProveedoresVehiculosPageState extends State<ProveedoresVehiculosPage> {
         builder: (_) => ProveedorVehiculoFormPage(proveedor: supplier),
       ),
     );
-    if (mounted)
+    if (mounted) {
       await context.read<ProveedorVehiculoProvider>().cargar(refresh: true);
+    }
   }
 
   Future<void> _deactivate(ProveedorVehiculo supplier) async {
