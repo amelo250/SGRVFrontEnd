@@ -3,6 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:sgrv_frontend/features/empresas/providers/empresa_provider.dart';
 import 'package:sgrv_frontend/shared/colors/app_colors.dart';
 import 'package:sgrv_frontend/shared/widgets/app_module_ui.dart';
+import 'package:sgrv_frontend/features/empresas/pages/empresa_onboarding_page.dart';
+import 'dart:convert';
+import 'package:sgrv_frontend/core/storage/token_storage.dart';
 
 class EmpresasPage extends StatefulWidget {
   const EmpresasPage({super.key});
@@ -26,7 +29,35 @@ class _EmpresasPageState extends State<EmpresasPage> {
     return AppModuleScaffold(
       title: 'Empresas',
       subtitle: 'Consulta las organizaciones y planes asociados a tu cuenta.',
-      body: _body(provider),
+      body: Column(
+        children: [
+          FutureBuilder<bool>(
+            future: _isSupAdmin(),
+            builder: (_, s) => s.data == true
+                ? Align(
+                    alignment: Alignment.centerRight,
+                    child: FilledButton.icon(
+                      onPressed: () async {
+                        final created = await Navigator.push<bool>(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const EmpresaOnboardingPage(),
+                          ),
+                        );
+                        if (created == true && mounted) {
+                          await provider.cargarEmpresas();
+                        }
+                      },
+                      icon: const Icon(Icons.add_business_outlined),
+                      label: const Text('Nueva empresa'),
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ),
+          const SizedBox(height: 12),
+          Expanded(child: _body(provider)),
+        ],
+      ),
     );
   }
 
@@ -105,7 +136,9 @@ class _EmpresasPageState extends State<EmpresasPage> {
                                   ?.copyWith(fontWeight: FontWeight.w900),
                             ),
                             Text(
-                              company.NombreComercial ?? 'Empresa registrada',
+                              company.nombreComercial.isEmpty
+                                  ? 'Empresa registrada'
+                                  : company.nombreComercial,
                               style: const TextStyle(color: AppColors.muted),
                             ),
                           ],
@@ -131,14 +164,14 @@ class _EmpresasPageState extends State<EmpresasPage> {
                         child: _detail(
                           Icons.badge_outlined,
                           'RNC',
-                          company.RNC ?? 'No registrado',
+                          company.rnc.isEmpty ? 'No registrado' : company.rnc,
                         ),
                       ),
                       Expanded(
                         child: _detail(
                           Icons.workspace_premium_outlined,
                           'Plan',
-                          '#${company.IdPlan}',
+                          '#${company.idPlan}',
                         ),
                       ),
                     ],
@@ -174,4 +207,18 @@ class _EmpresasPageState extends State<EmpresasPage> {
       ),
     ],
   );
+
+  Future<bool> _isSupAdmin() async {
+    final token = await TokenStorage.getToken();
+    if (token == null) return false;
+    try {
+      final part = base64Url.normalize(token.split('.')[1]);
+      final json =
+          jsonDecode(utf8.decode(base64Url.decode(part)))
+              as Map<String, dynamic>;
+      return json.values.any((v) => v == 'SUPADMIN');
+    } catch (_) {
+      return false;
+    }
+  }
 }

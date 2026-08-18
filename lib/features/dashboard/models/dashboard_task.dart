@@ -66,8 +66,6 @@ class DashboardTasksResult {
 
   static List<DashboardTask> _items(Object? value) =>
       (value as List<dynamic>? ?? const [])
-          .map(
-            (item) => DashboardTask.fromJson(item as Map<String, dynamic>),
-          )
+          .map((item) => DashboardTask.fromJson(item as Map<String, dynamic>))
           .toList(growable: false);
 }

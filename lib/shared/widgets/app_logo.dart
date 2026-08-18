@@ -1,11 +1,21 @@
 import 'package:flutter/material.dart';
 import '../colors/app_colors.dart';
+import 'package:sgrv_frontend/core/config/api_config.dart';
+import 'package:sgrv_frontend/core/storage/token_storage.dart';
 
 class AppLogo extends StatelessWidget {
   final bool compact;
   final Color? color;
+  final String? imageUrl;
+  final String title;
 
-  const AppLogo({super.key, this.compact = false, this.color});
+  const AppLogo({
+    super.key,
+    this.compact = false,
+    this.color,
+    this.imageUrl,
+    this.title = 'SGRV',
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -22,18 +32,39 @@ class AppLogo extends StatelessWidget {
               colors: [AppColors.secondary, Color(0xFF2F9DFF)],
             ),
           ),
-          child: Icon(
-            Icons.directions_car_rounded,
-            color: Colors.white,
-            size: compact ? 23 : 30,
-          ),
+          child: imageUrl?.isNotEmpty == true
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(13),
+                  child: FutureBuilder<String?>(
+                    future: TokenStorage.getToken(),
+                    builder: (_, token) => Image.network(
+                      imageUrl!.startsWith('http')
+                          ? imageUrl!
+                          : '${ApiConfig.baseUrl}$imageUrl',
+                      fit: BoxFit.cover,
+                      headers: token.data == null
+                          ? null
+                          : {'Authorization': 'Bearer ${token.data}'},
+                      errorBuilder: (_, _, _) => Icon(
+                        Icons.business_rounded,
+                        color: Colors.white,
+                        size: compact ? 23 : 30,
+                      ),
+                    ),
+                  ),
+                )
+              : Icon(
+                  Icons.directions_car_rounded,
+                  color: Colors.white,
+                  size: compact ? 23 : 30,
+                ),
         ),
         const SizedBox(width: 12),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'SGRV',
+              title,
               style: TextStyle(
                 color: foreground,
                 fontSize: compact ? 19 : 31,

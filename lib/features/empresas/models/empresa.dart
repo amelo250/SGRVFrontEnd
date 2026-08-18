@@ -1,39 +1,30 @@
 class Empresa {
-  final int IdEmpresa;
-  final int IdPlan;
-  final String nombre;
-  final String? NombreComercial;
-  final String? RNC;
-  final String? Telefono;
-  final String? Email;
-  final String? Direccion;
-  final String? LogoUrl;
-
-  final bool activo;
-
   const Empresa({
-    required this.IdEmpresa,
+    required this.idEmpresa,
+    required this.idPlan,
     required this.nombre,
-    this.NombreComercial,
-    this.RNC,
-    this.Telefono,
-    this.Email,
-    this.Direccion,
-    required this.IdPlan,
-    this.LogoUrl,
+    required this.nombreComercial,
+    required this.rnc,
     required this.activo,
+    this.telefono,
+    this.correo,
+    this.direccion,
+    this.logoUrl,
   });
-
-  factory Empresa.fromJson(Map<String, dynamic> json) {
-    return Empresa(
-      IdEmpresa: (json['idEmpresa'] as num).toInt(),
-      IdPlan: (json['idPlan'] as num).toInt(),
-      nombre: json['nombre']?.toString() ?? '',
-      RNC: json['rnc']?.toString(),
-      Telefono: json['Telefono']?.toString(),
-      Email: json['Email']?.toString(),
-      Direccion: json['direccion']?.toString(),
-      activo: json['activo'] as bool? ?? true,
-    );
-  }
+  final int idEmpresa, idPlan;
+  final String nombre, nombreComercial, rnc;
+  final String? telefono, correo, direccion, logoUrl;
+  final bool activo;
+  factory Empresa.fromJson(Map<String, dynamic> j) => Empresa(
+    idEmpresa: (j['idEmpresa'] as num?)?.toInt() ?? 0,
+    idPlan: (j['idPlan'] as num?)?.toInt() ?? 0,
+    nombre: j['nombre']?.toString() ?? '',
+    nombreComercial: j['nombreComercial']?.toString() ?? '',
+    rnc: j['rnc']?.toString() ?? '',
+    telefono: j['telefono']?.toString(),
+    correo: j['correo']?.toString(),
+    direccion: j['direccion']?.toString(),
+    logoUrl: j['logoUrl']?.toString(),
+    activo: j['activo'] as bool? ?? true,
+  );
 }

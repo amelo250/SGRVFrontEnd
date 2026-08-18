@@ -137,10 +137,7 @@ class _TaskGroup extends StatelessWidget {
         children: [
           Text(title, style: const TextStyle(fontWeight: FontWeight.w900)),
           const SizedBox(width: 8),
-          Badge(
-            backgroundColor: accent,
-            label: Text('$count'),
-          ),
+          Badge(backgroundColor: accent, label: Text('$count')),
         ],
       ),
       const SizedBox(height: 10),
@@ -187,7 +184,10 @@ class _TaskTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(task.titulo, style: const TextStyle(fontWeight: FontWeight.w800)),
+                Text(
+                  task.titulo,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
                 Text(
                   task.vehiculo,
                   maxLines: 1,
@@ -212,7 +212,11 @@ class _TaskTile extends StatelessWidget {
 }
 
 class _StateMessage extends StatelessWidget {
-  const _StateMessage({required this.icon, required this.message, this.onRetry});
+  const _StateMessage({
+    required this.icon,
+    required this.message,
+    this.onRetry,
+  });
   final IconData icon;
   final String message;
   final Future<void> Function()? onRetry;

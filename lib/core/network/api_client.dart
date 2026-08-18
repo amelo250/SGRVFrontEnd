@@ -83,6 +83,7 @@ class ApiClient {
     required String fileName,
     required String contentType,
     Map<String, String> fields = const {},
+    String fileField = 'archivo',
   }) async {
     final request = http.MultipartRequest('POST', Uri.parse(url));
     final token = await TokenStorage.getToken();
@@ -93,7 +94,7 @@ class ApiClient {
     request.fields.addAll(fields);
     request.files.add(
       http.MultipartFile.fromBytes(
-        'archivo',
+        fileField,
         bytes,
         filename: fileName,
         contentType: MediaType.parse(contentType),
