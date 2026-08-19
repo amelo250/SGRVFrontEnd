@@ -42,7 +42,8 @@ class _GastosPageState extends State<GastosPage> {
   Widget build(BuildContext context) => Consumer<GastoProvider>(
     builder: (context, provider, _) => AppModuleScaffold(
       title: 'Gastos',
-      subtitle: '${provider.total} registros de mantenimiento y operación',
+      subtitle:
+          '${provider.summaryData?.cantidad ?? provider.total} gastos totales registrados',
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => Navigator.push(
           context,
@@ -84,8 +85,7 @@ class _GastosPageState extends State<GastosPage> {
                 child: AppStateView(
                   icon: Icons.receipt_long_rounded,
                   title: 'Aún no hay gastos',
-                  message:
-                      'Registra el primer gasto operativo o de mantenimiento.',
+                  message: 'Registra el primer gasto operativo.',
                 ),
               )
             else

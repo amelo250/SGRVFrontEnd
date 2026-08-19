@@ -68,8 +68,18 @@ class GastoService {
     return response.data!;
   }
 
-  Future<List<GastoCatalogOption>> tipos() =>
-      _catalog('${ApiConfig.catalogs}/tipos?categoria=GASTOS');
+  Future<List<GastoCatalogOption>> tipos() async {
+    final items = await _catalog(
+      '${ApiConfig.catalogs}/tipos?categoria=GASTOS',
+    );
+    return items
+        .where((item) {
+          final code = item.code.toUpperCase();
+          return !code.contains('MANTEN') && !code.contains('REPAR');
+        })
+        .toList(growable: false);
+  }
+
   Future<List<GastoCatalogOption>> monedas() =>
       _catalog('${ApiConfig.catalogs}/monedas');
 

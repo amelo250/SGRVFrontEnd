@@ -19,8 +19,6 @@ class _GastoFormPageState extends State<GastoFormPage> {
   late final TextEditingController _tasa;
   late final TextEditingController _proveedor;
   late final TextEditingController _comprobante;
-  late final TextEditingController _kilometraje;
-  late final TextEditingController _taller;
   late final TextEditingController _observaciones;
   int? _tipo;
   int? _moneda;
@@ -42,10 +40,6 @@ class _GastoFormPageState extends State<GastoFormPage> {
     );
     _proveedor = TextEditingController(text: g?.proveedor ?? '');
     _comprobante = TextEditingController(text: g?.numeroComprobante ?? '');
-    _kilometraje = TextEditingController(
-      text: g?.kilometraje?.toString() ?? '',
-    );
-    _taller = TextEditingController(text: g?.taller ?? '');
     _observaciones = TextEditingController(text: g?.observaciones ?? '');
     WidgetsBinding.instance.addPostFrameCallback(
       (_) => context.read<GastoProvider>().loadCatalogs(),
@@ -60,8 +54,6 @@ class _GastoFormPageState extends State<GastoFormPage> {
       _tasa,
       _proveedor,
       _comprobante,
-      _kilometraje,
-      _taller,
       _observaciones,
     ]) {
       c.dispose();
@@ -85,8 +77,6 @@ class _GastoFormPageState extends State<GastoFormPage> {
       proveedor: _proveedor.text,
       monto: double.parse(_monto.text),
       tasaCambioAplicada: double.parse(_tasa.text),
-      kilometraje: int.tryParse(_kilometraje.text),
-      taller: _taller.text,
       observaciones: _observaciones.text,
       rowVersion: widget.gasto?.rowVersion,
     );
@@ -107,8 +97,7 @@ class _GastoFormPageState extends State<GastoFormPage> {
     builder: (context, provider, _) {
       return AppModuleScaffold(
         title: widget.gasto == null ? 'Nuevo gasto' : 'Editar gasto',
-        subtitle:
-            'Registra mantenimiento y gastos operativos con su moneda aplicada.',
+        subtitle: 'Registra gastos operativos con su moneda aplicada.',
         body: provider.saving && provider.tipos.isEmpty
             ? const Center(child: CircularProgressIndicator())
             : SingleChildScrollView(
@@ -124,7 +113,12 @@ class _GastoFormPageState extends State<GastoFormPage> {
                           children: [
                             _field(
                               DropdownButtonFormField<int>(
-                                initialValue: _tipo,
+                                initialValue:
+                                    provider.tipos.any(
+                                      (item) => item.id == _tipo,
+                                    )
+                                    ? _tipo
+                                    : null,
                                 decoration: const InputDecoration(
                                   labelText: 'Tipo de gasto',
                                   prefixIcon: Icon(Icons.category_rounded),
@@ -293,42 +287,17 @@ class _GastoFormPageState extends State<GastoFormPage> {
                       ),
                       const SizedBox(height: 16),
                       AppSectionCard(
-                        title: 'Mantenimiento (opcional)',
-                        child: Wrap(
-                          spacing: 16,
-                          runSpacing: 16,
-                          children: [
-                            _field(
-                              TextFormField(
-                                controller: _kilometraje,
-                                keyboardType: TextInputType.number,
-                                decoration: const InputDecoration(
-                                  labelText: 'Kilometraje',
-                                  prefixIcon: Icon(Icons.speed_rounded),
-                                ),
-                              ),
+                        title: 'Notas',
+                        child: SizedBox(
+                          width: 760,
+                          child: TextFormField(
+                            controller: _observaciones,
+                            maxLines: 3,
+                            decoration: const InputDecoration(
+                              labelText: 'Observaciones',
+                              prefixIcon: Icon(Icons.notes_rounded),
                             ),
-                            _field(
-                              TextFormField(
-                                controller: _taller,
-                                decoration: const InputDecoration(
-                                  labelText: 'Taller',
-                                  prefixIcon: Icon(Icons.car_repair_rounded),
-                                ),
-                              ),
-                            ),
-                            SizedBox(
-                              width: 760,
-                              child: TextFormField(
-                                controller: _observaciones,
-                                maxLines: 3,
-                                decoration: const InputDecoration(
-                                  labelText: 'Observaciones',
-                                  prefixIcon: Icon(Icons.notes_rounded),
-                                ),
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                       ),
                       const SizedBox(height: 22),

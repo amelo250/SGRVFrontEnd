@@ -5,18 +5,28 @@ import 'package:sgrv_frontend/features/auth/pages/login_page.dart';
 import 'package:sgrv_frontend/features/auth/providers/auth_provider.dart';
 import 'package:sgrv_frontend/features/calendario/pages/calendario_page.dart';
 import 'package:sgrv_frontend/features/clientes/pages/clientes_page.dart';
+import 'package:sgrv_frontend/features/clientes/pages/cliente_form_page.dart';
 import 'package:sgrv_frontend/features/configuracion/pages/configuracion_page.dart';
+import 'package:sgrv_frontend/features/contabilidad/pages/contabilidad_page.dart';
 import 'package:sgrv_frontend/features/dashboard/models/dashboard_summary.dart';
 import 'package:sgrv_frontend/features/dashboard/providers/dashboard_task_provider.dart';
 import 'package:sgrv_frontend/features/dashboard/widgets/dashboard_tasks_section.dart';
+import 'package:sgrv_frontend/features/dashboard/widgets/dashboard_quick_actions.dart';
+import 'package:sgrv_frontend/features/dashboard/widgets/dashboard_quick_actions_fab.dart';
 import 'package:sgrv_frontend/features/empresas/pages/empresa_page.dart';
 import 'package:sgrv_frontend/features/gastos/pages/gastos_page.dart';
+import 'package:sgrv_frontend/features/gastos/pages/gasto_form_page.dart';
 import 'package:sgrv_frontend/features/mantenimientos/pages/mantenimientos_page.dart';
+import 'package:sgrv_frontend/features/mantenimientos/pages/mantenimiento_form_page.dart';
 import 'package:sgrv_frontend/features/pagos/pages/pagos_page.dart';
+import 'package:sgrv_frontend/features/pagos/pages/pago_form_page.dart';
 import 'package:sgrv_frontend/features/proveedores/pages/proveedores_vehiculos_page.dart';
 import 'package:sgrv_frontend/features/rentas/pages/rentas_page.dart';
+import 'package:sgrv_frontend/features/rentas/pages/renta_form_page.dart';
 import 'package:sgrv_frontend/features/reservaciones/pages/reservaciones_page.dart';
+import 'package:sgrv_frontend/features/reservaciones/pages/reservacion_form_page.dart';
 import 'package:sgrv_frontend/features/vehiculos/pages/vehiculos_page.dart';
+import 'package:sgrv_frontend/features/vehiculos/pages/vehiculo_form_page.dart';
 import 'package:sgrv_frontend/shared/widgets/app_logo.dart';
 
 class DashboardPage extends StatefulWidget {
@@ -38,9 +48,19 @@ class _DashboardPageState extends State<DashboardPage> {
       icon: Icons.directions_car_rounded,
       page: VehiculosPage(),
     ),
+    (
+      label: 'Mantenimientos',
+      icon: Icons.build_rounded,
+      page: MantenimientosPage(),
+    ),
     (label: 'Clientes', icon: Icons.people_rounded, page: ClientesPage()),
     (label: 'Pagos', icon: Icons.payments_rounded, page: PagosPage()),
     (label: 'Gastos', icon: Icons.receipt_long_rounded, page: GastosPage()),
+    (
+      label: 'Contabilidad',
+      icon: Icons.account_balance_rounded,
+      page: ContabilidadPage(),
+    ),
     (
       label: 'Calendario',
       icon: Icons.calendar_month_rounded,
@@ -56,11 +76,6 @@ class _DashboardPageState extends State<DashboardPage> {
       label: 'Configuración',
       icon: Icons.settings_rounded,
       page: ConfiguracionPage(),
-    ),
-    (
-      label: 'Mantenimientos',
-      icon: Icons.build_rounded,
-      page: MantenimientosPage(),
     ),
   ];
   @override
@@ -92,6 +107,7 @@ class _DashboardPageState extends State<DashboardPage> {
           IconButton(onPressed: _logout, icon: const Icon(Icons.logout)),
         ],
       ),
+      floatingActionButton: DashboardQuickActionsFab(actions: _quickActions()),
       body: p.status == DashboardTaskStatus.loading && s == null
           ? const Center(child: CircularProgressIndicator())
           : p.status == DashboardTaskStatus.error && s == null
@@ -110,6 +126,68 @@ class _DashboardPageState extends State<DashboardPage> {
             )
           : _content(p, s),
     );
+  }
+
+  List<DashboardQuickAction> _quickActions() => [
+    DashboardQuickAction(
+      title: 'Nueva renta',
+      subtitle: 'Registrar alquiler',
+      icon: Icons.key_rounded,
+      color: const Color(0xFF3867F4),
+      onTap: () => _openQuickAction(const RentaFormPage()),
+    ),
+    DashboardQuickAction(
+      title: 'Nuevo vehículo',
+      subtitle: 'Agregar a la flota',
+      icon: Icons.directions_car_rounded,
+      color: const Color(0xFF7057F5),
+      onTap: () => _openQuickAction(const VehiculoFormPage()),
+    ),
+    DashboardQuickAction(
+      title: 'Mantenimiento',
+      subtitle: 'Registrar servicio',
+      icon: Icons.build_circle_rounded,
+      color: const Color(0xFFFF8A34),
+      onTap: () => _openQuickAction(const MantenimientoFormPage()),
+    ),
+    DashboardQuickAction(
+      title: 'Reservación',
+      subtitle: 'Separar vehículo',
+      icon: Icons.event_available_rounded,
+      color: const Color(0xFF1A9B72),
+      onTap: () => _openQuickAction(const ReservacionFormPage()),
+    ),
+    DashboardQuickAction(
+      title: 'Nuevo cliente',
+      subtitle: 'Registrar persona',
+      icon: Icons.person_add_alt_1_rounded,
+      color: const Color(0xFF2F9DFF),
+      onTap: () => _openQuickAction(const ClienteFormPage()),
+    ),
+    DashboardQuickAction(
+      title: 'Registrar pago',
+      subtitle: 'Aplicar a una renta',
+      icon: Icons.add_card_rounded,
+      color: const Color(0xFF2EBE7E),
+      onTap: () => _openQuickAction(const PagoFormPage()),
+    ),
+    DashboardQuickAction(
+      title: 'Registrar gasto',
+      subtitle: 'Control financiero',
+      icon: Icons.receipt_long_rounded,
+      color: const Color(0xFFE05A67),
+      onTap: () => _openQuickAction(const GastoFormPage()),
+    ),
+  ];
+
+  Future<void> _openQuickAction(Widget page) async {
+    await Navigator.push<void>(
+      context,
+      MaterialPageRoute(builder: (_) => page),
+    );
+    if (mounted) {
+      await context.read<DashboardTaskProvider>().load(refresh: true);
+    }
   }
 
   Widget _menu(DashboardSummary? s) => SafeArea(

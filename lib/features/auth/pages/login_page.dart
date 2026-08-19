@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:sgrv_frontend/features/auth/providers/auth_provider.dart';
 import 'package:sgrv_frontend/features/dashboard/pages/dashboard_page.dart';
 import 'package:sgrv_frontend/features/dashboard/providers/dashboard_task_provider.dart';
+import 'package:sgrv_frontend/features/administracion/pages/administracion_dashboard_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -48,10 +49,15 @@ class _LoginPageState extends State<LoginPage> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (_) => ChangeNotifierProvider(
-            create: (_) => DashboardTaskProvider(),
-            child: const DashboardPage(),
-          ),
+          builder: (_) {
+            if (authProvider.isSuperAdmin) {
+              return const AdministracionDashboardPage();
+            }
+            return ChangeNotifierProvider(
+              create: (_) => DashboardTaskProvider(),
+              child: const DashboardPage(),
+            );
+          },
         ),
       );
     }

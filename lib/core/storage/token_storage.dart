@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -30,6 +32,25 @@ class TokenStorage {
   static Future<bool> hasToken() async {
     final token = await getToken();
     return token != null && token.isNotEmpty;
+  }
+
+  static Future<String?> getRole() async {
+    final token = await getToken();
+    if (token == null) return null;
+    try {
+      final parts = token.split('.');
+      if (parts.length != 3) return null;
+      final payload =
+          jsonDecode(
+                utf8.decode(base64Url.decode(base64Url.normalize(parts[1]))),
+              )
+              as Map<String, dynamic>;
+      const roleClaim =
+          'http://schemas.microsoft.com/ws/2008/06/identity/claims/role';
+      return (payload[roleClaim] ?? payload['role'])?.toString();
+    } catch (_) {
+      return null;
+    }
   }
 
   static Future<void> deleteToken() async {

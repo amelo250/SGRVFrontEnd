@@ -26,4 +26,9 @@ class ApiConfig {
   static const String mantenimientos = '$baseUrl/api/mantenimientos';
   static const String dashboardTasks = '$baseUrl/api/dashboard/tareas';
   static const String dashboardSummary = '$baseUrl/api/dashboard/resumen';
+  static const String administracionResumen =
+      '$baseUrl/api/administracion/resumen';
+  static const String administracionRoles = '$baseUrl/api/administracion/roles';
+  static const String usuarios = '$baseUrl/api/usuarios';
+  static const String contabilidad = '$baseUrl/api/contabilidad/resumen';
 }
