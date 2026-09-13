@@ -5,26 +5,24 @@
 // gestures. You can also use WidgetTester to find child widgets in the widget
 // tree, read text, and verify that the values of widget properties are correct.
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:sgrv_frontend/main.dart';
+import 'package:sgrv_frontend/core/network/api_response.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  test('ApiResponse interpreta el contrato estándar del backend', () {
+    final response = ApiResponse<String>.fromJson(
+      {
+        'success': true,
+        'message': 'Operación correcta',
+        'data': 'resultado',
+        'timestamp': '2026-08-18T12:00:00Z',
+      },
+      (value) => value! as String,
+    );
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(response.success, isTrue);
+    expect(response.message, 'Operación correcta');
+    expect(response.data, 'resultado');
+    expect(response.timestamp, isNotNull);
   });
 }

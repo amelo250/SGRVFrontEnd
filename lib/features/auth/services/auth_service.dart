@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:sgrv_frontend/core/config/api_config.dart';
+import 'package:sgrv_frontend/core/network/api_response.dart';
 import 'package:sgrv_frontend/core/storage/token_storage.dart';
 import 'package:sgrv_frontend/features/auth/models/login_response.dart';
 
@@ -22,11 +23,19 @@ class AuthService {
       final Map<String, dynamic> json =
           jsonDecode(response.body) as Map<String, dynamic>;
 
-      final loginResponse = LoginResponse.fromJson(json);
+      final apiResponse = ApiResponse<LoginResponse>.fromJson(
+        json,
+        (value) => LoginResponse.fromJson(value! as Map<String, dynamic>),
+      );
+      final loginResponse = apiResponse.data;
 
-      if (loginResponse.token.isEmpty) {
+      if (!apiResponse.success ||
+          loginResponse == null ||
+          loginResponse.token.isEmpty) {
         throw Exception(
-          'El servidor respondió correctamente, pero no devolvió el token.',
+          apiResponse.message.isEmpty
+              ? 'El servidor respondió correctamente, pero no devolvió el token.'
+              : apiResponse.message,
         );
       }
 
