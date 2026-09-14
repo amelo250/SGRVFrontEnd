@@ -24,7 +24,7 @@ class _LoginPageState extends State<LoginPage> {
   static const Color _secondaryColor = Color(0xFF7057F5);
   static const Color _textColor = Color(0xFF172033);
   static const Color _mutedColor = Color(0xFF7B8498);
-  static const Color _backgroundColor = Color(0xFFF5F7FB);
+  static const Color _backgroundColor = Color(0xFFF1F4F9);
   static const Color _borderColor = Color(0xFFE7EBF2);
 
   Future<void> _iniciarSesion() async {

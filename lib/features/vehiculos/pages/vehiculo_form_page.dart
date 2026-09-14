@@ -72,7 +72,7 @@ class _VehiculoFormPageState extends State<VehiculoFormPage> {
     final catalogs = context.watch<VehicleCatalogProvider>();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FB),
+      backgroundColor: const Color(0xFFF1F4F9),
       appBar: AppBar(
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,

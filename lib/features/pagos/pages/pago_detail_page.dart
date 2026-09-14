@@ -33,7 +33,7 @@ class _PagoDetailPageState extends State<PagoDetailPage> {
     final provider = context.watch<PagoProvider>();
     final pago = provider.selected;
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FB),
+      backgroundColor: const Color(0xFFF1F4F9),
       appBar: AppBar(
         title: Text('Pago #${widget.pagoId}'),
         backgroundColor: Colors.white,

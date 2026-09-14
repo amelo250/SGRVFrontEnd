@@ -89,7 +89,7 @@ class _RentaFormPageState extends State<RentaFormPage> {
         .toList(growable: false);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FB),
+      backgroundColor: const Color(0xFFF1F4F9),
       appBar: AppBar(
         title: Text(_editing ? 'Editar renta' : 'Nueva renta'),
         backgroundColor: Colors.white,

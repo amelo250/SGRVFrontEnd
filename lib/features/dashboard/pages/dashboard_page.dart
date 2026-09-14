@@ -91,7 +91,7 @@ class _DashboardPageState extends State<DashboardPage> {
     final p = context.watch<DashboardTaskProvider>();
     final s = p.summary;
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FB),
+      backgroundColor: const Color(0xFFF1F4F9),
       drawer: Drawer(child: _menu(s)),
       appBar: AppBar(
         title: Text(

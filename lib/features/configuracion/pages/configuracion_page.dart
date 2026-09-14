@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sgrv_frontend/shared/widgets/app_module_ui.dart';
+import 'package:sgrv_frontend/shared/theme/theme_provider.dart';
 import '../models/configuracion_catalogo.dart';
 import '../providers/configuracion_provider.dart';
 import '../widgets/configuracion_catalogo_form.dart';
@@ -35,28 +36,57 @@ class _ConfiguracionPageState extends State<ConfiguracionPage> {
               icon: const Icon(Icons.add_rounded),
               label: const Text('Nuevo registro'),
             ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          if (provider.definitions.isEmpty && provider.loading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          return constraints.maxWidth >= 820
-              ? Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(width: 260, child: _catalogs(provider)),
-                    const SizedBox(width: 18),
-                    Expanded(child: _content(provider)),
-                  ],
-                )
-              : Column(
-                  children: [
-                    _catalogSelector(provider),
-                    const SizedBox(height: 14),
-                    Expanded(child: _content(provider)),
-                  ],
-                );
-        },
+      body: Column(
+        children: [
+          _appearanceSettings(),
+          const SizedBox(height: 18),
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                if (provider.definitions.isEmpty && provider.loading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                return constraints.maxWidth >= 820
+                    ? Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(width: 260, child: _catalogs(provider)),
+                          const SizedBox(width: 18),
+                          Expanded(child: _content(provider)),
+                        ],
+                      )
+                    : Column(
+                        children: [
+                          _catalogSelector(provider),
+                          const SizedBox(height: 14),
+                          Expanded(child: _content(provider)),
+                        ],
+                      );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _appearanceSettings() {
+    final themeProvider = context.watch<ThemeProvider>();
+    return Card(
+      child: SwitchListTile.adaptive(
+        value: themeProvider.isDarkMode,
+        onChanged: themeProvider.setDarkMode,
+        secondary: Icon(
+          themeProvider.isDarkMode
+              ? Icons.dark_mode_rounded
+              : Icons.light_mode_rounded,
+          color: Theme.of(context).colorScheme.primary,
+        ),
+        title: const Text(
+          'Modo oscuro',
+          style: TextStyle(fontWeight: FontWeight.w800),
+        ),
+        subtitle: const Text('Reduce el brillo y usa una paleta oscura.'),
       ),
     );
   }
@@ -77,7 +107,9 @@ class _ConfiguracionPageState extends State<ConfiguracionPage> {
           ...provider.definitions.map(
             (definition) => ListTile(
               selected: provider.selected?.key == definition.key,
-              selectedTileColor: const Color(0xFF3867F4).withValues(alpha: .09),
+              selectedTileColor: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: .12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -123,7 +155,10 @@ class _ConfiguracionPageState extends State<ConfiguracionPage> {
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                Icon(_icon(definition.key), color: const Color(0xFF3867F4)),
+                Icon(
+                  _icon(definition.key),
+                  color: Theme.of(context).colorScheme.primary,
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(

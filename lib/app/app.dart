@@ -10,6 +10,7 @@ import 'package:sgrv_frontend/features/rentas/providers/renta_provider.dart';
 import 'package:sgrv_frontend/features/vehiculos/providers/vehiculo_provider.dart';
 import 'package:sgrv_frontend/features/vehiculos/providers/vehicle_catalog_provider.dart';
 import 'package:sgrv_frontend/shared/colors/app_theme.dart';
+import 'package:sgrv_frontend/shared/theme/theme_provider.dart';
 import 'package:sgrv_frontend/features/clientes/providers/cliente_provider.dart';
 import 'package:sgrv_frontend/features/pagos/providers/pago_form_provider.dart';
 import 'package:sgrv_frontend/features/pagos/providers/pago_provider.dart';
@@ -28,6 +29,7 @@ class SgrvApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider()..initialize()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => EmpresaProvider()),
         ChangeNotifierProvider(create: (_) => ProveedorVehiculoProvider()),
@@ -47,11 +49,15 @@ class SgrvApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AdministracionProvider()),
         ChangeNotifierProvider(create: (_) => ContabilidadProvider()),
       ],
-      child: MaterialApp(
-        title: 'SGRV',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.light,
-        home: const AuthGate(),
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, _) => MaterialApp(
+          title: 'SGRV',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.light,
+          darkTheme: AppTheme.dark,
+          themeMode: themeProvider.themeMode,
+          home: const AuthGate(),
+        ),
       ),
     );
   }

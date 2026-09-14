@@ -39,7 +39,7 @@ class _RentaDetailPageState extends State<RentaDetailPage> {
     final provider = context.watch<RentaProvider>();
     final rental = provider.selected;
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FB),
+      backgroundColor: const Color(0xFFF1F4F9),
       appBar: AppBar(
         title: Text('Renta #${widget.rentaId}'),
         backgroundColor: Colors.white,

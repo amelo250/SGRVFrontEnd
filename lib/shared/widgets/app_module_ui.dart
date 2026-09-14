@@ -98,12 +98,16 @@ class AppPageHeader extends StatelessWidget {
               title,
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.w900,
-                color: AppColors.text,
               ),
             ),
             if (subtitle?.isNotEmpty == true) ...[
               const SizedBox(height: 4),
-              Text(subtitle!, style: const TextStyle(color: AppColors.muted)),
+              Text(
+                subtitle!,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
             ],
           ],
         ),
@@ -140,7 +144,7 @@ class AppSearchPanel extends StatelessWidget {
               decoration: InputDecoration(
                 hintText: hint,
                 prefixIcon: const Icon(Icons.search_rounded),
-                fillColor: AppColors.background,
+                fillColor: Theme.of(context).colorScheme.surfaceContainerLow,
               ),
             ),
           ),
@@ -195,7 +199,9 @@ class AppStateView extends StatelessWidget {
               Text(
                 message!,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: AppColors.muted),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
             if (onRetry != null) ...[
@@ -301,7 +307,9 @@ class AppSectionCard extends StatelessWidget {
                     if (subtitle?.isNotEmpty == true)
                       Text(
                         subtitle!,
-                        style: const TextStyle(color: AppColors.muted),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
                   ],
                 ),
