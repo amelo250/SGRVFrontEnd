@@ -106,18 +106,18 @@ abstract final class AppTheme {
     final scheme = ColorScheme.fromSeed(
       seedColor: AppColors.primary,
       brightness: Brightness.dark,
-      surface: const Color(0xFF151B27),
+      surface: const Color(0xFF29292C),
     );
-    const border = Color(0xFF343D4F);
+    const border = Color(0xFF3A3A3E);
 
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
-      scaffoldBackgroundColor: const Color(0xFF0D111B),
+      scaffoldBackgroundColor: const Color(0xFF18181A),
       fontFamily: 'Arial',
       visualDensity: VisualDensity.standard,
       appBarTheme: const AppBarTheme(
-        backgroundColor: Color(0xFF151B27),
+        backgroundColor: Color(0xFF202023),
         foregroundColor: Color(0xFFF1F4FA),
         surfaceTintColor: Colors.transparent,
         elevation: 0,
@@ -129,7 +129,7 @@ abstract final class AppTheme {
         ),
       ),
       cardTheme: CardThemeData(
-        color: const Color(0xFF151B27),
+        color: const Color(0xFF29292C),
         surfaceTintColor: Colors.transparent,
         shadowColor: Colors.black.withValues(alpha: .35),
         elevation: 2,
@@ -165,7 +165,7 @@ abstract final class AppTheme {
         extendedTextStyle: TextStyle(fontWeight: FontWeight.w800),
       ),
       chipTheme: ChipThemeData(
-        backgroundColor: const Color(0xFF1D2533),
+        backgroundColor: const Color(0xFF323236),
         selectedColor: AppColors.primary.withValues(alpha: .28),
         side: const BorderSide(color: border),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -178,7 +178,7 @@ abstract final class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: const Color(0xFF1D2533),
+        fillColor: const Color(0xFF232326),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 18,
           vertical: 18,

@@ -56,7 +56,6 @@ class _RentaRecepcionPageState extends State<RentaRecepcionPage> {
     final provider = context.watch<RentaProvider>();
     final data = provider.entrega;
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F4F9),
       appBar: AppBar(title: const Text('Recepción del vehículo')),
       body: provider.loadingEntrega
           ? const Center(child: CircularProgressIndicator())

@@ -91,7 +91,6 @@ class _DashboardPageState extends State<DashboardPage> {
     final p = context.watch<DashboardTaskProvider>();
     final s = p.summary;
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F4F9),
       drawer: Drawer(child: _menu(s)),
       appBar: AppBar(
         title: Text(
@@ -314,14 +313,16 @@ class _DashboardPageState extends State<DashboardPage> {
         children: [
           AppLogo(
             compact: true,
-            color: const Color(0xFF172033),
+            color: Theme.of(context).colorScheme.onSurface,
             imageUrl: e.logoUrl,
             title: e.nombreComercial.isEmpty ? e.nombre : e.nombreComercial,
           ),
           const Spacer(),
           Text(
             'Empresa #${e.idEmpresa}',
-            style: const TextStyle(color: Color(0xFF7B8498)),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
         ],
       ),
@@ -339,7 +340,12 @@ class _DashboardPageState extends State<DashboardPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(label, style: const TextStyle(color: Color(0xFF7B8498))),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
                 Text(
                   value,
                   maxLines: 1,

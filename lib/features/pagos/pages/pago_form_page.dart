@@ -78,10 +78,8 @@ class _PagoFormPageState extends State<PagoFormPage> {
     );
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F4F9),
       appBar: AppBar(
         title: const Text('Registrar pago'),
-        backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
       ),
       body: form.loading

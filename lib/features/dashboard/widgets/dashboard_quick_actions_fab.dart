@@ -60,7 +60,9 @@ class _DashboardQuickActionsFabState extends State<DashboardQuickActionsFab> {
                             padding: const EdgeInsets.only(top: 8),
                             child: FloatingActionButton.extended(
                               heroTag: 'quick-${action.title}',
-                              backgroundColor: Colors.white,
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.surfaceContainerHigh,
                               foregroundColor: action.color,
                               elevation: 4,
                               onPressed: () {
@@ -70,8 +72,10 @@ class _DashboardQuickActionsFabState extends State<DashboardQuickActionsFab> {
                               icon: Icon(action.icon),
                               label: Text(
                                 action.title,
-                                style: const TextStyle(
-                                  color: Color(0xFF172033),
+                                style: TextStyle(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
                                   fontWeight: FontWeight.w800,
                                 ),
                               ),

@@ -45,7 +45,9 @@ class VehiculoFeatureBlocked extends StatelessWidget {
               Text(
                 message,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Color(0xFF7B8498)),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
               if (examples.isNotEmpty) ...[
                 const SizedBox(height: 20),

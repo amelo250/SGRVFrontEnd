@@ -89,10 +89,8 @@ class _RentaFormPageState extends State<RentaFormPage> {
         .toList(growable: false);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F4F9),
       appBar: AppBar(
         title: Text(_editing ? 'Editar renta' : 'Nueva renta'),
-        backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
       ),
       body: Form(
@@ -311,16 +309,16 @@ class _RentaFormPageState extends State<RentaFormPage> {
   }) => Container(
     padding: const EdgeInsets.all(22),
     decoration: BoxDecoration(
-      color: Colors.white,
+      color: Theme.of(context).colorScheme.surface,
       borderRadius: BorderRadius.circular(20),
-      border: Border.all(color: const Color(0xFFE4E8F0)),
+      border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Icon(icon, color: const Color(0xFF3867F4)),
+            Icon(icon, color: Theme.of(context).colorScheme.primary),
             const SizedBox(width: 10),
             Text(
               title,
@@ -386,9 +384,13 @@ class _RentaFormPageState extends State<RentaFormPage> {
     width: double.infinity,
     padding: const EdgeInsets.all(14),
     decoration: BoxDecoration(
-      color: const Color(0xFFF1F5FF),
+      color: Theme.of(
+        context,
+      ).colorScheme.primaryContainer.withValues(alpha: .32),
       borderRadius: BorderRadius.circular(14),
-      border: Border.all(color: const Color(0xFFD9E2FF)),
+      border: Border.all(
+        color: Theme.of(context).colorScheme.primary.withValues(alpha: .28),
+      ),
     ),
     child: Text(
       MoneyFormatter.isLocal(vehicle.monedaCodigo)
@@ -406,10 +408,12 @@ class _RentaFormPageState extends State<RentaFormPage> {
     labelText: label,
     prefixIcon: Icon(icon),
     filled: true,
-    fillColor: const Color(0xFFF8FAFD),
+    fillColor: Theme.of(context).colorScheme.surfaceContainerLow,
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
-      borderSide: const BorderSide(color: Color(0xFFE1E6EF)),
+      borderSide: BorderSide(
+        color: Theme.of(context).colorScheme.outlineVariant,
+      ),
     ),
   );
 

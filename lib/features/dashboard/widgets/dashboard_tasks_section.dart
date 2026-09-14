@@ -31,11 +31,11 @@ class DashboardTasksSection extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      const Text(
                         'Tareas operativas',
                         style: TextStyle(
                           fontSize: 17,
@@ -44,7 +44,9 @@ class DashboardTasksSection extends StatelessWidget {
                       ),
                       Text(
                         'Entregas, recepciones y mantenimientos más cercanos.',
-                        style: TextStyle(color: Color(0xFF7B8498)),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ),
@@ -192,7 +194,9 @@ class _TaskTile extends StatelessWidget {
                   task.vehiculo,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: Color(0xFF7B8498)),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -226,7 +230,11 @@ class _StateMessage extends StatelessWidget {
       padding: const EdgeInsets.all(24),
       child: Column(
         children: [
-          Icon(icon, size: 38, color: const Color(0xFF7B8498)),
+          Icon(
+            icon,
+            size: 38,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
           const SizedBox(height: 9),
           Text(message, textAlign: TextAlign.center),
           if (onRetry != null)

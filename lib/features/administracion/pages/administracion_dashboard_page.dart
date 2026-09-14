@@ -31,7 +31,6 @@ class _AdministracionDashboardPageState
     final provider = context.watch<AdministracionProvider>();
     final data = provider.resumen;
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F4F9),
       appBar: AppBar(
         title: const Text('Administración SGRV'),
         actions: [

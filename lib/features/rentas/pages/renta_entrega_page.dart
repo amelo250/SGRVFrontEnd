@@ -51,10 +51,8 @@ class _RentaEntregaPageState extends State<RentaEntregaPage> {
     final provider = context.watch<RentaProvider>();
     final data = provider.entrega;
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F4F9),
       appBar: AppBar(
         title: const Text('Entrega del vehículo'),
-        backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
         actions: [
           IconButton(
@@ -361,7 +359,12 @@ class _RentaEntregaPageState extends State<RentaEntregaPage> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(color: Color(0xFF7B8498))),
+        Text(
+          label,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
         const SizedBox(height: 4),
         Text(
           value.trim().isEmpty ? 'No registrado' : value,
