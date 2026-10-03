@@ -423,6 +423,7 @@ class _VehiculoFormPageState extends State<VehiculoFormPage> {
         const SizedBox(width: 12),
         FilledButton.icon(
           style: FilledButton.styleFrom(
+            foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 17),
             backgroundColor: const Color(0xFF3867F4),
           ),

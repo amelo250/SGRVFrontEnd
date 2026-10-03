@@ -124,19 +124,30 @@ class _ConfiguracionPageState extends State<ConfiguracionPage> {
   );
 
   Widget _catalogSelector(ConfiguracionProvider provider) =>
-      DropdownButtonFormField<ConfiguracionCatalogoDefinition>(
-        initialValue: provider.selected,
+      DropdownButtonFormField<String>(
+        key: ValueKey(provider.selected?.key),
+        initialValue:
+            provider.definitions.any(
+              (item) => item.key == provider.selected?.key,
+            )
+            ? provider.selected?.key
+            : null,
+        isExpanded: true,
         decoration: const InputDecoration(
           labelText: 'Catálogo',
           prefixIcon: Icon(Icons.tune_rounded),
         ),
         items: provider.definitions
             .map(
-              (item) => DropdownMenuItem(value: item, child: Text(item.nombre)),
+              (item) =>
+                  DropdownMenuItem(value: item.key, child: Text(item.nombre)),
             )
             .toList(),
         onChanged: (value) {
-          if (value != null) provider.select(value);
+          final definition = provider.definitions
+              .where((item) => item.key == value)
+              .firstOrNull;
+          if (definition != null) provider.select(definition);
         },
       );
 
@@ -153,42 +164,53 @@ class _ConfiguracionPageState extends State<ConfiguracionPage> {
         Card(
           child: Padding(
             padding: const EdgeInsets.all(16),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Icon(
-                  _icon(definition.key),
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        definition.nombre,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w900,
-                        ),
+                Row(
+                  children: [
+                    Icon(
+                      _icon(definition.key),
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            definition.nombre,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          Text(
+                            definition.esGlobal
+                                ? 'Catálogo global · Solo SUPADMIN puede modificarlo.'
+                                : 'Catálogo privado de la empresa y opciones globales.',
+                          ),
+                        ],
                       ),
-                      Text(
-                        definition.esGlobal
-                            ? 'Catálogo global · Solo SUPADMIN puede modificarlo.'
-                            : 'Catálogo privado de la empresa y opciones globales.',
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                FilterChip(
-                  selected: provider.incluirInactivos,
-                  label: const Text('Inactivos'),
-                  avatar: const Icon(Icons.visibility_outlined, size: 18),
-                  onSelected: provider.setIncludeInactive,
-                ),
-                IconButton(
-                  tooltip: 'Actualizar',
-                  onPressed: provider.refresh,
-                  icon: const Icon(Icons.refresh_rounded),
+                const SizedBox(height: 8),
+                Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    FilterChip(
+                      selected: provider.incluirInactivos,
+                      label: const Text('Inactivos'),
+                      avatar: const Icon(Icons.visibility_outlined, size: 18),
+                      onSelected: provider.setIncludeInactive,
+                    ),
+                    IconButton(
+                      tooltip: 'Actualizar',
+                      onPressed: provider.refresh,
+                      icon: const Icon(Icons.refresh_rounded),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -205,18 +227,22 @@ class _ConfiguracionPageState extends State<ConfiguracionPage> {
       return const Center(child: CircularProgressIndicator());
     }
     if (provider.error != null) {
-      return AppStateView(
-        icon: Icons.cloud_off_rounded,
-        title: 'No se pudo cargar la configuración',
-        message: provider.error,
-        onRetry: provider.refresh,
+      return SingleChildScrollView(
+        child: AppStateView(
+          icon: Icons.cloud_off_rounded,
+          title: 'No se pudo cargar la configuración',
+          message: provider.error,
+          onRetry: provider.refresh,
+        ),
       );
     }
     if (provider.items.isEmpty) {
-      return const AppStateView(
-        icon: Icons.inventory_2_outlined,
-        title: 'No hay registros',
-        message: 'Crea el primer registro de este catálogo.',
+      return const SingleChildScrollView(
+        child: AppStateView(
+          icon: Icons.inventory_2_outlined,
+          title: 'No hay registros',
+          message: 'Crea el primer registro de este catálogo.',
+        ),
       );
     }
     return RefreshIndicator(

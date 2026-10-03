@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
@@ -13,11 +14,25 @@ class AuthService {
   }) async {
     final uri = Uri.parse(ApiConfig.login);
 
-    final response = await http.post(
-      uri,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'email': correo, 'password': contrasena}),
-    );
+    final http.Response response;
+    try {
+      response = await http
+          .post(
+            uri,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'email': correo, 'password': contrasena}),
+          )
+          .timeout(ApiConfig.timeout);
+    } on http.ClientException {
+      throw Exception(
+        'No se pudo conectar con el servidor. '
+        'Verifique su conexión y la dirección del servicio configurada.',
+      );
+    } on TimeoutException {
+      throw Exception(
+        'El servidor tardó demasiado en responder. Intente nuevamente.',
+      );
+    }
 
     if (response.statusCode == 200) {
       final Map<String, dynamic> json =

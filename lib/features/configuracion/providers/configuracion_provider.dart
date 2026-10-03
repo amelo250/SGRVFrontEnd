@@ -21,7 +21,11 @@ class ConfiguracionProvider extends ChangeNotifier {
     notifyListeners();
     try {
       definitions = await _service.getDefinitions();
-      selected ??= definitions.isEmpty ? null : definitions.first;
+      final previousKey = selected?.key;
+      selected =
+          definitions.where((item) => item.key == previousKey).firstOrNull ??
+          definitions.firstOrNull;
+      items = const [];
       if (selected != null) {
         items = await _service.getItems(
           selected!,

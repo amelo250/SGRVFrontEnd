@@ -381,24 +381,30 @@ class _PanelFormulario extends StatelessWidget {
                       },
                     ),
                     const SizedBox(height: 10),
-                    Row(
+                    Wrap(
+                      alignment: WrapAlignment.spaceBetween,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        Checkbox(
-                          value: recordarme,
-                          onChanged: onRecordarmeChanged,
-                          activeColor: _LoginPageState._primaryColor,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(4),
-                          ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Checkbox(
+                              value: recordarme,
+                              onChanged: onRecordarmeChanged,
+                              activeColor: _LoginPageState._primaryColor,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                            ),
+                            const Text(
+                              'Recordarme',
+                              style: TextStyle(
+                                color: _LoginPageState._textColor,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
                         ),
-                        const Text(
-                          'Recordarme',
-                          style: TextStyle(
-                            color: _LoginPageState._textColor,
-                            fontSize: 13,
-                          ),
-                        ),
-                        const Spacer(),
                         TextButton(
                           onPressed: authProvider.isLoading
                               ? null
@@ -433,9 +439,8 @@ class _PanelFormulario extends StatelessWidget {
                       child: FilledButton(
                         onPressed: authProvider.isLoading ? null : onLogin,
                         style: FilledButton.styleFrom(
+                          foregroundColor: Colors.white,
                           backgroundColor: _LoginPageState._primaryColor,
-                          disabledBackgroundColor: _LoginPageState._primaryColor
-                              .withValues(alpha: 0.55),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
                           ),
