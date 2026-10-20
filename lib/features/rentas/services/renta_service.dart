@@ -1,4 +1,6 @@
 import 'package:sgrv_frontend/core/config/api_config.dart';
+import 'package:sgrv_frontend/features/rentas/models/renta_recepcion_document.dart';
+import 'package:sgrv_frontend/features/rentas/dtos/politica_renta_dto.dart';
 import 'package:sgrv_frontend/core/network/api_client.dart';
 import 'package:sgrv_frontend/core/network/api_exception.dart';
 import 'package:sgrv_frontend/core/network/api_response.dart';
@@ -14,6 +16,27 @@ class RentaService {
   RentaService({ApiClient? apiClient}) : _apiClient = apiClient ?? ApiClient();
 
   final ApiClient _apiClient;
+
+  Future<String> crearEnlaceContrato(int id) async {
+    final response = await _apiClient.postJson('${ApiConfig.rentas}/$id/documento-entrega/enlace', {});
+    final data = response['data'] as Map<String, dynamic>?;
+    final url = data?['url']?.toString();
+    if (response['success'] != true || url == null) {
+      throw ApiException(message: response['message']?.toString() ?? 'No fue posible crear el enlace.');
+    }
+    return url;
+  }
+
+  Future<PoliticaRentaDto> getPolicy() async {
+    final response = ApiResponse<PoliticaRentaDto>.fromJson(
+      await _apiClient.getJson('${ApiConfig.rentas}/politica'),
+      (value) => PoliticaRentaDto.fromJson(value as Map<String, dynamic>),
+    );
+    if (!response.success || response.data == null) {
+      throw ApiException(message: response.message);
+    }
+    return response.data!;
+  }
 
   Future<RentaPageResult> getAll({
     RentaListScope scope = RentaListScope.active,
@@ -119,6 +142,28 @@ class RentaService {
 
   Future<List<int>> getEntregaDocumentBytes(int id) => _apiClient.getBytes(
     '${ApiConfig.rentas}/$id/documento-entrega/contenido',
+  );
+
+  Future<void> saveRecepcionDocument(int id, List<int> bytes, RentaRecepcionDocument document) async {
+    final json = await _apiClient.multipart(
+      '${ApiConfig.rentas}/$id/documento-recepcion',
+      bytes: bytes, fileName: 'recepcion-R-$id.pdf', contentType: 'application/pdf',
+      fields: {
+        'nombreAgente': document.nombreAgente,
+        'nivelCombustibleEntrega': '${document.nivelCombustibleEntrega}',
+        'nivelCombustibleRecepcion': '${document.nivelCombustibleRecepcion}',
+        'fechaRecepcion': document.fechaRecepcion.toUtc().toIso8601String(),
+        'accesoriosRecibidos': document.accesoriosRecibidos.join(','),
+        if (document.observaciones != null) 'observaciones': document.observaciones!,
+      },
+    );
+    if (json['success'] != true) {
+      throw ApiException(message: _message(json['message']?.toString() ?? ''));
+    }
+  }
+
+  Future<List<int>> getRecepcionDocumentBytes(int id) => _apiClient.getBytes(
+    '${ApiConfig.rentas}/$id/documento-recepcion/contenido',
   );
 
   Future<Renta> create(RentaCreateDto dto) =>

@@ -9,7 +9,9 @@ import 'package:sgrv_frontend/features/reservaciones/widgets/reservacion_card.da
 import 'package:sgrv_frontend/shared/widgets/app_module_ui.dart';
 
 class ReservacionesPage extends StatefulWidget {
-  const ReservacionesPage({super.key});
+  const ReservacionesPage({this.soloHoy = false, super.key});
+
+  final bool soloHoy;
 
   @override
   State<ReservacionesPage> createState() => _ReservacionesPageState();
@@ -22,7 +24,7 @@ class _ReservacionesPageState extends State<ReservacionesPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback(
-      (_) => context.read<ReservacionProvider>().load(),
+      (_) => context.read<ReservacionProvider>().open(soloHoy: widget.soloHoy),
     );
   }
 
@@ -35,32 +37,46 @@ class _ReservacionesPageState extends State<ReservacionesPage> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<ReservacionProvider>();
-    return AppModuleScaffold(
-      title: 'Reservaciones',
-      subtitle: 'Organiza solicitudes, confirmaciones y disponibilidad futura.',
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: provider.isMutating ? null : () => _openForm(),
-        icon: const Icon(Icons.event_available_rounded),
-        label: const Text('Nueva reservación'),
-      ),
-      body: Column(
-        children: [
-          AppSearchPanel(
-            hint: 'Cliente, vehículo o estado',
-            onChanged: _search,
+    return DefaultTabController(
+      length: 2,
+      child: AppModuleScaffold(
+        title: 'Reservaciones',
+        subtitle: widget.soloHoy
+            ? 'Reservaciones que inician hoy.'
+            : 'Organiza solicitudes, confirmaciones y disponibilidad futura.',
+        actions: [
+          IconButton(
+            tooltip: 'Nueva reservación',
+            icon: const Icon(Icons.add),
+            onPressed: provider.isMutating ? null : () => _openForm(),
           ),
-          const SizedBox(height: 14),
-          if (provider.status == ReservacionStatus.success)
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                '${provider.totalCount} reservaciones encontradas',
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ),
-          const SizedBox(height: 10),
-          Expanded(child: _body(provider)),
         ],
+        body: Column(
+          children: [
+            TabBar(
+              onTap: (index) => provider.changeScope(index == 1),
+              tabs: const [
+                Tab(text: "Reservaciones activas"),
+                Tab(text: "Históricos"),
+              ],
+            ),
+            AppSearchPanel(
+              hint: 'Cliente, vehículo o estado',
+              onChanged: _search,
+            ),
+            const SizedBox(height: 14),
+            if (provider.status == ReservacionStatus.success)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  '${provider.totalCount} reservaciones encontradas',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ),
+            const SizedBox(height: 10),
+            Expanded(child: _body(provider)),
+          ],
+        ),
       ),
     );
   }

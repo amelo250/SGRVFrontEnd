@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:sgrv_frontend/core/session/session_state.dart';
 import 'package:sgrv_frontend/core/network/api_exception.dart';
 import 'package:sgrv_frontend/features/dashboard/models/dashboard_task.dart';
 import 'package:sgrv_frontend/features/dashboard/models/dashboard_summary.dart';
@@ -6,7 +6,7 @@ import 'package:sgrv_frontend/features/dashboard/services/dashboard_task_service
 
 enum DashboardTaskStatus { initial, loading, success, empty, error }
 
-class DashboardTaskProvider extends ChangeNotifier {
+class DashboardTaskProvider extends SessionNotifier {
   DashboardTaskProvider({DashboardTaskService? service})
     : _service = service ?? DashboardTaskService();
   final DashboardTaskService _service;

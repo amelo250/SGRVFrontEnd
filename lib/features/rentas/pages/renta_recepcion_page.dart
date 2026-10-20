@@ -1,4 +1,6 @@
 import 'dart:typed_data';
+import 'package:sgrv_frontend/features/rentas/services/renta_service.dart';
+import 'package:sgrv_frontend/core/network/api_exception.dart';
 
 import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
@@ -25,6 +27,8 @@ class _RentaRecepcionPageState extends State<RentaRecepcionPage> {
   final _agentSignature = GlobalKey<SignaturePadState>();
   final _accessories = <int>{};
   final _pdf = RentaRecepcionPdfService();
+  final _service = RentaService();
+  RentaRecepcionDocument? _generatedDocument;
   int _deliveryFuel = 100;
   int _receptionFuel = 100;
   bool _working = false;
@@ -46,6 +50,7 @@ class _RentaRecepcionPageState extends State<RentaRecepcionPage> {
 
   @override
   void dispose() {
+    _service.dispose();
     _agent.dispose();
     _notes.dispose();
     super.dispose();
@@ -75,6 +80,12 @@ class _RentaRecepcionPageState extends State<RentaRecepcionPage> {
                     child: Column(
                       children: [
                         _notice(),
+                        Text(
+                          'Lugar de entrega: ${data.lugarEntrega ?? 'Por confirmar'}',
+                        ),
+                        Text(
+                          'Lugar de recepción / devolución: ${data.lugarRecepcion ?? 'Por confirmar'}',
+                        ),
                         _section(
                           'Contraste de combustible',
                           Icons.local_gas_station_outlined,
@@ -97,7 +108,7 @@ class _RentaRecepcionPageState extends State<RentaRecepcionPage> {
                               Text(
                                 'Diferencia: ${_receptionFuel - _deliveryFuel}%',
                                 style: TextStyle(
-                                  fontWeight: FontWeight.w900,
+                                  fontWeight: FontWeight.w700,
                                   color: _receptionFuel < _deliveryFuel
                                       ? Colors.deepOrange
                                       : Colors.green,
@@ -173,6 +184,16 @@ class _RentaRecepcionPageState extends State<RentaRecepcionPage> {
                           child: Wrap(
                             spacing: 10,
                             children: [
+                              FilledButton.icon(
+                                onPressed: _working ? null : () => _save(data),
+                                icon: const Icon(Icons.save_outlined),
+                                label: const Text('Guardar recepción'),
+                              ),
+                              OutlinedButton.icon(
+                                onPressed: _working ? null : _openSaved,
+                                icon: const Icon(Icons.folder_open_outlined),
+                                label: const Text('Ver recepción guardada'),
+                              ),
                               OutlinedButton.icon(
                                 onPressed: _working ? null : () => _print(data),
                                 icon: const Icon(Icons.print_outlined),
@@ -200,7 +221,7 @@ class _RentaRecepcionPageState extends State<RentaRecepcionPage> {
       leading: Icon(Icons.info_outline),
       title: Text('Documento de recepción'),
       subtitle: Text(
-        'Como el documento de entrega aún no se almacena, indica su nivel de combustible para realizar el contraste. El PDF generado queda bajo control del usuario.',
+        'Revisa el nivel de entrega, confirma los accesorios y firma la recepción. Guarda el PDF en el servidor para conservarlo con la renta.',
       ),
     ),
   );
@@ -219,7 +240,7 @@ class _RentaRecepcionPageState extends State<RentaRecepcionPage> {
                 title,
                 style: Theme.of(
                   context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
               ),
             ],
           ),
@@ -261,19 +282,62 @@ class _RentaRecepcionPageState extends State<RentaRecepcionPage> {
         _message('Se requieren ambas firmas.');
         return null;
       }
-      return _pdf.generate(
-        data,
-        RentaRecepcionDocument(
-          nombreAgente: _agent.text.trim(),
-          nivelCombustibleEntrega: _deliveryFuel,
-          nivelCombustibleRecepcion: _receptionFuel,
-          accesoriosRecibidos: Set.unmodifiable(_accessories),
-          firmaCliente: client,
-          firmaAgente: agent,
-          fechaRecepcion: DateTime.now(),
-          observaciones: _notes.text.trim(),
-        ),
+      final document = RentaRecepcionDocument(
+        nombreAgente: _agent.text.trim(),
+        nivelCombustibleEntrega: _deliveryFuel,
+        nivelCombustibleRecepcion: _receptionFuel,
+        accesoriosRecibidos: Set.unmodifiable(_accessories),
+        firmaCliente: client,
+        firmaAgente: agent,
+        fechaRecepcion: DateTime.now(),
+        observaciones: _notes.text.trim(),
       );
+      _generatedDocument = document;
+      return _pdf.generate(data, document);
+    } finally {
+      if (mounted) setState(() => _working = false);
+    }
+  }
+
+  Future<void> _save(RentaEntrega data) async {
+    try {
+      final bytes = await _generate(data);
+      if (bytes == null || !mounted) return;
+      setState(() => _working = true);
+      await _service.saveRecepcionDocument(
+        widget.rentaId,
+        bytes,
+        _generatedDocument!,
+      );
+      if (mounted) _message('Recepción guardada correctamente.');
+    } on ApiException catch (error) {
+      if (mounted) _message(error.message);
+    } catch (_) {
+      if (mounted) _message('No fue posible guardar la recepción.');
+    } finally {
+      if (mounted) setState(() => _working = false);
+    }
+  }
+
+  Future<void> _openSaved() async {
+    setState(() => _working = true);
+    try {
+      final bytes = await _service.getRecepcionDocumentBytes(widget.rentaId);
+      if (mounted) {
+        await Printing.layoutPdf(
+          onLayout: (_) async => Uint8List.fromList(bytes),
+        );
+      }
+    } on ApiException catch (error) {
+      if (mounted) {
+        _message(
+          error.statusCode == 404
+              ? 'La renta aún no tiene recepción guardada.'
+              : error.message,
+        );
+      }
+    } catch (_) {
+      if (mounted) _message('No fue posible recuperar la recepción.');
     } finally {
       if (mounted) setState(() => _working = false);
     }

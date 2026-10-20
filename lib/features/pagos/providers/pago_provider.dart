@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:sgrv_frontend/core/session/session_state.dart';
 import 'package:sgrv_frontend/core/network/api_exception.dart';
 import 'package:sgrv_frontend/features/pagos/models/pago.dart';
 import 'package:sgrv_frontend/features/pagos/models/pago_dto.dart';
@@ -7,7 +7,7 @@ import 'package:sgrv_frontend/features/pagos/services/pago_service.dart';
 
 enum PagoStatus { initial, loading, success, empty, error }
 
-class PagoProvider extends ChangeNotifier {
+class PagoProvider extends SessionNotifier {
   PagoProvider({PagoService? service}) : _service = service ?? PagoService();
 
   final PagoService _service;

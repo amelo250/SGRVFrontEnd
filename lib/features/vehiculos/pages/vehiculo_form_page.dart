@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sgrv_frontend/shared/widgets/app_module_ui.dart';
 import 'package:provider/provider.dart';
 import 'package:sgrv_frontend/features/vehiculos/models/vehiculo.dart';
 import 'package:sgrv_frontend/features/vehiculos/models/vehiculo_dto.dart';
@@ -263,137 +264,27 @@ class _VehiculoFormPageState extends State<VehiculoFormPage> {
     );
   }
 
-  Widget _formHeader() {
-    final editing = widget.vehiculo != null;
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF3867F4), Color(0xFF7057F5)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x333867F4),
-            blurRadius: 24,
-            offset: Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 58,
-            height: 58,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.16),
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: const Icon(
-              Icons.directions_car_filled_rounded,
-              color: Colors.white,
-              size: 32,
-            ),
-          ),
-          const SizedBox(width: 18),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  editing ? 'Actualizar vehículo' : 'Registrar vehículo',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 23,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  editing
-                      ? 'Modifica los datos operativos y comerciales.'
-                      : 'Completa la información para agregarlo a tu flota.',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.82),
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget _formHeader() => AppPageHeader(
+    title: widget.vehiculo != null
+        ? 'Actualizar vehículo'
+        : 'Registrar vehículo',
+    subtitle: widget.vehiculo != null
+        ? 'Modifica los datos operativos y comerciales.'
+        : 'Completa la información para agregarlo a tu flota.',
+    icon: Icons.directions_car_outlined,
+  );
 
   Widget _sectionCard({
     required IconData icon,
     required String title,
     required String subtitle,
     required Widget child,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE7EBF2)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0D101828),
-            blurRadius: 20,
-            offset: Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE9EEFF),
-                  borderRadius: BorderRadius.circular(13),
-                ),
-                child: Icon(icon, color: const Color(0xFF3867F4)),
-              ),
-              const SizedBox(width: 13),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF172033),
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      subtitle,
-                      style: const TextStyle(
-                        color: Color(0xFF7B8498),
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 22),
-          child,
-        ],
-      ),
-    );
-  }
+  }) => AppSectionCard(
+    title: title,
+    subtitle: subtitle,
+    icon: icon,
+    child: child,
+  );
 
   Widget _propertyDropdown() {
     return DropdownButtonFormField<TipoPropiedadVehiculo>(
@@ -531,27 +422,11 @@ class _VehiculoFormPageState extends State<VehiculoFormPage> {
     String label,
     IconData? icon, {
     String? suffixText,
-  }) {
-    return InputDecoration(
-      labelText: label,
-      prefixIcon: icon == null ? null : Icon(icon, size: 21),
-      suffixText: suffixText,
-      filled: true,
-      fillColor: const Color(0xFFF8FAFD),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: Color(0xFFE1E6EF)),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: Color(0xFFE1E6EF)),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: Color(0xFF3867F4), width: 1.6),
-      ),
-    );
-  }
+  }) => InputDecoration(
+    labelText: label,
+    prefixIcon: icon == null ? null : Icon(icon, size: 21),
+    suffixText: suffixText,
+  );
 
   Widget _catalogError(VehicleCatalogProvider catalogs) {
     return Center(

@@ -8,6 +8,7 @@ class Renta {
     required this.idEstado,
     required this.estadoCodigo,
     required this.estadoNombre,
+    this.periodoSinHora = false,
     required this.fechaInicio,
     required this.fechaFin,
     required this.precioPorDia,
@@ -30,6 +31,8 @@ class Renta {
     this.idProveedorVehiculo,
     this.idAcuerdoVehiculo,
     this.observaciones,
+    this.lugarEntrega,
+    this.lugarRecepcion,
     this.fechaActualizacion,
   });
 
@@ -42,6 +45,7 @@ class Renta {
   final int idEstado;
   final String estadoCodigo;
   final String estadoNombre;
+  final bool periodoSinHora;
   final DateTime fechaInicio;
   final DateTime fechaFin;
   final DateTime? fechaEntregaReal;
@@ -60,6 +64,8 @@ class Renta {
   final int? idProveedorVehiculo;
   final int? idAcuerdoVehiculo;
   final String? observaciones;
+  final String? lugarEntrega;
+  final String? lugarRecepcion;
   final DateTime fechaCreacion;
   final DateTime? fechaActualizacion;
   final int idUsuarioCreacion;
@@ -82,6 +88,7 @@ class Renta {
     idEstado: _int(json['idEstado']),
     estadoCodigo: json['estadoCodigo']?.toString() ?? '',
     estadoNombre: json['estadoNombre']?.toString() ?? '',
+    periodoSinHora: json['periodoSinHora'] == true,
     fechaInicio: _date(json['fechaInicio']),
     fechaFin: _date(json['fechaFin']),
     fechaEntregaReal: _nullableDate(json['fechaEntregaReal']),
@@ -99,6 +106,8 @@ class Renta {
     totalMonedaLocal: _double(json['totalMonedaLocal']),
     idProveedorVehiculo: _nullableInt(json['idProveedorVehiculo']),
     idAcuerdoVehiculo: _nullableInt(json['idAcuerdoVehiculo']),
+    lugarEntrega: json['lugarEntrega']?.toString(),
+    lugarRecepcion: json['lugarRecepcion']?.toString(),
     observaciones: _nullableString(json['observaciones']),
     fechaCreacion: _date(json['fechaCreacion']),
     fechaActualizacion: _nullableDate(json['fechaActualizacion']),

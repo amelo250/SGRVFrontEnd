@@ -1,10 +1,10 @@
-import 'package:flutter/foundation.dart';
+import 'package:sgrv_frontend/core/session/session_state.dart';
 import 'package:sgrv_frontend/core/network/api_exception.dart';
 import 'package:sgrv_frontend/core/storage/token_storage.dart';
 import '../models/documento_cliente.dart';
 import '../services/documento_cliente_service.dart';
 
-class DocumentoClienteProvider extends ChangeNotifier {
+class DocumentoClienteProvider extends SessionNotifier {
   DocumentoClienteProvider({DocumentoClienteService? service})
     : _service = service ?? DocumentoClienteService();
 

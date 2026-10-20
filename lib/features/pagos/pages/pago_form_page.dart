@@ -129,7 +129,7 @@ class _PagoFormPageState extends State<PagoFormPage> {
           ? null
           : SafeArea(
               child: Container(
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.surface,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
                   vertical: 14,
@@ -170,7 +170,7 @@ class _PagoFormPageState extends State<PagoFormPage> {
   }) => Card(
     elevation: 0,
     shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(22),
+      borderRadius: BorderRadius.circular(8),
       side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
     ),
     child: Padding(
@@ -182,7 +182,7 @@ class _PagoFormPageState extends State<PagoFormPage> {
             'Información del cobro',
             style: Theme.of(
               context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 20),
           DropdownButtonFormField<int>(
@@ -309,7 +309,7 @@ class _PagoFormPageState extends State<PagoFormPage> {
             'Equivalente local: RD\$ ${localAmount.toStringAsFixed(2)}',
             style: const TextStyle(
               color: Color(0xFF3867F4),
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 16),

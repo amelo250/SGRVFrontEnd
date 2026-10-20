@@ -204,7 +204,7 @@ class _Detail extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 5),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.w800)),
+        Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
       ],
     ),
   );

@@ -117,7 +117,7 @@ class _MetricCard extends StatelessWidget {
                     value,
                     style: const TextStyle(
                       fontSize: 17,
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ],
@@ -148,7 +148,7 @@ class _Detail extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 5),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.w800)),
+        Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
       ],
     ),
   );

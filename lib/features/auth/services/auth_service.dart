@@ -1,3 +1,4 @@
+import 'package:sgrv_frontend/core/session/session_state.dart';
 import 'dart:async';
 import 'dart:convert';
 
@@ -12,6 +13,7 @@ class AuthService {
     required String correo,
     required String contrasena,
   }) async {
+    final generation = SessionState.generation.value;
     final uri = Uri.parse(ApiConfig.login);
 
     final http.Response response;
@@ -54,7 +56,7 @@ class AuthService {
         );
       }
 
-      await TokenStorage.saveToken(loginResponse.token);
+      await TokenStorage.saveToken(loginResponse.token, expectedGeneration: generation);
 
       return;
     }

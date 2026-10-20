@@ -5,6 +5,8 @@ class ReservacionDto {
     required this.fechaInicio,
     required this.fechaFin,
     this.observacion,
+    this.lugarEntrega,
+    this.lugarRecepcion,
   });
 
   final int idVehiculo;
@@ -12,6 +14,8 @@ class ReservacionDto {
   final DateTime fechaInicio;
   final DateTime fechaFin;
   final String? observacion;
+  final String? lugarEntrega;
+  final String? lugarRecepcion;
 
   Map<String, dynamic> toJson() => {
     'idVehiculo': idVehiculo,
@@ -19,6 +23,8 @@ class ReservacionDto {
     'fechaInicio': fechaInicio.toUtc().toIso8601String(),
     'fechaFin': fechaFin.toUtc().toIso8601String(),
     'observacion': _nullable(observacion),
+    if (lugarEntrega != null) 'lugarEntrega': lugarEntrega!.trim(),
+    if (lugarRecepcion != null) 'lugarRecepcion': lugarRecepcion!.trim(),
   };
 
   static String? _nullable(String? value) {

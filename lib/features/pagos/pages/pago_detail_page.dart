@@ -59,20 +59,24 @@ class _PagoDetailPageState extends State<PagoDetailPage> {
                           Container(
                             padding: const EdgeInsets.all(24),
                             decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(22),
+                              color: Theme.of(context).colorScheme.surface,
+                              borderRadius: BorderRadius.circular(8),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
                                   children: [
-                                    const CircleAvatar(
+                                    CircleAvatar(
                                       radius: 27,
-                                      backgroundColor: Color(0xFFEAF0FF),
+                                      backgroundColor: Theme.of(
+                                        context,
+                                      ).colorScheme.primaryContainer,
                                       child: Icon(
                                         Icons.payments_rounded,
-                                        color: Color(0xFF3867F4),
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onPrimaryContainer,
                                       ),
                                     ),
                                     const SizedBox(width: 14),
@@ -87,7 +91,7 @@ class _PagoDetailPageState extends State<PagoDetailPage> {
                                                 .textTheme
                                                 .titleLarge
                                                 ?.copyWith(
-                                                  fontWeight: FontWeight.w900,
+                                                  fontWeight: FontWeight.w700,
                                                 ),
                                           ),
                                           Text(

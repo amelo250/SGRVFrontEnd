@@ -93,8 +93,8 @@ class VehiculoCard extends StatelessWidget {
                           ),
                         ),
                       ],
-                      icon: const CircleAvatar(
-                        backgroundColor: Color(0xCCFFFFFF),
+                      icon: CircleAvatar(
+                        backgroundColor: colors.surface,
                         child: Icon(Icons.more_vert_rounded),
                       ),
                     ),
@@ -112,7 +112,7 @@ class VehiculoCard extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -127,10 +127,12 @@ class VehiculoCard extends StatelessWidget {
                     runSpacing: 7,
                     children: [
                       _feature(
+                        context,
                         Icons.category_outlined,
                         vehiculo.tipoNombre ?? 'Tipo no indicado',
                       ),
                       _feature(
+                        context,
                         Icons.local_gas_station_outlined,
                         vehiculo.combustibleNombre ?? 'Combustible no indicado',
                       ),
@@ -149,7 +151,7 @@ class VehiculoCard extends StatelessWidget {
                           style: TextStyle(
                             color: colors.primary,
                             fontSize: 18,
-                            fontWeight: FontWeight.w900,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ),
@@ -200,15 +202,20 @@ class VehiculoCard extends StatelessWidget {
     );
   }
 
-  Widget _feature(IconData icon, String label) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
-    decoration: BoxDecoration(
-      color: const Color(0xFFF0F3FA),
-      borderRadius: BorderRadius.circular(10),
-    ),
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [Icon(icon, size: 16), const SizedBox(width: 5), Text(label)],
-    ),
-  );
+  Widget _feature(BuildContext context, IconData icon, String label) =>
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16),
+            const SizedBox(width: 5),
+            Text(label),
+          ],
+        ),
+      );
 }

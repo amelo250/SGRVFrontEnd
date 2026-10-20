@@ -52,7 +52,7 @@ class DocumentoClienteCard extends StatelessWidget {
                       documento.tipoDocumentoNombre,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontWeight: FontWeight.w800),
+                      style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
                     Text(
                       _formatDate(documento.fechaSubida),

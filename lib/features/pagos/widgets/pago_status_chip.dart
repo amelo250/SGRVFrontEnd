@@ -14,7 +14,10 @@ class PagoStatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = active ? const Color(0xFF168A5B) : const Color(0xFFC44747);
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final color = active
+        ? (dark ? const Color(0xFF83DBB0) : const Color(0xFF126F4B))
+        : (dark ? const Color(0xFFFFB4AB) : const Color(0xFFAF3030));
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
       decoration: BoxDecoration(
@@ -25,7 +28,7 @@ class PagoStatusChip extends StatelessWidget {
         active ? (label.isEmpty ? code : label) : 'Anulado',
         style: TextStyle(
           color: color,
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w600,
           fontSize: 12,
         ),
       ),

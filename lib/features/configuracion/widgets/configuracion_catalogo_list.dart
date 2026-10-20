@@ -41,7 +41,7 @@ class ConfiguracionCatalogoList extends StatelessWidget {
               Flexible(
                 child: Text(
                   item.nombre,
-                  style: const TextStyle(fontWeight: FontWeight.w800),
+                  style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
               ),
               if (item.esGlobal) ...[

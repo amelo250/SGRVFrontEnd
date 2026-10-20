@@ -1,9 +1,9 @@
-import 'package:flutter/foundation.dart';
+import 'package:sgrv_frontend/core/session/session_state.dart';
 import 'package:sgrv_frontend/core/network/api_exception.dart';
 import 'package:sgrv_frontend/features/vehiculos/models/vehicle_catalog_option.dart';
 import 'package:sgrv_frontend/features/vehiculos/services/vehicle_catalog_service.dart';
 
-class VehicleCatalogProvider extends ChangeNotifier {
+class VehicleCatalogProvider extends SessionNotifier {
   VehicleCatalogProvider({VehicleCatalogService? service})
     : _service = service ?? VehicleCatalogService();
 

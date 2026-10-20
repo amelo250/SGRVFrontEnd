@@ -41,42 +41,37 @@ class _VehiculosPageState extends State<VehiculosPage> {
       ),
       body: Column(
         children: [
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.directions_car_rounded,
-                    color: Color(0xFF3867F4),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      '${provider.vehiculos.length} vehículos visibles',
-                      style: const TextStyle(fontWeight: FontWeight.w800),
-                    ),
-                  ),
-                  FilterChip(
-                    avatar: const Icon(Icons.visibility_outlined, size: 18),
-                    label: const Text('Inactivos'),
-                    selected: provider.incluirInactivos,
-                    onSelected: provider.establecerIncluirInactivos,
-                  ),
-                ],
-              ),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              '${provider.vehiculos.length} vehículos visibles',
+              style: Theme.of(context).textTheme.bodySmall,
             ),
           ),
-          const SizedBox(height: 16),
-          VehiculoFilterPanel(
-            filter: provider.filter,
-            types: catalogs.types,
-            fuels: catalogs.fuels,
-            brands: provider.marcas,
-            onTypeChanged: provider.establecerTipo,
-            onFuelChanged: provider.establecerCombustible,
-            onBrandChanged: provider.establecerMarca,
-            onClear: provider.limpiarFiltros,
+          const SizedBox(height: 12),
+          AppFilterPanel(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                FilterChip(
+                  avatar: const Icon(Icons.visibility_outlined, size: 18),
+                  label: const Text('Inactivos'),
+                  selected: provider.incluirInactivos,
+                  onSelected: provider.establecerIncluirInactivos,
+                ),
+                const SizedBox(height: 12),
+                VehiculoFilterPanel(
+                  filter: provider.filter,
+                  types: catalogs.types,
+                  fuels: catalogs.fuels,
+                  brands: provider.marcas,
+                  onTypeChanged: provider.establecerTipo,
+                  onFuelChanged: provider.establecerCombustible,
+                  onBrandChanged: provider.establecerMarca,
+                  onClear: provider.limpiarFiltros,
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 16),
           Expanded(child: _body(provider)),

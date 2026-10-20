@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:sgrv_frontend/core/session/session_state.dart';
 import 'package:sgrv_frontend/core/network/api_exception.dart';
 import 'package:sgrv_frontend/features/reservaciones/models/reservacion.dart';
 import 'package:sgrv_frontend/features/reservaciones/models/reservacion_dto.dart';
@@ -7,7 +7,7 @@ import 'package:sgrv_frontend/features/reservaciones/services/reservacion_servic
 
 enum ReservacionStatus { initial, loading, success, empty, error }
 
-class ReservacionProvider extends ChangeNotifier {
+class ReservacionProvider extends SessionNotifier {
   ReservacionProvider({ReservacionService? service})
     : _service = service ?? ReservacionService();
 
@@ -17,6 +17,21 @@ class ReservacionProvider extends ChangeNotifier {
   String? _errorMessage;
   bool _isMutating = false;
   String _search = '';
+  bool _historicas = false;
+  bool _soloHoy = false;
+
+  Future<void> open({bool soloHoy = false}) async {
+    _soloHoy = soloHoy;
+    _search = "";
+    await changeScope(false);
+  }
+
+  Future<void> changeScope(bool historicas) async {
+    _historicas = historicas;
+    _pageNumber = 1;
+    await load();
+  }
+
   int _pageNumber = 1;
   int _pageSize = 20;
   int _totalCount = 0;
@@ -47,6 +62,8 @@ class ReservacionProvider extends ChangeNotifier {
         pageNumber: _pageNumber,
         pageSize: _pageSize,
         search: _search,
+        historicas: _historicas,
+        soloHoy: _soloHoy,
       );
       if (requestVersion != _requestVersion) return;
       _items = page.items;

@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:sgrv_frontend/core/session/session_state.dart';
 import 'package:sgrv_frontend/core/network/api_exception.dart';
 import 'package:sgrv_frontend/features/clientes/models/cliente.dart';
 import 'package:sgrv_frontend/features/clientes/models/cliente_dto.dart';
@@ -6,7 +6,7 @@ import 'package:sgrv_frontend/features/clientes/services/cliente_service.dart';
 
 enum ClienteStatus { initial, loading, success, empty, error }
 
-class ClienteProvider extends ChangeNotifier {
+class ClienteProvider extends SessionNotifier {
   ClienteProvider({ClienteService? service})
     : _service = service ?? ClienteService();
 

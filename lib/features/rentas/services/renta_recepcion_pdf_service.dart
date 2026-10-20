@@ -1,3 +1,4 @@
+import 'package:sgrv_frontend/core/utils/periodo_alquiler_fechas.dart';
 import 'dart:typed_data';
 
 import 'package:intl/intl.dart';
@@ -38,7 +39,18 @@ class RentaRecepcionPdfService {
             '${data.vehiculo.marca} ${data.vehiculo.modelo} ${data.vehiculo.anio} · ${data.vehiculo.placa}',
           ),
           _row('Kilometraje de referencia', '${data.vehiculo.kilometraje} km'),
-          _row('Retorno previsto', date.format(data.fechaFin)),
+          _row(
+            'Lugar de entrega acordado',
+            data.lugarEntrega ?? 'Por confirmar',
+          ),
+          _row(
+            'Lugar de recepción acordado',
+            data.lugarRecepcion ?? 'Por confirmar',
+          ),
+          _row(
+            'Retorno previsto',
+            PeriodoAlquilerFechas.formato(data.fechaFin, data.periodoSinHora),
+          ),
           _row('Recepción registrada', date.format(document.fechaRecepcion)),
           pw.SizedBox(height: 10),
           pw.Table(

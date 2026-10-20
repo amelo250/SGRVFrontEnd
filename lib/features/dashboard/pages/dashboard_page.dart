@@ -1,4 +1,7 @@
+import 'package:sgrv_frontend/core/utils/periodo_alquiler_fechas.dart';
 import 'package:flutter/material.dart';
+import 'package:sgrv_frontend/shared/theme/theme_provider.dart';
+import 'package:sgrv_frontend/features/auth/pages/password_page.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:sgrv_frontend/features/auth/pages/login_page.dart';
@@ -90,40 +93,132 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget build(BuildContext context) {
     final p = context.watch<DashboardTaskProvider>();
     final s = p.summary;
-    return Scaffold(
-      drawer: Drawer(child: _menu(s)),
-      appBar: AppBar(
-        title: Text(
-          s?.empresa.nombreComercial.isNotEmpty == true
-              ? s!.empresa.nombreComercial
-              : 'Dashboard',
-        ),
-        actions: [
-          IconButton(
-            onPressed: () => p.load(refresh: true),
-            icon: const Icon(Icons.refresh),
+    final desktop = MediaQuery.sizeOf(context).width >= 1100;
+    final theme = Theme.of(context);
+    return Row(
+      children: [
+        if (desktop)
+          SizedBox(
+            width: 236,
+            child: Material(
+              color: theme.scaffoldBackgroundColor,
+              shape: Border(
+                right: BorderSide(color: theme.colorScheme.outline),
+              ),
+              child: _menu(s, persistent: true),
+            ),
           ),
-          IconButton(onPressed: _logout, icon: const Icon(Icons.logout)),
-        ],
-      ),
-      floatingActionButton: DashboardQuickActionsFab(actions: _quickActions()),
-      body: p.status == DashboardTaskStatus.loading && s == null
-          ? const Center(child: CircularProgressIndicator())
-          : p.status == DashboardTaskStatus.error && s == null
-          ? Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(p.error ?? 'No fue posible cargar el dashboard.'),
-                  const SizedBox(height: 12),
-                  FilledButton(
-                    onPressed: p.load,
-                    child: const Text('Reintentar'),
+        Expanded(
+          child: Scaffold(
+            drawer: desktop ? null : Drawer(child: _menu(s)),
+            appBar: AppBar(
+              title: const Text(
+                'Dashboard',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              shape: Border(
+                bottom: BorderSide(color: theme.colorScheme.outline),
+              ),
+              actions: [
+                if (MediaQuery.sizeOf(context).width < 600)
+                  PopupMenuButton<String>(
+                    tooltip: 'Opciones',
+                    onSelected: (value) {
+                      if (value == 'theme') {
+                        final t = context.read<ThemeProvider>();
+                        t.setDarkMode(!t.isDarkMode);
+                      }
+                      if (value == 'refresh') p.load(refresh: true);
+                      if (value == 'logout') _logout();
+                      if (value == 'password')
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                const PasswordPage(mode: PasswordMode.change),
+                          ),
+                        );
+                    },
+                    itemBuilder: (_) => const [
+                      PopupMenuItem(
+                        value: 'theme',
+                        child: Text('Cambiar tema'),
+                      ),
+                      PopupMenuItem(
+                        value: 'password',
+                        child: Text('Cambiar mi contraseña'),
+                      ),
+                      PopupMenuItem(
+                        value: 'refresh',
+                        child: Text('Actualizar'),
+                      ),
+                      PopupMenuItem(
+                        value: 'logout',
+                        child: Text('Cerrar sesión'),
+                      ),
+                    ],
+                  )
+                else ...[
+                  IconButton(
+                    tooltip: context.watch<ThemeProvider>().isDarkMode
+                        ? 'Activar tema claro'
+                        : 'Activar tema oscuro',
+                    icon: Icon(
+                      context.watch<ThemeProvider>().isDarkMode
+                          ? Icons.light_mode_outlined
+                          : Icons.dark_mode_outlined,
+                    ),
+                    onPressed: () {
+                      final theme = context.read<ThemeProvider>();
+                      theme.setDarkMode(!theme.isDarkMode);
+                    },
+                  ),
+                  IconButton(
+                    tooltip: 'Cambiar mi contraseña',
+                    icon: const Icon(Icons.lock_outline),
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            const PasswordPage(mode: PasswordMode.change),
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => p.load(refresh: true),
+                    icon: const Icon(Icons.refresh),
+                  ),
+                  IconButton(
+                    onPressed: _logout,
+                    icon: const Icon(Icons.logout),
                   ),
                 ],
-              ),
-            )
-          : _content(p, s),
+              ],
+            ),
+            floatingActionButton: DashboardQuickActionsFab(
+              actions: _quickActions(),
+            ),
+            body: p.status == DashboardTaskStatus.loading && s == null
+                ? const Center(child: CircularProgressIndicator())
+                : p.status == DashboardTaskStatus.error && s == null
+                ? Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(p.error ?? 'No fue posible cargar el dashboard.'),
+                        const SizedBox(height: 12),
+                        FilledButton(
+                          onPressed: p.load,
+                          child: const Text('Reintentar'),
+                        ),
+                      ],
+                    ),
+                  )
+                : _content(p, s),
+          ),
+        ),
+      ],
     );
   }
 
@@ -189,42 +284,112 @@ class _DashboardPageState extends State<DashboardPage> {
     }
   }
 
-  Widget _menu(DashboardSummary? s) => SafeArea(
-    child: Column(
-      children: [
-        Container(
-          color: const Color(0xFF081225),
-          padding: const EdgeInsets.all(20),
-          child: AppLogo(
-            compact: true,
-            imageUrl: s?.empresa.logoUrl,
-            title: s?.empresa.nombreComercial.isNotEmpty == true
-                ? s!.empresa.nombreComercial
-                : 'SGRV',
+  Widget _menu(DashboardSummary? s, {bool persistent = false}) {
+    final scheme = Theme.of(context).colorScheme;
+    return SafeArea(
+      child: Column(
+        children: [
+          SizedBox(
+            height: 74,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18),
+              child: ClipRect(
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: AppLogo(
+                    compact: true,
+                    color: scheme.onSurface,
+                    imageUrl: s?.empresa.logoUrl,
+                    title: 'SGRV',
+                  ),
+                ),
+              ),
+            ),
           ),
-        ),
-        Expanded(
-          child: ListView(
-            children: _nav
-                .map(
-                  (x) => ListTile(
-                    leading: Icon(x.icon),
-                    title: Text(x.label),
+          const Divider(height: 1),
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.all(12),
+              children: [
+                ListTile(
+                  dense: true,
+                  selected: true,
+                  selectedColor: Colors.white,
+                  selectedTileColor: const Color(0xFF278C54),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  leading: const Icon(Icons.space_dashboard_outlined, size: 19),
+                  title: const Text(
+                    'Dashboard',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  onTap: () {
+                    if (!persistent) Navigator.pop(context);
+                  },
+                ),
+                for (var i = 0; i < _nav.length; i++) ...[
+                  if (i == 0 || i == 5 || i == 9)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 24, 12, 8),
+                      child: Text(
+                        i == 0
+                            ? 'OPERACIONES'
+                            : i == 5
+                            ? 'FINANZAS'
+                            : 'ADMINISTRACIÓN',
+                        style: TextStyle(
+                          fontSize: 10,
+                          letterSpacing: 1.3,
+                          fontWeight: FontWeight.w600,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ListTile(
+                    dense: true,
+                    visualDensity: VisualDensity.compact,
+                    leading: Icon(_nav[i].icon, size: 18),
+                    title: Text(
+                      _nav[i].label,
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
                     onTap: () {
-                      Navigator.pop(context);
+                      if (!persistent) Navigator.pop(context);
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => x.page),
+                        MaterialPageRoute(builder: (_) => _nav[i].page),
                       );
                     },
                   ),
-                )
-                .toList(),
+                ],
+              ],
+            ),
           ),
-        ),
-      ],
-    ),
-  );
+          const Divider(height: 1),
+          ListTile(
+            leading: const Icon(Icons.business_outlined, size: 20),
+            title: Text(
+              s?.empresa.nombreComercial.isNotEmpty == true
+                  ? s!.empresa.nombreComercial
+                  : 'Mi empresa',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+            ),
+            subtitle: const Text(
+              'Gestión de rentas',
+              style: TextStyle(fontSize: 11),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _content(DashboardTaskProvider p, DashboardSummary? s) {
     if (s == null) {
       return const Center(child: Text('Sin información disponible.'));
@@ -233,8 +398,26 @@ class _DashboardPageState extends State<DashboardPage> {
     return RefreshIndicator(
       onRefresh: () => p.load(refresh: true),
       child: ListView(
-        padding: const EdgeInsets.all(22),
+        padding: EdgeInsets.all(
+          MediaQuery.sizeOf(context).width < 700 ? 16 : 32,
+        ),
         children: [
+          const Text(
+            'Dashboard',
+            style: TextStyle(
+              fontSize: 30,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -.6,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Rendimiento del negocio y operaciones de tu flota',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 24),
           _brand(s.empresa),
           const SizedBox(height: 18),
           LayoutBuilder(
@@ -242,13 +425,13 @@ class _DashboardPageState extends State<DashboardPage> {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               crossAxisCount: c.maxWidth >= 1000
-                  ? 5
+                  ? 3
                   : c.maxWidth >= 620
                   ? 2
                   : 1,
-              childAspectRatio: 2.2,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
+              mainAxisExtent: 126,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
               children: [
                 _metric(
                   'Reservas hoy',
@@ -311,57 +494,71 @@ class _DashboardPageState extends State<DashboardPage> {
       padding: const EdgeInsets.all(20),
       child: Row(
         children: [
-          AppLogo(
-            compact: true,
-            color: Theme.of(context).colorScheme.onSurface,
-            imageUrl: e.logoUrl,
-            title: e.nombreComercial.isEmpty ? e.nombre : e.nombreComercial,
-          ),
-          const Spacer(),
-          Text(
-            'Empresa #${e.idEmpresa}',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
-  Widget _metric(String label, String value, IconData icon) => Card(
-    child: Padding(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          CircleAvatar(child: Icon(icon)),
-          const SizedBox(width: 12),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                Text(
-                  value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w900,
-                    fontSize: 18,
-                  ),
-                ),
-              ],
+            child: AppLogo(
+              compact: true,
+              color: Theme.of(context).colorScheme.onSurface,
+              imageUrl: e.logoUrl,
+              title: e.nombreComercial.isEmpty ? e.nombre : e.nombreComercial,
             ),
           ),
         ],
       ),
     ),
   );
+  Widget _metric(String label, String value, IconData icon) {
+    final accent = icon == Icons.payments || icon == Icons.trending_up
+        ? const Color(0xFF28B779)
+        : icon == Icons.people
+        ? const Color(0xFFD88B43)
+        : icon == Icons.car_rental
+        ? const Color(0xFF9971E8)
+        : const Color(0xFF649DEB);
+    return Card(
+      child: InkWell(
+        onTap: () => _openQuickAction(switch (label) {
+          "Reservas hoy" => const ReservacionesPage(soloHoy: true),
+          "Vehículos alquilados" => const RentasPage(),
+          "Clientes activos" => const ClientesPage(),
+          _ => const PagosPage(),
+        }),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      label,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  Icon(icon, color: accent, size: 18),
+                ],
+              ),
+              const Spacer(),
+              Text(
+                value,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 25,
+                  letterSpacing: -.5,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _reservations(DashboardSummary s) => _panel(
     'Reservas recientes',
     s.reservasRecientes.isEmpty
@@ -373,7 +570,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   leading: const Icon(Icons.event_outlined),
                   title: Text(x.vehiculo),
                   subtitle: Text(
-                    '${x.cliente} · ${DateFormat('dd/MM hh:mm a').format(x.fecha)}',
+                    '${x.cliente} · ${(x.periodoSinHora ? PeriodoAlquilerFechas.formato(x.fecha, true) : DateFormat('dd/MM hh:mm a').format(x.fecha))}',
                   ),
                   trailing: Chip(label: Text(x.estado)),
                 ),
@@ -427,7 +624,7 @@ class _DashboardPageState extends State<DashboardPage> {
         children: [
           Text(
             title,
-            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 17),
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 17),
           ),
           const SizedBox(height: 10),
           ...children,

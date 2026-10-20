@@ -1,3 +1,9 @@
+import 'package:sgrv_frontend/core/session/session_state.dart';
+import 'package:sgrv_frontend/core/config/api_config.dart';
+import 'package:sgrv_frontend/core/network/api_client.dart';
+import 'package:sgrv_frontend/core/network/api_exception.dart';
+import 'package:sgrv_frontend/features/configuracion/services/condiciones_contrato_service.dart';
+import 'package:sgrv_frontend/core/utils/periodo_alquiler_fechas.dart';
 import 'dart:typed_data';
 
 import 'package:intl/intl.dart';
@@ -7,10 +13,38 @@ import 'package:sgrv_frontend/features/rentas/models/renta_entrega.dart';
 import 'package:sgrv_frontend/features/rentas/models/renta_entrega_document.dart';
 
 class RentaEntregaPdfService {
+  RentaEntregaPdfService({this.client});
+  final ApiClient? client;
+
   Future<Uint8List> generate(
     RentaEntrega data,
     RentaEntregaDocument document,
   ) async {
+    final generation = SessionState.generation.value;
+    final api = client ?? ApiClient();
+    late final String condiciones;
+    pw.MemoryImage? logo;
+    try {
+      condiciones = await CondicionesContratoService(client: api).get();
+      final url = data.empresa.logoUrl?.trim();
+      if (url != null && url.isNotEmpty) {
+        final base = Uri.base.resolve(ApiConfig.baseUrl);
+        final uri = base.resolve(url);
+        // Solo enviar el JWT al origen de nuestra API.
+        if (uri.origin != base.origin) {
+          throw const ApiException(
+            message:
+                'Vuelve a cargar el logo desde la configuración de empresa para incluirlo en el contrato.',
+          );
+        }
+        logo = pw.MemoryImage(
+          Uint8List.fromList(await api.getBytes(uri.toString())),
+        );
+      }
+    } finally {
+      if (client == null) api.dispose();
+    }
+    SessionState.requireCurrent(generation);
     final pdf = pw.Document(
       title: 'Entrega ${data.numeroContrato}',
       author: data.empresa.nombreComercial,
@@ -26,7 +60,7 @@ class RentaEntregaPdfService {
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
         margin: const pw.EdgeInsets.all(32),
-        header: (_) => _header(data),
+        header: (_) => _header(data, logo),
         footer: (context) => pw.Row(
           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
           children: [
@@ -67,8 +101,25 @@ class RentaEntregaPdfService {
             _item('VIN', data.vehiculo.vin),
             _item('Color', data.vehiculo.color),
             _item('Kilometraje', '${data.vehiculo.kilometraje} km'),
-            _item('Salida', dateTime.format(data.fechaInicio)),
-            _item('Retorno previsto', dateTime.format(data.fechaFin)),
+            _item(
+              'Lugar de entrega acordado',
+              data.lugarEntrega ?? 'Por confirmar',
+            ),
+            _item(
+              'Lugar de recepción acordado',
+              data.lugarRecepcion ?? 'Por confirmar',
+            ),
+            _item(
+              'Salida',
+              PeriodoAlquilerFechas.formato(
+                data.fechaInicio,
+                data.periodoSinHora,
+              ),
+            ),
+            _item(
+              'Retorno previsto',
+              PeriodoAlquilerFechas.formato(data.fechaFin, data.periodoSinHora),
+            ),
           ]),
           _title('NIVEL DE COMBUSTIBLE AL ENTREGAR'),
           _fuelGauge(document.nivelCombustible),
@@ -136,6 +187,21 @@ class RentaEntregaPdfService {
             textAlign: pw.TextAlign.justify,
             style: const pw.TextStyle(fontSize: 9),
           ),
+          _title('CONDICIONES DEL CONTRATO'),
+          if (condiciones.trim().isEmpty)
+            pw.Text(
+              'Sin condiciones adicionales.',
+              style: const pw.TextStyle(fontSize: 9),
+            )
+          else
+            for (final paragraph in _conditionBlocks(condiciones))
+              pw.Padding(
+                padding: const pw.EdgeInsets.only(bottom: 5),
+                child: pw.Text(
+                  paragraph,
+                  style: const pw.TextStyle(fontSize: 9),
+                ),
+              ),
           pw.SizedBox(height: 18),
           pw.Row(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -160,10 +226,12 @@ class RentaEntregaPdfService {
         ],
       ),
     );
-    return pdf.save();
+    final bytes = await pdf.save();
+    SessionState.requireCurrent(generation);
+    return bytes;
   }
 
-  pw.Widget _header(RentaEntrega data) => pw.Container(
+  pw.Widget _header(RentaEntrega data, pw.MemoryImage? logo) => pw.Container(
     margin: const pw.EdgeInsets.only(bottom: 16),
     padding: const pw.EdgeInsets.only(bottom: 10),
     decoration: const pw.BoxDecoration(
@@ -175,31 +243,38 @@ class RentaEntregaPdfService {
       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
-        pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.start,
-          children: [
-            pw.Text(
-              data.empresa.nombreComercial,
-              style: pw.TextStyle(
-                fontSize: 18,
-                fontWeight: pw.FontWeight.bold,
-                color: PdfColors.blue800,
+        if (logo != null) ...[
+          pw.Image(logo, width: 64, height: 64, fit: pw.BoxFit.contain),
+          pw.SizedBox(width: 10),
+        ],
+        pw.Expanded(
+          child: pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Text(
+                data.empresa.nombreComercial,
+                style: pw.TextStyle(
+                  fontSize: 18,
+                  fontWeight: pw.FontWeight.bold,
+                  color: PdfColors.blue800,
+                ),
               ),
-            ),
-            pw.Text(
-              'RNC ${data.empresa.rnc}',
-              style: const pw.TextStyle(fontSize: 9),
-            ),
-            pw.Text(
-              data.empresa.telefono,
-              style: const pw.TextStyle(fontSize: 9),
-            ),
-            pw.Text(
-              data.empresa.direccion,
-              style: const pw.TextStyle(fontSize: 9),
-            ),
-          ],
+              pw.Text(
+                'RNC ${data.empresa.rnc}',
+                style: const pw.TextStyle(fontSize: 9),
+              ),
+              pw.Text(
+                data.empresa.telefono,
+                style: const pw.TextStyle(fontSize: 9),
+              ),
+              pw.Text(
+                data.empresa.direccion,
+                style: const pw.TextStyle(fontSize: 9),
+              ),
+            ],
+          ),
         ),
+        pw.SizedBox(width: 10),
         pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.end,
           children: [
@@ -213,6 +288,24 @@ class RentaEntregaPdfService {
       ],
     ),
   );
+
+  Iterable<String> _conditionBlocks(String text) sync* {
+    // Bloques pequeños permiten paginar incluso párrafos largos.
+    for (final line in text.split('\n')) {
+      if (line.isEmpty) {
+        yield ' ';
+        continue;
+      }
+      var rest = line;
+      while (rest.length > 500) {
+        final space = rest.lastIndexOf(' ', 500);
+        final end = space > 0 ? space : 500;
+        yield rest.substring(0, end);
+        rest = rest.substring(end).trimLeft();
+      }
+      if (rest.isNotEmpty) yield rest;
+    }
+  }
 
   pw.Widget _fuelGauge(int level) => pw.Row(
     children: [

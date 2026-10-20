@@ -1,4 +1,5 @@
-import 'package:flutter/foundation.dart';
+import 'package:sgrv_frontend/core/session/session_state.dart';
+import 'package:sgrv_frontend/features/mantenimientos/dtos/mantenimiento_estado_dto.dart';
 import 'package:sgrv_frontend/core/network/api_exception.dart';
 import 'package:sgrv_frontend/features/mantenimientos/models/mantenimiento.dart';
 import 'package:sgrv_frontend/features/mantenimientos/models/mantenimiento_dto.dart';
@@ -6,11 +7,13 @@ import 'package:sgrv_frontend/features/mantenimientos/services/mantenimiento_ser
 
 enum MantenimientoStatus { initial, loading, success, empty, error }
 
-class MantenimientoProvider extends ChangeNotifier {
+class MantenimientoProvider extends SessionNotifier {
   MantenimientoProvider({MantenimientoService? service})
     : _service = service ?? MantenimientoService();
   final MantenimientoService _service;
   List<Mantenimiento> _items = const [];
+  Map<int, MantenimientoEstadoDto> _estados = {};
+  MantenimientoEstadoDto? estadoDe(int id) => _estados[id];
   List<MantenimientoCatalogo> _tipos = const [];
   List<MantenimientoCatalogo> _vehiculos = const [];
   MantenimientoResumen? _resumen;
@@ -38,10 +41,12 @@ class MantenimientoProvider extends ChangeNotifier {
     notifyListeners();
     try {
       final result = await Future.wait<Object>([
-        _service.getAll(search: search, idVehiculo: _idVehiculoFilter),
+        _service.getListado(search: search, idVehiculo: _idVehiculoFilter),
         _service.resumen(),
       ]);
-      _items = result[0] as List<Mantenimiento>;
+      final listado = result[0] as List<MantenimientoListadoDto>;
+      _items = listado.map((x) => x.mantenimiento).toList();
+      _estados = {for (final x in listado) x.operacion.id: x.operacion};
       _resumen = result[1] as MantenimientoResumen;
       _status = _items.isEmpty
           ? MantenimientoStatus.empty
@@ -85,6 +90,21 @@ class MantenimientoProvider extends ChangeNotifier {
       _saving = false;
       notifyListeners();
     }
+  }
+
+  Future<bool> eliminar(int id) async {
+    _error = null;
+    try {
+      await _service.eliminar(id);
+      await load(refresh: true);
+      return true;
+    } on ApiException catch (error) {
+      _error = error.message;
+    } catch (_) {
+      _error = 'No fue posible eliminar el mantenimiento.';
+    }
+    notifyListeners();
+    return false;
   }
 
   @override

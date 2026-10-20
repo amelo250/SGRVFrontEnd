@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sgrv_frontend/features/auth/pages/password_page.dart';
 import 'package:provider/provider.dart';
 import 'package:sgrv_frontend/features/administracion/providers/administracion_provider.dart';
 import 'package:sgrv_frontend/features/auth/pages/login_page.dart';
@@ -6,6 +7,7 @@ import 'package:sgrv_frontend/features/auth/providers/auth_provider.dart';
 import 'package:sgrv_frontend/features/configuracion/pages/configuracion_page.dart';
 import 'package:sgrv_frontend/features/empresas/pages/empresa_page.dart';
 import 'usuarios_admin_page.dart';
+import 'planes_admin_page.dart';
 
 class AdministracionDashboardPage extends StatefulWidget {
   const AdministracionDashboardPage({super.key});
@@ -34,6 +36,12 @@ class _AdministracionDashboardPageState
       appBar: AppBar(
         title: const Text('Administración SGRV'),
         actions: [
+          IconButton(
+            tooltip: 'Cambiar mi contraseña',
+            icon: const Icon(Icons.lock_outline),
+            onPressed: () =>
+                _open(const PasswordPage(mode: PasswordMode.change)),
+          ),
           IconButton(
             onPressed: provider.load,
             icon: const Icon(Icons.refresh_rounded),
@@ -64,7 +72,7 @@ class _AdministracionDashboardPageState
                 children: [
                   const Text(
                     'Panel de superadministración',
-                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900),
+                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(height: 6),
                   const Text(
@@ -125,6 +133,8 @@ class _AdministracionDashboardPageState
                         Icons.manage_accounts_rounded,
                         () => _open(const UsuariosAdminPage()),
                       ),
+                      _action('Planes comerciales', 'Precios, límites y capacidades',
+                        Icons.workspace_premium_outlined, () => _open(const PlanesAdminPage())),
                       _action(
                         'Mantener catálogos',
                         'Estados, tipos, monedas y más',
@@ -144,7 +154,7 @@ class _AdministracionDashboardPageState
                             'Empresas recientes',
                             style: TextStyle(
                               fontSize: 18,
-                              fontWeight: FontWeight.w900,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                           const SizedBox(height: 10),
@@ -194,7 +204,7 @@ class _AdministracionDashboardPageState
                   value,
                   style: const TextStyle(
                     fontSize: 22,
-                    fontWeight: FontWeight.w900,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ],
@@ -215,7 +225,7 @@ class _AdministracionDashboardPageState
       child: ListTile(
         onTap: onTap,
         leading: CircleAvatar(child: Icon(icon)),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
         subtitle: Text(subtitle),
         trailing: const Icon(Icons.arrow_forward_rounded),
       ),

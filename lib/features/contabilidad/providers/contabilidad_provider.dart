@@ -1,8 +1,8 @@
-import 'package:flutter/foundation.dart';
+import 'package:sgrv_frontend/core/session/session_state.dart';
 import '../models/contabilidad_resumen.dart';
 import '../services/contabilidad_service.dart';
 
-class ContabilidadProvider extends ChangeNotifier {
+class ContabilidadProvider extends SessionNotifier {
   ContabilidadProvider({ContabilidadService? service})
     : _service = service ?? ContabilidadService();
   final ContabilidadService _service;

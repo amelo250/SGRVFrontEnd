@@ -1,3 +1,4 @@
+import 'package:sgrv_frontend/core/session/session_state.dart';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
@@ -10,6 +11,7 @@ class ApiClient {
   ApiClient({http.Client? client}) : _client = client ?? http.Client();
 
   final http.Client _client;
+  final _responseGenerations = Expando<int>('session');
 
   Future<Map<String, String>> _buildHeaders({
     bool includeAuthorization = true,
@@ -30,9 +32,9 @@ class ApiClient {
   }
 
   Future<http.Response> get(String url) async {
-    return _client
+    return _guard(() async => _client
         .get(Uri.parse(url), headers: await _buildHeaders())
-        .timeout(ApiConfig.timeout);
+        .timeout(ApiConfig.timeout));
   }
 
   Future<http.Response> post(
@@ -40,7 +42,7 @@ class ApiClient {
     Object? body,
     bool includeAuthorization = true,
   }) async {
-    return _client
+    return _guard(() async => _client
         .post(
           Uri.parse(url),
           headers: await _buildHeaders(
@@ -48,33 +50,33 @@ class ApiClient {
           ),
           body: body == null ? null : jsonEncode(body),
         )
-        .timeout(ApiConfig.timeout);
+        .timeout(ApiConfig.timeout));
   }
 
   Future<http.Response> put(String url, {Object? body}) async {
-    return _client
+    return _guard(() async => _client
         .put(
           Uri.parse(url),
           headers: await _buildHeaders(),
           body: body == null ? null : jsonEncode(body),
         )
-        .timeout(ApiConfig.timeout);
+        .timeout(ApiConfig.timeout));
   }
 
   Future<http.Response> patch(String url, {Object? body}) async {
-    return _client
+    return _guard(() async => _client
         .patch(
           Uri.parse(url),
           headers: await _buildHeaders(),
           body: body == null ? null : jsonEncode(body),
         )
-        .timeout(ApiConfig.timeout);
+        .timeout(ApiConfig.timeout));
   }
 
   Future<http.Response> delete(String url) async {
-    return _client
+    return _guard(() async => _client
         .delete(Uri.parse(url), headers: await _buildHeaders())
-        .timeout(ApiConfig.timeout);
+        .timeout(ApiConfig.timeout));
   }
 
   Future<Map<String, dynamic>> multipart(
@@ -85,6 +87,7 @@ class ApiClient {
     Map<String, String> fields = const {},
     String fileField = 'archivo',
   }) async {
+    final generation = SessionState.generation.value;
     final request = http.MultipartRequest('POST', Uri.parse(url));
     final token = await TokenStorage.getToken();
     if (token != null && token.isNotEmpty) {
@@ -100,8 +103,12 @@ class ApiClient {
         contentType: MediaType.parse(contentType),
       ),
     );
-    final streamed = await _client.send(request).timeout(ApiConfig.timeout);
-    return _decode(await http.Response.fromStream(streamed));
+    SessionState.requireCurrent(generation);
+    final response = await _guard(() async {
+      final streamed = await _client.send(request).timeout(ApiConfig.timeout);
+      return http.Response.fromStream(streamed);
+    });
+    return _decode(response);
   }
 
   Future<ApiJsonResult> getJsonResult(String url) async {
@@ -119,13 +126,6 @@ class ApiClient {
 
   Future<List<int>> getBytes(String url) async {
     final response = await get(url);
-    if (response.statusCode == 401) {
-      await TokenStorage.deleteToken();
-      throw const ApiException(
-        message: 'La sesión expiró. Inicia sesión nuevamente.',
-        statusCode: 401,
-      );
-    }
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw ApiException(
         message: 'No fue posible recuperar el archivo.',
@@ -151,7 +151,23 @@ class ApiClient {
     return _decode(await delete(url));
   }
 
+  Future<http.Response> _guard(Future<http.Response> Function() send) async {
+    final generation = SessionState.generation.value;
+    final response = await send();
+    SessionState.requireCurrent(generation);
+    if (response.statusCode == 401) {
+      await TokenStorage.deleteToken(expectedGeneration: generation);
+      throw const ApiException(
+        message: 'La sesión expiró. Inicia sesión nuevamente.', statusCode: 401,
+      );
+    }
+    _responseGenerations[response] = generation;
+    return response;
+  }
+
   Future<Map<String, dynamic>> _decode(http.Response response) async {
+    final generation = _responseGenerations[response];
+    if (generation != null) SessionState.requireCurrent(generation);
     Map<String, dynamic> json = <String, dynamic>{};
     if (response.body.trim().isNotEmpty) {
       final decoded = jsonDecode(response.body);
@@ -165,13 +181,6 @@ class ApiClient {
       }
     }
 
-    if (response.statusCode == 401) {
-      await TokenStorage.deleteToken();
-      throw const ApiException(
-        message: 'La sesión expiró. Inicia sesión nuevamente.',
-        statusCode: 401,
-      );
-    }
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw ApiException(

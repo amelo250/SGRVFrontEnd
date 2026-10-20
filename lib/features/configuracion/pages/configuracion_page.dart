@@ -1,4 +1,6 @@
+import 'package:sgrv_frontend/features/empresas/pages/empresa_configuracion_page.dart';
 import 'package:flutter/material.dart';
+import 'package:sgrv_frontend/shared/widgets/app_version.dart';
 import 'package:provider/provider.dart';
 import 'package:sgrv_frontend/shared/widgets/app_module_ui.dart';
 import 'package:sgrv_frontend/shared/theme/theme_provider.dart';
@@ -38,7 +40,18 @@ class _ConfiguracionPageState extends State<ConfiguracionPage> {
             ),
       body: Column(
         children: [
+          ListTile(
+            title: const Text('Configuración de empresa'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const EmpresaConfiguracionPage(),
+              ),
+            ),
+          ),
           _appearanceSettings(),
+          const AppVersion(),
           const SizedBox(height: 18),
           Expanded(
             child: LayoutBuilder(
@@ -84,7 +97,7 @@ class _ConfiguracionPageState extends State<ConfiguracionPage> {
         ),
         title: const Text(
           'Modo oscuro',
-          style: TextStyle(fontWeight: FontWeight.w800),
+          style: TextStyle(fontWeight: FontWeight.w600),
         ),
         subtitle: const Text('Reduce el brillo y usa una paleta oscura.'),
       ),
@@ -101,7 +114,7 @@ class _ConfiguracionPageState extends State<ConfiguracionPage> {
             padding: EdgeInsets.all(10),
             child: Text(
               'Catálogos',
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
             ),
           ),
           ...provider.definitions.map(
@@ -182,7 +195,7 @@ class _ConfiguracionPageState extends State<ConfiguracionPage> {
                             definition.nombre,
                             style: const TextStyle(
                               fontSize: 18,
-                              fontWeight: FontWeight.w900,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                           Text(
@@ -199,11 +212,13 @@ class _ConfiguracionPageState extends State<ConfiguracionPage> {
                 Wrap(
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    FilterChip(
-                      selected: provider.incluirInactivos,
-                      label: const Text('Inactivos'),
-                      avatar: const Icon(Icons.visibility_outlined, size: 18),
-                      onSelected: provider.setIncludeInactive,
+                    AppFilterPanel(
+                      child: FilterChip(
+                        selected: provider.incluirInactivos,
+                        label: const Text('Inactivos'),
+                        avatar: const Icon(Icons.visibility_outlined, size: 18),
+                        onSelected: provider.setIncludeInactive,
+                      ),
                     ),
                     IconButton(
                       tooltip: 'Actualizar',

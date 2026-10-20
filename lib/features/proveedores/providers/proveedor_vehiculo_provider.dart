@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:sgrv_frontend/core/session/session_state.dart';
 import 'package:sgrv_frontend/core/network/api_exception.dart';
 import 'package:sgrv_frontend/features/proveedores/models/proveedor_vehiculo.dart';
 import 'package:sgrv_frontend/features/proveedores/models/proveedor_vehiculo_dto.dart';
@@ -6,7 +6,7 @@ import 'package:sgrv_frontend/features/proveedores/services/proveedor_vehiculo_s
 
 enum ProveedorStatus { initial, loading, success, empty, error }
 
-class ProveedorVehiculoProvider extends ChangeNotifier {
+class ProveedorVehiculoProvider extends SessionNotifier {
   ProveedorVehiculoProvider({ProveedorVehiculoService? service})
     : _service = service ?? ProveedorVehiculoService();
 

@@ -20,7 +20,7 @@ class GastoCard extends StatelessWidget {
       ),
       title: Text(
         gasto.concepto,
-        style: const TextStyle(fontWeight: FontWeight.w800),
+        style: const TextStyle(fontWeight: FontWeight.w600),
       ),
       subtitle: Text(
         '${gasto.tipoNombre} · ${DateFormat('dd MMM yyyy', 'es_DO').format(gasto.fecha)}${gasto.vehiculoDescripcion == null ? '' : ' · ${gasto.vehiculoDescripcion}'}',
@@ -31,7 +31,7 @@ class GastoCard extends StatelessWidget {
         children: [
           Text(
             '${gasto.monedaSimbolo} ${NumberFormat('#,##0.00').format(gasto.monto)}',
-            style: const TextStyle(fontWeight: FontWeight.w900),
+            style: const TextStyle(fontWeight: FontWeight.w700),
           ),
           Text(
             gasto.activo ? 'Activo' : 'Eliminado',

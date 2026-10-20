@@ -1,4 +1,7 @@
+import 'package:sgrv_frontend/core/utils/periodo_alquiler_fechas.dart';
 import 'package:flutter/material.dart';
+import 'package:sgrv_frontend/features/auth/providers/auth_provider.dart';
+import 'package:sgrv_frontend/features/notificaciones/widgets/contrato_notificacion_dialog.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:sgrv_frontend/features/rentas/models/renta_dto.dart';
@@ -108,37 +111,44 @@ class _RentaDetailPageState extends State<RentaDetailPage> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF173C9B), Color(0xFF5E55D8)],
-        ),
-        borderRadius: BorderRadius.circular(24),
+        color: Theme.of(context).colorScheme.surface,
+        border: Border.all(color: Theme.of(context).colorScheme.outline),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Wrap(
         runSpacing: 18,
         spacing: 18,
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
-          const CircleAvatar(
+          CircleAvatar(
             radius: 30,
-            backgroundColor: Color(0x33FFFFFF),
-            child: Icon(Icons.key_rounded, color: Colors.white, size: 30),
+            backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+            child: Icon(
+              Icons.key_rounded,
+              color: Theme.of(context).colorScheme.onPrimaryContainer,
+              size: 30,
+            ),
           ),
           SizedBox(
-            width: 430,
+            width: MediaQuery.sizeOf(context).width < 520
+                ? MediaQuery.sizeOf(context).width - 96
+                : 430,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   rental.clienteNombre,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w900,
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   rental.vehiculoDescripcion,
-                  style: const TextStyle(color: Color(0xFFDDE5FF)),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -149,53 +159,73 @@ class _RentaDetailPageState extends State<RentaDetailPage> {
           ),
           OutlinedButton.icon(
             style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.white,
-              side: const BorderSide(color: Colors.white54),
+              foregroundColor: Theme.of(context).colorScheme.onSurface,
+              side: BorderSide(color: Theme.of(context).colorScheme.outline),
             ),
             onPressed: _openDelivery,
             icon: const Icon(Icons.assignment_outlined),
-            label: const Text('Entrega y firmas'),
+            label: Text('Entrega y firmas'),
           ),
+          if (const [
+            'ADMIN',
+            'SUPADMIN',
+          ].contains(context.watch<AuthProvider>().role))
+            OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Theme.of(context).colorScheme.onSurface,
+                side: BorderSide(color: Theme.of(context).colorScheme.outline),
+              ),
+              onPressed: provider.isMutating
+                  ? null
+                  : () => showDialog<void>(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (_) =>
+                          ContratoNotificacionDialog(rentaId: widget.rentaId),
+                    ),
+              icon: const Icon(Icons.send_outlined),
+              label: Text('Enviar contrato'),
+            ),
           if (rental.finalizada)
             OutlinedButton.icon(
               style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.white,
-                side: const BorderSide(color: Colors.white54),
+                foregroundColor: Theme.of(context).colorScheme.onSurface,
+                side: BorderSide(color: Theme.of(context).colorScheme.outline),
               ),
               onPressed: _openReception,
               icon: const Icon(Icons.assignment_turned_in_outlined),
-              label: const Text('Documento de recepción'),
+              label: Text('Documento de recepción'),
             ),
           if (rental.activa)
             FilledButton.icon(
               onPressed: provider.isMutating ? null : _registerPayment,
               icon: const Icon(Icons.add_card_rounded),
-              label: const Text('Registrar pago'),
+              label: Text('Registrar pago'),
             ),
           if (rental.puedeEditar)
             OutlinedButton.icon(
               style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.white,
-                side: const BorderSide(color: Colors.white54),
+                foregroundColor: Theme.of(context).colorScheme.onSurface,
+                side: BorderSide(color: Theme.of(context).colorScheme.outline),
               ),
               onPressed: provider.isMutating ? null : _edit,
               icon: const Icon(Icons.edit_outlined),
-              label: const Text('Editar'),
+              label: Text('Editar'),
             ),
           if (rental.puedeFinalizar)
             FilledButton.icon(
               onPressed: provider.isMutating ? null : _complete,
               icon: const Icon(Icons.assignment_turned_in_outlined),
-              label: const Text('Finalizar'),
+              label: Text('Finalizar'),
             ),
           if (rental.puedeCancelar)
             TextButton.icon(
               style: TextButton.styleFrom(
-                foregroundColor: const Color(0xFFFFD5D2),
+                foregroundColor: Theme.of(context).colorScheme.error,
               ),
               onPressed: provider.isMutating ? null : _cancel,
               icon: const Icon(Icons.cancel_outlined),
-              label: const Text('Cancelar'),
+              label: Text('Cancelar'),
             ),
         ],
       ),
@@ -212,7 +242,7 @@ class _RentaDetailPageState extends State<RentaDetailPage> {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(8),
         side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
       ),
       child: Padding(
@@ -224,18 +254,34 @@ class _RentaDetailPageState extends State<RentaDetailPage> {
               'Detalles de la renta',
               style: Theme.of(
                 context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 18),
             _item(
               Icons.login_rounded,
               'Inicio',
-              date.format(rental.fechaInicio),
+              PeriodoAlquilerFechas.formato(
+                rental.fechaInicio,
+                rental.periodoSinHora,
+              ),
             ),
             _item(
               Icons.logout_rounded,
               'Fin previsto',
-              date.format(rental.fechaFin),
+              PeriodoAlquilerFechas.formato(
+                rental.fechaFin,
+                rental.periodoSinHora,
+              ),
+            ),
+            _item(
+              Icons.location_on_outlined,
+              'Lugar de entrega',
+              rental.lugarEntrega ?? 'Por confirmar',
+            ),
+            _item(
+              Icons.location_on_outlined,
+              'Lugar de recepción / devolución',
+              rental.lugarRecepcion ?? 'Por confirmar',
             ),
             if (rental.fechaEntregaReal != null)
               _item(

@@ -5,6 +5,7 @@ class RentaEntrega {
     required this.empresa,
     required this.cliente,
     required this.vehiculo,
+    this.periodoSinHora = false,
     required this.fechaInicio,
     required this.fechaFin,
     required this.precioPorDiaPactado,
@@ -19,6 +20,8 @@ class RentaEntrega {
     required this.pagos,
     required this.accesorios,
     this.observaciones,
+    this.lugarEntrega,
+    this.lugarRecepcion,
   });
 
   final int idRenta;
@@ -26,6 +29,7 @@ class RentaEntrega {
   final EntregaEmpresa empresa;
   final EntregaCliente cliente;
   final EntregaVehiculo vehiculo;
+  final bool periodoSinHora;
   final DateTime fechaInicio;
   final DateTime fechaFin;
   final double precioPorDiaPactado;
@@ -38,6 +42,8 @@ class RentaEntrega {
   final String monedaCodigo;
   final String monedaSimbolo;
   final String? observaciones;
+  final String? lugarEntrega;
+  final String? lugarRecepcion;
   final List<EntregaPago> pagos;
   final List<EntregaAccesorio> accesorios;
 
@@ -52,6 +58,7 @@ class RentaEntrega {
     vehiculo: EntregaVehiculo.fromJson(
       json['vehiculo'] as Map<String, dynamic>,
     ),
+    periodoSinHora: json['periodoSinHora'] == true,
     fechaInicio: _date(json['fechaInicio']),
     fechaFin: _date(json['fechaFin']),
     precioPorDiaPactado: _double(json['precioPorDiaPactado']),
@@ -63,6 +70,8 @@ class RentaEntrega {
     total: _double(json['total']),
     monedaCodigo: json['monedaCodigo']?.toString() ?? '',
     monedaSimbolo: json['monedaSimbolo']?.toString() ?? '',
+    lugarEntrega: json['lugarEntrega']?.toString(),
+    lugarRecepcion: json['lugarRecepcion']?.toString(),
     observaciones: json['observaciones']?.toString(),
     pagos: (json['pagos'] as List? ?? const [])
         .map((x) => EntregaPago.fromJson(x as Map<String, dynamic>))

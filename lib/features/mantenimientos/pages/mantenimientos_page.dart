@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:sgrv_frontend/features/auth/providers/auth_provider.dart';
+import 'package:sgrv_frontend/features/mantenimientos/widgets/completar_mantenimiento_dialog.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:sgrv_frontend/features/mantenimientos/models/mantenimiento.dart';
@@ -13,6 +15,10 @@ class MantenimientosPage extends StatefulWidget {
 }
 
 class _MantenimientosPageState extends State<MantenimientosPage> {
+  final Set<int> _completando = {};
+  final Set<int> _eliminando = {};
+  bool get _admin =>
+      const ["ADMIN", "SUPADMIN"].contains(context.watch<AuthProvider>().role);
   @override
   void initState() {
     super.initState();
@@ -75,7 +81,9 @@ class _MantenimientosPageState extends State<MantenimientosPage> {
                     alerta.nivel == 'VENCIDO'
                         ? Icons.error_rounded
                         : Icons.warning_amber_rounded,
-                    color: alerta.nivel == 'VENCIDO' ? Colors.red : Colors.orange,
+                    color: alerta.nivel == 'VENCIDO'
+                        ? Colors.red
+                        : Colors.orange,
                   ),
                   title: Text(alerta.vehiculo),
                   subtitle: Text(alerta.mensaje),
@@ -91,7 +99,9 @@ class _MantenimientosPageState extends State<MantenimientosPage> {
             const Card(
               child: Padding(
                 padding: EdgeInsets.all(34),
-                child: Center(child: Text('No hay mantenimientos registrados.')),
+                child: Center(
+                  child: Text('No hay mantenimientos registrados.'),
+                ),
               ),
             )
           else
@@ -101,21 +111,114 @@ class _MantenimientosPageState extends State<MantenimientosPage> {
                   leading: const CircleAvatar(child: Icon(Icons.build_rounded)),
                   title: Text('${item.tipoNombre} · ${item.vehiculo}'),
                   subtitle: Text(
-                    '${DateFormat('dd/MM/yyyy').format(item.fecha)}'
-                    '${item.kilometraje == null ? '' : ' · ${item.kilometraje} km'}',
+                    '${provider.estadoDe(item.idMantenimiento)?.etiqueta ?? "Sin clasificar"} · ${DateFormat('dd/MM/yyyy').format(item.fecha)}'
+                    '${item.kilometraje == null ? '' : ' · ${item.kilometraje} km'}'
+                    '${provider.estadoDe(item.idMantenimiento)?.fechaCompletadoUtc == null ? "" : "\nCierre: ${DateFormat('dd/MM/yyyy HH:mm').format(provider.estadoDe(item.idMantenimiento)!.fechaCompletadoUtc!.toLocal())} · ${provider.estadoDe(item.idMantenimiento)!.usuarioCompletadoEtiqueta}"}',
                   ),
-                  trailing: Text(
-                    item.costo == null
-                        ? '—'
-                        : NumberFormat.currency(symbol: r'RD$ ').format(item.costo),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (_admin)
+                        IconButton(
+                          tooltip: 'Eliminar mantenimiento',
+                          onPressed:
+                              _eliminando.contains(item.idMantenimiento) ||
+                                  _completando.contains(item.idMantenimiento)
+                              ? null
+                              : () => _eliminar(item),
+                          icon: const Icon(
+                            Icons.delete_outline_rounded,
+                            color: Colors.red,
+                          ),
+                        ),
+                      Text(
+                        item.costo == null
+                            ? '—'
+                            : NumberFormat.currency(
+                                symbol: r'RD$ ',
+                              ).format(item.costo),
+                      ),
+                      if (_admin &&
+                          provider.estadoDe(item.idMantenimiento)?.pendiente ==
+                              true)
+                        IconButton(
+                          tooltip: 'Completar mantenimiento',
+                          onPressed:
+                              _completando.contains(item.idMantenimiento) ||
+                                  _eliminando.contains(item.idMantenimiento)
+                              ? null
+                              : () => _completar(item.idMantenimiento),
+                          icon: const Icon(Icons.task_alt),
+                        ),
+                    ],
                   ),
-                  onTap: () => _openForm(item),
+                  onTap:
+                      provider.estadoDe(item.idMantenimiento)?.completado ==
+                          true
+                      ? null
+                      : () => _openForm(item),
                 ),
               ),
             ),
         ],
       ),
     );
+  }
+
+  Future<void> _eliminar(Mantenimiento item) async {
+    if (_eliminando.contains(item.idMantenimiento)) return;
+    final provider = context.read<MantenimientoProvider>();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Eliminar mantenimiento'),
+        content: Text(
+          '¿Eliminar el mantenimiento de ${item.vehiculo}? Se retirará del historial y de los totales.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Eliminar'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    setState(() => _eliminando.add(item.idMantenimiento));
+    try {
+      final ok = await provider.eliminar(item.idMantenimiento);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              ok
+                  ? 'Mantenimiento eliminado.'
+                  : provider.error ??
+                        'No fue posible eliminar el mantenimiento.',
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _eliminando.remove(item.idMantenimiento));
+    }
+  }
+
+  Future<void> _completar(int id) async {
+    if (_completando.contains(id)) return;
+    setState(() => _completando.add(id));
+    try {
+      await completarMantenimientoDialog(context, id);
+      if (mounted) {
+        await context.read<MantenimientoProvider>().load(refresh: true);
+      }
+    } finally {
+      if (mounted) setState(() => _completando.remove(id));
+    }
   }
 
   Future<void> _openForm([Mantenimiento? item]) async {
@@ -125,7 +228,9 @@ class _MantenimientosPageState extends State<MantenimientosPage> {
         builder: (_) => MantenimientoFormPage(mantenimiento: item),
       ),
     );
-    if (mounted) await context.read<MantenimientoProvider>().load(refresh: true);
+    if (mounted) {
+      await context.read<MantenimientoProvider>().load(refresh: true);
+    }
   }
 }
 
@@ -137,11 +242,26 @@ class _Summary extends StatelessWidget {
     final value = provider.resumen;
     return Row(
       children: [
-        _card(context, 'Registros', '${value?.totalRegistros ?? 0}', Colors.blue),
+        _card(
+          context,
+          'Registros',
+          '${value?.totalRegistros ?? 0}',
+          Colors.blue,
+        ),
         const SizedBox(width: 10),
-        _card(context, 'Próximos', '${value?.alertasProximas ?? 0}', Colors.orange),
+        _card(
+          context,
+          'Próximos',
+          '${value?.alertasProximas ?? 0}',
+          Colors.orange,
+        ),
         const SizedBox(width: 10),
-        _card(context, 'Vencidos', '${value?.alertasVencidas ?? 0}', Colors.red),
+        _card(
+          context,
+          'Vencidos',
+          '${value?.alertasVencidas ?? 0}',
+          Colors.red,
+        ),
       ],
     );
   }
@@ -160,7 +280,7 @@ class _Summary extends StatelessWidget {
                   value,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     color: color,
-                    fontWeight: FontWeight.w900,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ],

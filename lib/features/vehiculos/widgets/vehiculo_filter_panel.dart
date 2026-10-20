@@ -38,7 +38,7 @@ class VehiculoFilterPanel extends StatelessWidget {
               const Expanded(
                 child: Text(
                   'Filtrar flota',
-                  style: TextStyle(fontWeight: FontWeight.w900),
+                  style: TextStyle(fontWeight: FontWeight.w700),
                 ),
               ),
               if (!filter.isEmpty)

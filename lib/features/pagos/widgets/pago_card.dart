@@ -21,11 +21,11 @@ class PagoCard extends StatelessWidget {
       elevation: 0,
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(8),
         side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(8),
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.all(18),
@@ -35,12 +35,12 @@ class PagoCard extends StatelessWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEAF0FF),
-                  borderRadius: BorderRadius.circular(14),
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.payments_rounded,
-                  color: Color(0xFF3867F4),
+                  color: Theme.of(context).colorScheme.onPrimaryContainer,
                 ),
               ),
               const SizedBox(width: 15),
@@ -53,7 +53,7 @@ class PagoCard extends StatelessWidget {
                           ? 'Renta #${pago.idRenta}'
                           : pago.clienteNombre,
                       style: const TextStyle(
-                        fontWeight: FontWeight.w900,
+                        fontWeight: FontWeight.w700,
                         fontSize: 16,
                       ),
                     ),
@@ -82,7 +82,7 @@ class PagoCard extends StatelessWidget {
                   Text(
                     money.format(pago.monto),
                     style: const TextStyle(
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.w700,
                       fontSize: 17,
                     ),
                   ),

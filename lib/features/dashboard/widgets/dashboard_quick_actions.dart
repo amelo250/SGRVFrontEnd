@@ -35,7 +35,7 @@ class DashboardQuickActions extends StatelessWidget {
                 height: 42,
                 decoration: BoxDecoration(
                   color: const Color(0xFF3867F4).withValues(alpha: .1),
-                  borderRadius: BorderRadius.circular(13),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(Icons.bolt_rounded, color: Color(0xFF3867F4)),
               ),
@@ -48,7 +48,7 @@ class DashboardQuickActions extends StatelessWidget {
                       'Pasos rápidos',
                       style: TextStyle(
                         fontSize: 17,
-                        fontWeight: FontWeight.w900,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                     SizedBox(height: 3),
@@ -100,10 +100,10 @@ class _QuickActionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Material(
     color: action.color.withValues(alpha: .065),
-    borderRadius: BorderRadius.circular(16),
+    borderRadius: BorderRadius.circular(8),
     child: InkWell(
       onTap: action.onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(8),
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Column(
@@ -138,7 +138,7 @@ class _QuickActionTile extends StatelessWidget {
               action.title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontWeight: FontWeight.w900),
+              style: const TextStyle(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 3),
             Text(

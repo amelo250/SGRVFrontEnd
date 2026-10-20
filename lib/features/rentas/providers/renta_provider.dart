@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:sgrv_frontend/core/session/session_state.dart';
 import 'package:sgrv_frontend/core/network/api_exception.dart';
 import 'package:sgrv_frontend/features/rentas/models/renta.dart';
 import 'package:sgrv_frontend/features/rentas/models/renta_dto.dart';
@@ -10,7 +10,7 @@ import 'package:sgrv_frontend/features/rentas/services/renta_service.dart';
 
 enum RentaStatus { initial, loading, success, empty, error }
 
-class RentaProvider extends ChangeNotifier {
+class RentaProvider extends SessionNotifier {
   RentaProvider({RentaService? service}) : _service = service ?? RentaService();
 
   final RentaService _service;

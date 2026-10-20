@@ -1,9 +1,11 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 class ApiConfig {
   ApiConfig._();
 
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://10.0.2.2:5083',
+    defaultValue: kIsWeb ? 'http://localhost:5083' : 'http://10.0.2.2:5083',
   );
 
   static const Duration timeout = Duration(seconds: 30);

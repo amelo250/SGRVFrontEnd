@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:sgrv_frontend/core/utils/periodo_alquiler_fechas.dart';
+import 'package:sgrv_frontend/features/auth/providers/auth_provider.dart';
+import 'package:sgrv_frontend/features/rentas/dtos/politica_renta_dto.dart';
+import 'package:sgrv_frontend/features/rentas/services/renta_service.dart';
 import 'package:provider/provider.dart';
 import 'package:sgrv_frontend/features/clientes/providers/cliente_provider.dart';
 import 'package:sgrv_frontend/features/rentas/models/renta.dart';
@@ -24,11 +27,64 @@ class _RentaFormPageState extends State<RentaFormPage> {
   late final TextEditingController _discountController;
   late final TextEditingController _depositController;
   late final TextEditingController _rateController;
+  final _deliveryPlace = TextEditingController();
+  final _receptionPlace = TextEditingController();
   late final TextEditingController _notesController;
   int? _clientId;
   int? _vehicleId;
   late DateTime _start;
   late DateTime _end;
+  PoliticaRentaDto? _policy;
+  bool _policyLoading = true;
+  String? _policyError;
+  bool _datesChanged = false;
+  bool get _sinHora =>
+      widget.renta?.periodoSinHora ??
+      !(_policy?.capturarHorasPeriodoAlquiler ?? true);
+  bool _discountOverride = false;
+  bool get _isAdmin =>
+      const ["ADMIN", "SUPADMIN"].contains(context.read<AuthProvider>().role);
+  bool get _allowDiscount =>
+      (_isAdmin && _discountOverride) ||
+      (_policy?.permiteDescuento(_start, _end) ?? false);
+
+  Future<void> _loadPolicy() async {
+    setState(() {
+      _policyLoading = true;
+      _policyError = null;
+    });
+    final service = RentaService();
+    try {
+      final policy = await service.getPolicy();
+      if (!mounted) return;
+      setState(() {
+        _policy = policy;
+        _policyLoading = false;
+        if (!_editing && !_datesChanged) {
+          _end = _start.add(Duration(days: policy.minimoDias - 1));
+        }
+        if (_sinHora) {
+          _start = PeriodoAlquilerFechas.desdeDia(
+            PeriodoAlquilerFechas.dia(_start),
+          );
+          _end = PeriodoAlquilerFechas.desdeDia(
+            PeriodoAlquilerFechas.dia(_end),
+            fin: true,
+          );
+        }
+        if (!_allowDiscount) _discountController.text = '0';
+      });
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _policyLoading = false;
+          _policyError = 'No se pudo cargar el mínimo de días de renta.';
+        });
+      }
+    } finally {
+      service.dispose();
+    }
+  }
 
   bool get _editing => widget.renta != null;
 
@@ -47,14 +103,15 @@ class _RentaFormPageState extends State<RentaFormPage> {
     _vehicleId = rental?.idVehiculo;
     _start =
         rental?.fechaInicio ?? DateTime.now().add(const Duration(hours: 1));
-    _end =
-        rental?.fechaFin ??
-        DateTime.now().add(const Duration(days: 1, hours: 1));
+    _end = rental?.fechaFin ?? _start.add(const Duration(days: 2));
     _taxController = _money(rental?.impuestos);
     _discountController = _money(rental?.descuentos);
     _depositController = _money(rental?.deposito);
     _rateController = _money(rental?.tasaCambioAplicada ?? 1);
     _notesController = TextEditingController(text: rental?.observaciones);
+    _deliveryPlace.text = rental?.lugarEntrega ?? '';
+    _receptionPlace.text = rental?.lugarRecepcion ?? '';
+    _loadPolicy();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ClienteProvider>().cargarParaSelector();
       context.read<VehiculoProvider>().cargar(refresh: true);
@@ -71,6 +128,8 @@ class _RentaFormPageState extends State<RentaFormPage> {
     _depositController.dispose();
     _rateController.dispose();
     _notesController.dispose();
+    _deliveryPlace.dispose();
+    _receptionPlace.dispose();
     super.dispose();
   }
 
@@ -102,6 +161,21 @@ class _RentaFormPageState extends State<RentaFormPage> {
               padding: const EdgeInsets.all(24),
               children: [
                 _header(context),
+                if (_policyLoading) const LinearProgressIndicator(),
+                if (_policyError != null) ...[
+                  Text(_policyError!),
+                  TextButton(
+                    onPressed: _loadPolicy,
+                    child: const Text('Reintentar'),
+                  ),
+                ],
+                if (_policy != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: Text(
+                      'Mínimo: ${_policy!.minimoDias} días. Periodo: ${_policy!.dias(_start, _end)} días cobrados. Descuento al mínimo requiere habilitación de un administrador.',
+                    ),
+                  ),
                 const SizedBox(height: 22),
                 _section(
                   context,
@@ -216,10 +290,27 @@ class _RentaFormPageState extends State<RentaFormPage> {
                             _currencyNotice(vehicle, rate, localDaily),
                             const SizedBox(height: 14),
                           ],
+                          if (_isAdmin)
+                            SwitchListTile(
+                              title: const Text(
+                                'Habilitar descuento excepcional',
+                              ),
+                              value: _discountOverride,
+                              onChanged: (value) => setState(() {
+                                _discountOverride = value;
+                                if (!_allowDiscount) {
+                                  _discountController.text = '0';
+                                }
+                              }),
+                            ),
                           _responsive(
                             constraints.maxWidth,
                             _numberField('Impuestos', _taxController),
-                            _numberField('Descuentos', _discountController),
+                            _numberField(
+                              'Descuentos',
+                              _discountController,
+                              enabled: _allowDiscount,
+                            ),
                           ),
                           const SizedBox(height: 14),
                           _responsive(
@@ -236,6 +327,30 @@ class _RentaFormPageState extends State<RentaFormPage> {
                             ),
                           ),
                           const SizedBox(height: 14),
+                          TextFormField(
+                            controller: _deliveryPlace,
+                            maxLength: 250,
+                            decoration: const InputDecoration(
+                              labelText: 'Lugar de entrega del vehículo',
+                              border: OutlineInputBorder(),
+                            ),
+                            validator: (value) => (value?.length ?? 0) > 250
+                                ? 'Máximo 250 caracteres'
+                                : null,
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _receptionPlace,
+                            maxLength: 250,
+                            decoration: const InputDecoration(
+                              labelText: 'Lugar de recepción / devolución',
+                              border: OutlineInputBorder(),
+                            ),
+                            validator: (value) => (value?.length ?? 0) > 250
+                                ? 'Máximo 250 caracteres'
+                                : null,
+                          ),
+                          const SizedBox(height: 12),
                           TextFormField(
                             controller: _notesController,
                             maxLines: 4,
@@ -254,7 +369,13 @@ class _RentaFormPageState extends State<RentaFormPage> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: FilledButton.icon(
-                    onPressed: rentalProvider.isMutating ? null : _save,
+                    onPressed:
+                        rentalProvider.isMutating ||
+                            _policyLoading ||
+                            _policy == null ||
+                            _policyError != null
+                        ? null
+                        : _save,
                     icon: rentalProvider.isMutating
                         ? const SizedBox.square(
                             dimension: 18,
@@ -275,10 +396,9 @@ class _RentaFormPageState extends State<RentaFormPage> {
   Widget _header(BuildContext context) => Container(
     padding: const EdgeInsets.all(24),
     decoration: BoxDecoration(
-      gradient: const LinearGradient(
-        colors: [Color(0xFF315BD5), Color(0xFF6B55E8)],
-      ),
-      borderRadius: BorderRadius.circular(22),
+      color: Theme.of(context).colorScheme.surface,
+      border: Border.all(color: Theme.of(context).colorScheme.outline),
+      borderRadius: BorderRadius.circular(8),
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -288,12 +408,12 @@ class _RentaFormPageState extends State<RentaFormPage> {
               ? 'Actualiza las condiciones de la renta'
               : 'Registra una nueva entrega',
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-            color: Colors.white,
-            fontWeight: FontWeight.w800,
+            color: Theme.of(context).colorScheme.onSurface,
+            fontWeight: FontWeight.w600,
           ),
         ),
         const SizedBox(height: 6),
-        const Text(
+        Text(
           'La tarifa, moneda y totales definitivos serán calculados por el servidor.',
           style: TextStyle(color: Color(0xFFDDE5FF)),
         ),
@@ -310,7 +430,7 @@ class _RentaFormPageState extends State<RentaFormPage> {
     padding: const EdgeInsets.all(22),
     decoration: BoxDecoration(
       color: Theme.of(context).colorScheme.surface,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(8),
       border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
     ),
     child: Column(
@@ -324,7 +444,7 @@ class _RentaFormPageState extends State<RentaFormPage> {
               title,
               style: Theme.of(
                 context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
           ],
         ),
@@ -346,11 +466,11 @@ class _RentaFormPageState extends State<RentaFormPage> {
 
   Widget _dateField(String label, DateTime value, VoidCallback onTap) =>
       InkWell(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(8),
         onTap: onTap,
         child: InputDecorator(
           decoration: _decoration(label, Icons.schedule_outlined),
-          child: Text(DateFormat('dd/MM/yyyy · hh:mm a').format(value)),
+          child: Text(PeriodoAlquilerFechas.formato(value, _sinHora)),
         ),
       );
 
@@ -387,7 +507,7 @@ class _RentaFormPageState extends State<RentaFormPage> {
       color: Theme.of(
         context,
       ).colorScheme.primaryContainer.withValues(alpha: .32),
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(8),
       border: Border.all(
         color: Theme.of(context).colorScheme.primary.withValues(alpha: .28),
       ),
@@ -410,7 +530,7 @@ class _RentaFormPageState extends State<RentaFormPage> {
     filled: true,
     fillColor: Theme.of(context).colorScheme.surfaceContainerLow,
     border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(8),
       borderSide: BorderSide(
         color: Theme.of(context).colorScheme.outlineVariant,
       ),
@@ -426,6 +546,18 @@ class _RentaFormPageState extends State<RentaFormPage> {
       lastDate: DateTime.now().add(const Duration(days: 3650)),
     );
     if (date == null || !mounted) return;
+    if (_sinHora) {
+      setState(() {
+        _datesChanged = true;
+        if (start) {
+          _start = PeriodoAlquilerFechas.desdeDia(date);
+        } else {
+          _end = PeriodoAlquilerFechas.desdeDia(date, fin: true);
+        }
+        if (!_allowDiscount) _discountController.text = '0';
+      });
+      return;
+    }
     final time = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.fromDateTime(initial),
@@ -439,18 +571,31 @@ class _RentaFormPageState extends State<RentaFormPage> {
       time.minute,
     );
     setState(() {
+      _datesChanged = true;
       if (start) {
         _start = result;
       } else {
         _end = result;
       }
+      if (!_allowDiscount) _discountController.text = '0';
     });
   }
 
   Future<void> _save() async {
+    if (_policy == null || _policyLoading || _policyError != null) return;
     if (!_formKey.currentState!.validate()) return;
     if (!_end.isAfter(_start)) {
       _message('La fecha final debe ser posterior a la fecha inicial.');
+      return;
+    }
+    final policyError = _policy!.validar(
+      _start,
+      _end,
+      _parseDecimal(_discountController.text) ?? 0,
+      permitirDescuentoMinimo: _isAdmin && _discountOverride,
+    );
+    if (policyError != null) {
+      _message(policyError);
       return;
     }
     final provider = context.read<RentaProvider>();
@@ -473,6 +618,8 @@ class _RentaFormPageState extends State<RentaFormPage> {
           ? 1
           : _parseDecimal(_rateController.text)!,
       observaciones: _notesController.text,
+      lugarEntrega: _deliveryPlace.text,
+      lugarRecepcion: _receptionPlace.text,
     );
     final success = _editing
         ? await provider.update(
@@ -487,6 +634,8 @@ class _RentaFormPageState extends State<RentaFormPage> {
               deposito: common.deposito,
               tasaCambioAplicada: common.tasaCambioAplicada,
               observaciones: common.observaciones,
+              lugarEntrega: common.lugarEntrega,
+              lugarRecepcion: common.lugarRecepcion,
               rowVersion: widget.renta!.rowVersion,
             ),
           )

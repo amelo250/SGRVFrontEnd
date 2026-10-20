@@ -1,8 +1,12 @@
-import 'dart:typed_data';
+import 'package:sgrv_frontend/core/network/api_exception.dart';
+import 'package:sgrv_frontend/core/utils/periodo_alquiler_fechas.dart';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:sgrv_frontend/features/rentas/services/renta_service.dart';
+import 'package:sgrv_frontend/features/auth/providers/auth_provider.dart';
 import 'package:intl/intl.dart';
-import 'package:printing/printing.dart';
+import 'package:sgrv_frontend/features/rentas/services/contrato_pdf_actions.dart';
 import 'package:provider/provider.dart';
 import 'package:sgrv_frontend/features/rentas/models/renta_entrega.dart';
 import 'package:sgrv_frontend/features/rentas/models/renta_entrega_document.dart';
@@ -89,6 +93,12 @@ class _RentaEntregaPageState extends State<RentaEntregaPage> {
                         _fuel(context),
                         const SizedBox(height: 16),
                         _accessories(context, data),
+                        Text(
+                          'Lugar de entrega: ${data.lugarEntrega ?? 'Por confirmar'}',
+                        ),
+                        Text(
+                          'Lugar de recepción / devolución: ${data.lugarRecepcion ?? 'Por confirmar'}',
+                        ),
                         const SizedBox(height: 16),
                         _signatures(context, data),
                         const SizedBox(height: 22),
@@ -116,10 +126,9 @@ class _RentaEntregaPageState extends State<RentaEntregaPage> {
     width: double.infinity,
     padding: const EdgeInsets.all(26),
     decoration: BoxDecoration(
-      gradient: const LinearGradient(
-        colors: [Color(0xFF173C9B), Color(0xFF6655DF)],
-      ),
-      borderRadius: BorderRadius.circular(24),
+      color: Theme.of(context).colorScheme.surface,
+      border: Border.all(color: Theme.of(context).colorScheme.outline),
+      borderRadius: BorderRadius.circular(8),
     ),
     child: Wrap(
       alignment: WrapAlignment.spaceBetween,
@@ -131,13 +140,15 @@ class _RentaEntregaPageState extends State<RentaEntregaPage> {
             Text(
               data.empresa.nombreComercial,
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w900,
+                color: Theme.of(context).colorScheme.onSurface,
+                fontWeight: FontWeight.w700,
               ),
             ),
             Text(
               'RNC ${data.empresa.rnc} · ${data.empresa.telefono}',
-              style: const TextStyle(color: Color(0xFFDCE5FF)),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),
@@ -162,7 +173,7 @@ class _RentaEntregaPageState extends State<RentaEntregaPage> {
   Widget _savedDocument(RentaProvider provider) {
     final saved = provider.entregaArchivo!;
     return Card(
-      color: const Color(0xFFEAF7EF),
+      color: Theme.of(context).colorScheme.surface,
       child: ListTile(
         leading: const Icon(
           Icons.cloud_done_outlined,
@@ -173,17 +184,20 @@ class _RentaEntregaPageState extends State<RentaEntregaPage> {
           'Guardado ${DateFormat('dd/MM/yyyy hh:mm a').format(saved.fechaGuardado)} · '
           '${(saved.tamanoBytes / 1024).toStringAsFixed(1)} KB · Combustible ${saved.nivelCombustible}%',
         ),
-        trailing: OutlinedButton.icon(
-          onPressed: _working ? null : () => _openSaved(provider),
-          icon: const Icon(Icons.download_outlined),
-          label: const Text('Recuperar'),
-        ),
+        trailing: Wrap(children: [
+          IconButton(tooltip: 'Abrir PDF guardado', onPressed: _working ? null : () => _openSaved(provider),
+            icon: const Icon(Icons.picture_as_pdf_outlined)),
+          IconButton(tooltip: 'Compartir o descargar PDF guardado', onPressed: _working ? null : () => _openSaved(provider, compartir: true),
+            icon: const Icon(Icons.share_outlined)),
+          if (const ['ADMIN', 'SUPADMIN'].contains(context.watch<AuthProvider>().role))
+            IconButton(tooltip: 'Copiar enlace seguro de 15 minutos', onPressed: _working ? null : _copyLink,
+              icon: const Icon(Icons.link_outlined)),
+        ]),
       ),
     );
   }
 
   Widget _summary(BuildContext context, RentaEntrega data) {
-    final date = DateFormat('dd/MM/yyyy hh:mm a');
     return _section(
       context,
       title: 'Resumen de la entrega',
@@ -199,8 +213,17 @@ class _RentaEntregaPageState extends State<RentaEntregaPage> {
           ),
           _value('Placa', data.vehiculo.placa),
           _value('Color', data.vehiculo.color),
-          _value('Salida', date.format(data.fechaInicio)),
-          _value('Retorno', date.format(data.fechaFin)),
+          _value(
+            'Salida',
+            PeriodoAlquilerFechas.formato(
+              data.fechaInicio,
+              data.periodoSinHora,
+            ),
+          ),
+          _value(
+            'Retorno',
+            PeriodoAlquilerFechas.formato(data.fechaFin, data.periodoSinHora),
+          ),
           _value(
             'Precio diario',
             '${data.monedaCodigo} ${data.precioPorDiaPactado.toStringAsFixed(2)}',
@@ -343,7 +366,7 @@ class _RentaEntregaPageState extends State<RentaEntregaPage> {
                 title,
                 style: Theme.of(
                   context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
               ),
             ],
           ),
@@ -368,7 +391,7 @@ class _RentaEntregaPageState extends State<RentaEntregaPage> {
         const SizedBox(height: 4),
         Text(
           value.trim().isEmpty ? 'No registrado' : value,
-          style: const TextStyle(fontWeight: FontWeight.w800),
+          style: const TextStyle(fontWeight: FontWeight.w600),
         ),
       ],
     ),
@@ -421,8 +444,12 @@ class _RentaEntregaPageState extends State<RentaEntregaPage> {
       if (document == null) return null;
       _lastDocument = document;
       return await _pdfService.generate(data, document);
-    } catch (_) {
-      _message('No fue posible generar el PDF.');
+    } catch (error) {
+      _message(
+        error is ApiException
+            ? error.message
+            : 'No fue posible generar el PDF.',
+      );
       return null;
     } finally {
       if (mounted) setState(() => _working = false);
@@ -432,16 +459,15 @@ class _RentaEntregaPageState extends State<RentaEntregaPage> {
   Future<void> _print(RentaEntrega data) async {
     final bytes = await _generate(data);
     if (bytes == null) return;
-    await Printing.layoutPdf(onLayout: (_) async => bytes);
+    if (!mounted) return;
+    await presentarContratoPdf(context, bytes, filename: 'entrega-${data.numeroContrato}.pdf');
   }
 
   Future<void> _share(RentaEntrega data) async {
     final bytes = await _generate(data);
     if (bytes == null) return;
-    await Printing.sharePdf(
-      bytes: bytes,
-      filename: 'entrega-${data.numeroContrato}.pdf',
-    );
+    if (!mounted) return;
+    await presentarContratoPdf(context, bytes, filename: 'entrega-${data.numeroContrato}.pdf', compartir: true);
   }
 
   Future<void> _save(RentaEntrega data) async {
@@ -468,12 +494,37 @@ class _RentaEntregaPageState extends State<RentaEntregaPage> {
     );
   }
 
-  Future<void> _openSaved(RentaProvider provider) async {
+  Future<void> _openSaved(RentaProvider provider, {bool compartir = false}) async {
     setState(() => _working = true);
     final bytes = await provider.getEntregaDocumentBytes(widget.rentaId);
     if (mounted) setState(() => _working = false);
-    if (bytes == null || !mounted) return;
-    await Printing.layoutPdf(onLayout: (_) async => Uint8List.fromList(bytes));
+    if (!mounted) return;
+    if (bytes == null) {
+      _message(provider.errorMessage ?? 'No fue posible recuperar el contrato guardado.');
+      return;
+    }
+    await presentarContratoPdf(context, Uint8List.fromList(bytes),
+      filename: 'entrega-R-${widget.rentaId}.pdf', compartir: compartir);
+  }
+
+  Future<void> _copyLink() async {
+    final confirmed = await showDialog<bool>(context: context, builder: (dialog) => AlertDialog(
+      title: const Text('Compartir enlace temporal'),
+      content: const Text('Cualquier persona con el enlace podrá consultar el PDF guardado durante 15 minutos. Compártelo únicamente con el destinatario autorizado.'),
+      actions: [TextButton(onPressed: () => Navigator.pop(dialog, false), child: const Text('Cancelar')),
+        FilledButton(onPressed: () => Navigator.pop(dialog, true), child: const Text('Crear y copiar'))],
+    ));
+    if (confirmed != true || !mounted) return;
+    setState(() => _working = true);
+    final service = RentaService();
+    try {
+      final url = await service.crearEnlaceContrato(widget.rentaId);
+      if (!mounted) return;
+      await Clipboard.setData(ClipboardData(text: url));
+      if (mounted) _message('Enlace copiado. Caduca en 15 minutos.');
+    } catch (e) {
+      if (mounted) _message(e is ApiException ? e.message : 'No fue posible crear o copiar el enlace.');
+    } finally { service.dispose(); if (mounted) setState(() => _working = false); }
   }
 
   void _message(String value) => ScaffoldMessenger.of(

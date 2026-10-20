@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'app_filter_panel.dart';
+export 'app_filter_panel.dart';
 import 'package:sgrv_frontend/shared/colors/app_colors.dart';
 
 class AppModuleScaffold extends StatelessWidget {
@@ -19,7 +21,16 @@ class AppModuleScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text(title), actions: actions),
+    appBar: AppBar(
+      title: Text(
+        title,
+        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+      ),
+      shape: Border(
+        bottom: BorderSide(color: Theme.of(context).colorScheme.outline),
+      ),
+      actions: actions,
+    ),
     floatingActionButton: floatingActionButton,
     body: AppResponsiveContent(
       child: Column(
@@ -84,7 +95,7 @@ class AppPageHeader extends StatelessWidget {
             gradient: const LinearGradient(
               colors: [AppColors.primary, AppColors.secondary],
             ),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, color: Colors.white),
         ),
@@ -96,9 +107,9 @@ class AppPageHeader extends StatelessWidget {
           children: [
             Text(
               title,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w900,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
             ),
             if (subtitle?.isNotEmpty == true) ...[
               const SizedBox(height: 4),
@@ -132,24 +143,35 @@ class AppSearchPanel extends StatelessWidget {
   final TextEditingController? controller;
 
   @override
-  Widget build(BuildContext context) => Card(
-    child: Padding(
-      padding: const EdgeInsets.all(14),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
+  Widget build(BuildContext context) => AppFilterPanel(
+    child: Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final search = TextField(
               controller: controller,
               onChanged: onChanged,
               decoration: InputDecoration(
                 hintText: hint,
                 prefixIcon: const Icon(Icons.search_rounded),
-                fillColor: Theme.of(context).colorScheme.surfaceContainerLow,
               ),
-            ),
-          ),
-          if (trailing != null) ...[const SizedBox(width: 12), trailing!],
-        ],
+            );
+            if (trailing == null) return search;
+            return constraints.maxWidth < 600
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [search, const SizedBox(height: 12), trailing!],
+                  )
+                : Row(
+                    children: [
+                      Expanded(child: search),
+                      const SizedBox(width: 12),
+                      trailing!,
+                    ],
+                  );
+          },
+        ),
       ),
     ),
   );
@@ -182,7 +204,7 @@ class AppStateView extends StatelessWidget {
               height: 68,
               decoration: BoxDecoration(
                 color: AppColors.primary.withValues(alpha: .09),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(icon, size: 34, color: AppColors.primary),
             ),
@@ -192,7 +214,7 @@ class AppStateView extends StatelessWidget {
               textAlign: TextAlign.center,
               style: Theme.of(
                 context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
             ),
             if (message?.isNotEmpty == true) ...[
               const SizedBox(height: 8),
@@ -247,7 +269,7 @@ class AppPagination extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 18),
           child: Text(
             'Página $page de $totalPages',
-            style: const TextStyle(fontWeight: FontWeight.w800),
+            style: const TextStyle(fontWeight: FontWeight.w600),
           ),
         ),
         IconButton.filledTonal(
@@ -288,7 +310,7 @@ class AppSectionCard extends StatelessWidget {
                   height: 42,
                   decoration: BoxDecoration(
                     color: AppColors.primary.withValues(alpha: .09),
-                    borderRadius: BorderRadius.circular(13),
+                    borderRadius: BorderRadius.circular(6),
                   ),
                   child: Icon(icon, color: AppColors.primary),
                 ),
@@ -301,7 +323,7 @@ class AppSectionCard extends StatelessWidget {
                     Text(
                       title,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w900,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                     if (subtitle?.isNotEmpty == true)

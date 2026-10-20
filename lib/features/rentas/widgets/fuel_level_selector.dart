@@ -24,7 +24,7 @@ class FuelLevelSelector extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             '$label: $value%',
-            style: const TextStyle(fontWeight: FontWeight.w800),
+            style: const TextStyle(fontWeight: FontWeight.w600),
           ),
         ],
       ),
@@ -34,7 +34,9 @@ class FuelLevelSelector extends StatelessWidget {
         child: LinearProgressIndicator(
           value: value / 100,
           minHeight: 18,
-          backgroundColor: const Color(0xFFE5E9F2),
+          backgroundColor: Theme.of(
+            context,
+          ).colorScheme.surfaceContainerHighest,
           color: value <= 25 ? Colors.orange : const Color(0xFF33A46C),
         ),
       ),

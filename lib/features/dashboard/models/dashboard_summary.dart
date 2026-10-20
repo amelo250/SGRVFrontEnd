@@ -72,17 +72,20 @@ class DashboardDailyIncome {
 
 class DashboardRecentReservation {
   const DashboardRecentReservation({
+    this.periodoSinHora = false,
     required this.id,
     required this.cliente,
     required this.vehiculo,
     required this.fecha,
     required this.estado,
   });
+  final bool periodoSinHora;
   final int id;
   final String cliente, vehiculo, estado;
   final DateTime fecha;
   factory DashboardRecentReservation.fromJson(Map<String, dynamic> j) =>
       DashboardRecentReservation(
+        periodoSinHora: j['periodoSinHora'] == true,
         id: _i(j['idReservacion']),
         cliente: j['cliente']?.toString() ?? '',
         vehiculo: j['vehiculo']?.toString() ?? '',

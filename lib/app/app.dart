@@ -1,3 +1,4 @@
+import 'package:sgrv_frontend/core/session/session_state.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sgrv_frontend/features/auth/pages/auth_gate.dart';
@@ -27,10 +28,14 @@ class SgrvApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
+    return ChangeNotifierProvider(
+      create: (_) => ThemeProvider()..initialize(),
+      child: ValueListenableBuilder<int>(
+      valueListenable: SessionState.generation,
+      builder: (context, generation, _) => MultiProvider(
+      key: ValueKey(generation),
       providers: [
-        ChangeNotifierProvider(create: (_) => ThemeProvider()..initialize()),
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => AuthProvider()..checkSession()),
         ChangeNotifierProvider(create: (_) => EmpresaProvider()),
         ChangeNotifierProvider(create: (_) => ProveedorVehiculoProvider()),
         ChangeNotifierProvider(create: (_) => VehiculoProvider()),
@@ -58,6 +63,8 @@ class SgrvApp extends StatelessWidget {
           themeMode: themeProvider.themeMode,
           home: const AuthGate(),
         ),
+      ),
+      ),
       ),
     );
   }

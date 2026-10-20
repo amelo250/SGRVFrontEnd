@@ -74,7 +74,7 @@ class _Card extends StatelessWidget {
                   Text(
                     value,
                     style: const TextStyle(
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.w700,
                       fontSize: 18,
                     ),
                   ),

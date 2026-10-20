@@ -8,9 +8,12 @@ class Reservacion {
     required this.idEstado,
     required this.estadoCodigo,
     required this.estadoNombre,
+    this.periodoSinHora = false,
     required this.fechaInicio,
     required this.fechaFin,
     required this.observacion,
+    this.lugarEntrega,
+    this.lugarRecepcion,
     required this.fechaCreacion,
   });
 
@@ -22,9 +25,12 @@ class Reservacion {
   final int idEstado;
   final String estadoCodigo;
   final String estadoNombre;
+  final bool periodoSinHora;
   final DateTime fechaInicio;
   final DateTime fechaFin;
   final String observacion;
+  final String? lugarEntrega;
+  final String? lugarRecepcion;
   final DateTime fechaCreacion;
 
   bool get puedeEditar =>
@@ -42,8 +48,11 @@ class Reservacion {
     idEstado: (json['idEstado'] as num).toInt(),
     estadoCodigo: json['estadoCodigo']?.toString() ?? '',
     estadoNombre: json['estadoNombre']?.toString() ?? '',
+    periodoSinHora: json['periodoSinHora'] == true,
     fechaInicio: DateTime.parse(json['fechaInicio'] as String).toLocal(),
     fechaFin: DateTime.parse(json['fechaFin'] as String).toLocal(),
+    lugarEntrega: json['lugarEntrega']?.toString(),
+    lugarRecepcion: json['lugarRecepcion']?.toString(),
     observacion: json['observacion']?.toString() ?? '',
     fechaCreacion: DateTime.parse(json['fechaCreacion'] as String).toLocal(),
   );

@@ -74,16 +74,20 @@ class CalendarioMonthGrid extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                   onTap: () => onSelected(day),
                   child: Padding(
-                    padding: const EdgeInsets.all(7),
+                    padding: const EdgeInsets.all(4),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          '$dayNumber',
-                          style: TextStyle(
-                            fontWeight: selected || today
-                                ? FontWeight.w900
-                                : FontWeight.w600,
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            '$dayNumber',
+                            maxLines: 1,
+                            style: TextStyle(
+                              fontWeight: selected || today
+                                  ? FontWeight.w700
+                                  : FontWeight.w600,
+                            ),
                           ),
                         ),
                         const Spacer(),

@@ -36,7 +36,7 @@ class CalendarioEventoCard extends StatelessWidget {
                       Expanded(
                         child: Text(
                           evento.vehiculo,
-                          style: const TextStyle(fontWeight: FontWeight.w900),
+                          style: const TextStyle(fontWeight: FontWeight.w700),
                         ),
                       ),
                       Chip(label: Text(evento.estado)),
@@ -45,8 +45,7 @@ class CalendarioEventoCard extends StatelessWidget {
                   Text(evento.cliente),
                   const SizedBox(height: 5),
                   Text(
-                    '${hour.format(evento.fechaInicio)} – '
-                    '${hour.format(evento.fechaFin)} · '
+                    '${evento.periodoSinHora ? "Sin hora definida" : "${hour.format(evento.fechaInicio)} – ${hour.format(evento.fechaFin)}"} · '
                     '${evento.esReservacion ? 'Reservación' : 'Renta'}',
                   ),
                 ],

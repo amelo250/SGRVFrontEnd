@@ -10,6 +10,8 @@ class RentaCreateDto {
     required this.deposito,
     required this.tasaCambioAplicada,
     this.observaciones,
+    this.lugarEntrega,
+    this.lugarRecepcion,
   });
 
   final int idCliente;
@@ -22,6 +24,8 @@ class RentaCreateDto {
   final double deposito;
   final double tasaCambioAplicada;
   final String? observaciones;
+  final String? lugarEntrega;
+  final String? lugarRecepcion;
 
   Map<String, dynamic> toJson() => {
     'idCliente': idCliente,
@@ -34,6 +38,8 @@ class RentaCreateDto {
     'deposito': deposito,
     'tasaCambioAplicada': tasaCambioAplicada,
     'observaciones': nullableText(observaciones),
+    if (lugarEntrega != null) 'lugarEntrega': lugarEntrega!.trim(),
+    if (lugarRecepcion != null) 'lugarRecepcion': lugarRecepcion!.trim(),
   };
 }
 
@@ -50,6 +56,8 @@ class RentaUpdateDto extends RentaCreateDto {
     required super.tasaCambioAplicada,
     required this.rowVersion,
     super.observaciones,
+    super.lugarEntrega,
+    super.lugarRecepcion,
   });
 
   final String rowVersion;
@@ -69,6 +77,8 @@ class ConvertirReservacionRentaDto {
     required this.deposito,
     required this.tasaCambioAplicada,
     this.observaciones,
+    this.lugarEntrega,
+    this.lugarRecepcion,
   });
 
   final double? precioPorDiaPactado;
@@ -78,6 +88,8 @@ class ConvertirReservacionRentaDto {
   final double deposito;
   final double tasaCambioAplicada;
   final String? observaciones;
+  final String? lugarEntrega;
+  final String? lugarRecepcion;
 
   Map<String, dynamic> toJson() => {
     'precioPorDiaPactado': precioPorDiaPactado,
@@ -86,6 +98,8 @@ class ConvertirReservacionRentaDto {
     'deposito': deposito,
     'tasaCambioAplicada': tasaCambioAplicada,
     'observaciones': nullableText(observaciones),
+    if (lugarEntrega != null) 'lugarEntrega': lugarEntrega!.trim(),
+    if (lugarRecepcion != null) 'lugarRecepcion': lugarRecepcion!.trim(),
   };
 }
 

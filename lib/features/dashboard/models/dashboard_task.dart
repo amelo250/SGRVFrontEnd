@@ -9,6 +9,8 @@ class DashboardTask {
     required this.titulo,
     required this.estadoCodigo,
     required this.esHoy,
+    this.completada = false,
+    this.periodoSinHora = false,
     this.idCliente,
     this.cliente,
     this.detalle,
@@ -26,6 +28,8 @@ class DashboardTask {
   final String? detalle;
   final String estadoCodigo;
   final bool esHoy;
+  final bool completada;
+  final bool periodoSinHora;
 
   factory DashboardTask.fromJson(Map<String, dynamic> json) => DashboardTask(
     id: json['id']?.toString() ?? '',
@@ -40,6 +44,8 @@ class DashboardTask {
     detalle: json['detalle']?.toString(),
     estadoCodigo: json['estadoCodigo']?.toString() ?? '',
     esHoy: json['esHoy'] == true,
+    completada: json['completada'] == true,
+    periodoSinHora: json['periodoSinHora'] == true,
   );
 }
 

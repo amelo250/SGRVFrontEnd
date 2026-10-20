@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:sgrv_frontend/core/session/session_state.dart';
 import 'package:sgrv_frontend/core/network/api_exception.dart';
 import '../models/gasto.dart';
 import '../models/gasto_catalog_option.dart';
@@ -8,7 +8,7 @@ import '../services/gasto_service.dart';
 
 enum GastoStatus { initial, loading, success, empty, error }
 
-class GastoProvider extends ChangeNotifier {
+class GastoProvider extends SessionNotifier {
   GastoProvider({GastoService? service}) : _service = service ?? GastoService();
   final GastoService _service;
   List<Gasto> _items = const [];

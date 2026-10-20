@@ -115,7 +115,7 @@ class _ProveedorVehiculoFormPageState extends State<ProveedorVehiculoFormPage> {
                         onChanged: (value) => setState(() => _activo = value),
                         title: const Text(
                           'Proveedor activo',
-                          style: TextStyle(fontWeight: FontWeight.w800),
+                          style: TextStyle(fontWeight: FontWeight.w600),
                         ),
                       ),
                   ],

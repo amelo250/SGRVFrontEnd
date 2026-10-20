@@ -58,7 +58,7 @@ class _EmpresaOnboardingPageState extends State<EmpresaOnboardingPage> {
                         Text(
                           'Crea la organización',
                           style: Theme.of(context).textTheme.headlineSmall
-                              ?.copyWith(fontWeight: FontWeight.w900),
+                              ?.copyWith(fontWeight: FontWeight.w700),
                         ),
                         const SizedBox(height: 8),
                         const Text(

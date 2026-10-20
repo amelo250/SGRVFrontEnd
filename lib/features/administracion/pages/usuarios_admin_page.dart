@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:sgrv_frontend/features/auth/providers/auth_provider.dart';
+import 'package:sgrv_frontend/features/auth/pages/password_page.dart';
 import '../models/usuario_admin.dart';
 import '../services/usuarios_admin_service.dart';
 import 'package:sgrv_frontend/shared/widgets/app_module_ui.dart';
@@ -95,14 +98,35 @@ class _UsuariosAdminPageState extends State<UsuariosAdminPage> {
                     ),
                     title: Text(
                       item.nombre,
-                      style: const TextStyle(fontWeight: FontWeight.w800),
+                      style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
                     subtitle: Text(
                       '${item.email} · Empresa #${item.idEmpresa} · Rol #${item.idRol}',
                     ),
-                    trailing: Switch(
-                      value: item.activo,
-                      onChanged: (_) => _toggle(item),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (context.watch<AuthProvider>().isSuperAdmin)
+                          IconButton(
+                            tooltip: 'Restablecer contraseña',
+                            icon: const Icon(Icons.lock_reset),
+                            onPressed: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => PasswordPage(
+                                  mode: PasswordMode.reset,
+                                  userId: item.idUsuario,
+                                  companyId: item.idEmpresa,
+                                  userName: item.nombre,
+                                ),
+                              ),
+                            ),
+                          ),
+                        Switch(
+                          value: item.activo,
+                          onChanged: (_) => _toggle(item),
+                        ),
+                      ],
                     ),
                   ),
                 );

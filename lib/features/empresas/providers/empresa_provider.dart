@@ -1,8 +1,8 @@
-import 'package:flutter/foundation.dart';
+import 'package:sgrv_frontend/core/session/session_state.dart';
 import 'package:sgrv_frontend/features/empresas/models/empresa.dart';
 import 'package:sgrv_frontend/features/empresas/services/empresa_service.dart';
 
-class EmpresaProvider extends ChangeNotifier {
+class EmpresaProvider extends SessionNotifier {
   final EmpresaService _empresaService;
 
   EmpresaProvider({EmpresaService? empresaService})

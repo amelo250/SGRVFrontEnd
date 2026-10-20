@@ -1,11 +1,12 @@
-import 'package:flutter/foundation.dart';
+import 'package:sgrv_frontend/core/utils/periodo_alquiler_fechas.dart';
+import 'package:sgrv_frontend/core/session/session_state.dart';
 import 'package:sgrv_frontend/core/network/api_exception.dart';
 import 'package:sgrv_frontend/features/calendario/models/calendario_evento.dart';
 import 'package:sgrv_frontend/features/calendario/services/calendario_service.dart';
 
 enum CalendarioStatus { initial, loading, success, empty, error }
 
-class CalendarioProvider extends ChangeNotifier {
+class CalendarioProvider extends SessionNotifier {
   CalendarioProvider({CalendarioService? service})
     : _service = service ?? CalendarioService(),
       _mesVisible = DateTime(DateTime.now().year, DateTime.now().month),
@@ -34,16 +35,20 @@ class CalendarioProvider extends ChangeNotifier {
 
   List<CalendarioEvento> eventosDelDia(DateTime day) => eventos
       .where((event) {
-        final inicio = DateTime(
-          event.fechaInicio.year,
-          event.fechaInicio.month,
-          event.fechaInicio.day,
-        );
-        final fin = DateTime(
-          event.fechaFin.year,
-          event.fechaFin.month,
-          event.fechaFin.day,
-        );
+        final inicio = event.periodoSinHora
+            ? PeriodoAlquilerFechas.dia(event.fechaInicio)
+            : DateTime(
+                event.fechaInicio.year,
+                event.fechaInicio.month,
+                event.fechaInicio.day,
+              );
+        final fin = event.periodoSinHora
+            ? PeriodoAlquilerFechas.dia(event.fechaFin)
+            : DateTime(
+                event.fechaFin.year,
+                event.fechaFin.month,
+                event.fechaFin.day,
+              );
         final fecha = DateTime(day.year, day.month, day.day);
         return !fecha.isBefore(inicio) && !fecha.isAfter(fin);
       })

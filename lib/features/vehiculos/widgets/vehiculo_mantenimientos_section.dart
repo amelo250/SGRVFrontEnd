@@ -55,7 +55,7 @@ class _VehiculoMantenimientosSectionState
                       'Historial de mantenimiento',
                       style: TextStyle(
                         fontSize: 20,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     Text('Servicios y costos registrados para este vehículo.'),
@@ -130,7 +130,7 @@ class _VehiculoMantenimientosSectionState
                   currencyCode: widget.vehiculo.monedaCodigo,
                   currencySymbol: widget.vehiculo.monedaSimbolo,
                 ),
-                style: const TextStyle(fontWeight: FontWeight.w800),
+                style: const TextStyle(fontWeight: FontWeight.w600),
               ),
               onTap: () => _openForm(context, item),
             ),

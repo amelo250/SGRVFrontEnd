@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:sgrv_frontend/features/auth/providers/auth_provider.dart';
+import 'package:sgrv_frontend/features/mantenimientos/widgets/completar_mantenimiento_dialog.dart';
+import 'package:sgrv_frontend/features/rentas/pages/renta_detail_page.dart';
+import 'package:sgrv_frontend/features/mantenimientos/pages/mantenimientos_page.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:sgrv_frontend/features/dashboard/models/dashboard_task.dart';
@@ -23,7 +27,7 @@ class DashboardTasksSection extends StatelessWidget {
                   height: 44,
                   decoration: BoxDecoration(
                     color: const Color(0xFF3867F4).withValues(alpha: .1),
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(
                     Icons.task_alt_rounded,
@@ -39,7 +43,7 @@ class DashboardTasksSection extends StatelessWidget {
                         'Tareas operativas',
                         style: TextStyle(
                           fontSize: 17,
-                          fontWeight: FontWeight.w900,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                       Text(
@@ -83,7 +87,9 @@ class DashboardTasksSection extends StatelessWidget {
                 builder: (context, constraints) {
                   final wide = constraints.maxWidth >= 780;
                   final today = _TaskGroup(
-                    title: 'Hoy',
+                    title: provider.data!.hoy.any((x) => !x.esHoy)
+                        ? 'Hoy y pendientes anteriores'
+                        : 'Hoy',
                     count: provider.data!.totalHoy,
                     tasks: provider.data!.hoy,
                     accent: const Color(0xFF3867F4),
@@ -137,7 +143,7 @@ class _TaskGroup extends StatelessWidget {
     children: [
       Row(
         children: [
-          Text(title, style: const TextStyle(fontWeight: FontWeight.w900)),
+          Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
           const SizedBox(width: 8),
           Badge(backgroundColor: accent, label: Text('$count')),
         ],
@@ -149,18 +155,48 @@ class _TaskGroup extends StatelessWidget {
           child: Center(child: Text('Sin tareas')),
         )
       else
-        ...tasks.map((task) => _TaskTile(task: task, accent: accent)),
+        ...tasks.map(
+          (task) =>
+              _TaskTile(key: ValueKey(task.id), task: task, accent: accent),
+        ),
     ],
   );
 }
 
-class _TaskTile extends StatelessWidget {
-  const _TaskTile({required this.task, required this.accent});
+class _TaskTile extends StatefulWidget {
+  const _TaskTile({super.key, required this.task, required this.accent});
   final DashboardTask task;
   final Color accent;
 
   @override
+  State<_TaskTile> createState() => _TaskTileState();
+}
+
+class _TaskTileState extends State<_TaskTile> {
+  bool _busy = false;
+  DashboardTask get task => widget.task;
+  Color get accent => widget.accent;
+
+  @override
   Widget build(BuildContext context) {
+    // REGISTRADO no permite inferir si el mantenimiento está pendiente o completado.
+    final sinEstado =
+        task.tipo == 'MANTENIMIENTO' &&
+        const ['REGISTRADO', 'SIN_CLASIFICAR'].contains(task.estadoCodigo);
+    final puedeCompletar =
+        task.tipo == 'MANTENIMIENTO' &&
+        task.estadoCodigo == 'PENDIENTE' &&
+        const [
+          'ADMIN',
+          'SUPADMIN',
+        ].contains(context.watch<AuthProvider?>()?.role);
+    final soloConsulta =
+        task.tipo == "MANTENIMIENTO" && !puedeCompletar && !task.completada;
+    final estado = sinEstado
+        ? 'Registrado · estado no disponible'
+        : task.completada
+        ? 'Completada'
+        : 'Pendiente';
     final (icon, color) = switch (task.tipo) {
       'ENTREGA' => (Icons.key_rounded, Colors.green),
       'RECEPCION' => (Icons.assignment_return_rounded, Colors.blue),
@@ -172,7 +208,7 @@ class _TaskTile extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: color.withValues(alpha: .065),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(color: color.withValues(alpha: .15)),
       ),
       child: Row(
@@ -187,8 +223,8 @@ class _TaskTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  task.titulo,
-                  style: const TextStyle(fontWeight: FontWeight.w800),
+                  "${task.titulo} · $estado",
+                  style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
                 Text(
                   task.vehiculo,
@@ -201,13 +237,74 @@ class _TaskTile extends StatelessWidget {
               ],
             ),
           ),
+          IconButton(
+            tooltip: 'Abrir detalle',
+            icon: const Icon(Icons.open_in_new_outlined),
+            onPressed: _busy ? null : () async {
+              await Navigator.push(context, MaterialPageRoute(
+                builder: (_) => task.tipo == 'MANTENIMIENTO'
+                    ? const MantenimientosPage()
+                    : RentaDetailPage(rentaId: task.idEntidad),
+              ));
+              if (context.mounted) {
+                await context.read<DashboardTaskProvider>().load(refresh: true);
+              }
+            },
+          ),
+          IconButton(
+            tooltip: puedeCompletar
+                ? "Completar mantenimiento"
+                : (sinEstado || soloConsulta)
+                ? "Ver mantenimiento"
+                : task.completada
+                ? "Completada"
+                : "Abrir para completar",
+            icon: Icon(
+              (sinEstado || soloConsulta)
+                  ? Icons.visibility_outlined
+                  : task.completada
+                  ? Icons.check_circle
+                  : Icons.radio_button_unchecked,
+            ),
+            onPressed: _busy || (task.completada && !sinEstado)
+                ? null
+                : () async {
+                    setState(() => _busy = true);
+                    try {
+                      if (puedeCompletar) {
+                        await completarMantenimientoDialog(
+                          context,
+                          task.idEntidad,
+                        );
+                      } else {
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => task.tipo == "MANTENIMIENTO"
+                                ? const MantenimientosPage()
+                                : RentaDetailPage(rentaId: task.idEntidad),
+                          ),
+                        );
+                      }
+                      if (context.mounted) {
+                        await context.read<DashboardTaskProvider>().load(
+                          refresh: true,
+                        );
+                      }
+                    } finally {
+                      if (mounted) setState(() => _busy = false);
+                    }
+                  },
+          ),
           const SizedBox(width: 8),
           Text(
-            task.esHoy
+            task.periodoSinHora
+                ? '${DateFormat("dd MMM").format(task.fecha)}\nSin hora definida'
+                : task.esHoy
                 ? DateFormat('h:mm a').format(task.fecha)
                 : DateFormat('dd MMM\nh:mm a').format(task.fecha),
             textAlign: TextAlign.right,
-            style: TextStyle(color: color, fontWeight: FontWeight.w800),
+            style: TextStyle(color: color, fontWeight: FontWeight.w600),
           ),
         ],
       ),

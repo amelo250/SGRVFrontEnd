@@ -1,8 +1,8 @@
-import 'package:flutter/foundation.dart';
+import 'package:sgrv_frontend/core/session/session_state.dart';
 import '../models/administracion_resumen.dart';
 import '../services/administracion_service.dart';
 
-class AdministracionProvider extends ChangeNotifier {
+class AdministracionProvider extends SessionNotifier {
   AdministracionProvider({AdministracionService? service})
     : _service = service ?? AdministracionService();
   final AdministracionService _service;

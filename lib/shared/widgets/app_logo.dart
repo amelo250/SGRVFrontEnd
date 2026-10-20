@@ -60,28 +60,32 @@ class AppLogo extends StatelessWidget {
                 ),
         ),
         const SizedBox(width: 12),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: TextStyle(
-                color: foreground,
-                fontSize: compact ? 19 : 31,
-                fontWeight: FontWeight.w800,
-                letterSpacing: .4,
+        Flexible(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: foreground,
+                  fontSize: compact ? 19 : 31,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: .4,
+                ),
               ),
-            ),
-            Text(
-              'RENT CAR',
-              style: TextStyle(
-                color: compact ? AppColors.primary : const Color(0xFF58B8FF),
-                fontSize: compact ? 9 : 13,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 1.8,
+              Text(
+                'RENT CAR',
+                style: TextStyle(
+                  color: compact ? AppColors.primary : const Color(0xFF58B8FF),
+                  fontSize: compact ? 9 : 13,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.8,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     );

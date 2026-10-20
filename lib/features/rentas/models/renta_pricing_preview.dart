@@ -1,4 +1,4 @@
-import 'dart:math' as math;
+import 'package:sgrv_frontend/features/rentas/dtos/politica_renta_dto.dart';
 
 class RentaPricingPreview {
   const RentaPricingPreview({
@@ -21,8 +21,9 @@ class RentaPricingPreview {
     required double impuestos,
     required double descuentos,
   }) {
-    final hours = fechaFin.difference(fechaInicio).inMinutes / 60;
-    final days = math.max(1, (hours / 24).ceil());
+    final days = const PoliticaRentaDto(
+      minimoDias: 3,
+    ).dias(fechaInicio, fechaFin);
     final subtotal = _round(precioPactado * days);
     final total = _round(subtotal + impuestos - descuentos);
     return RentaPricingPreview(

@@ -40,8 +40,9 @@ class _CalendarioPageState extends State<CalendarioPage> {
   }
 
   Widget _body(CalendarioProvider provider) {
-    if (provider.status == CalendarioStatus.initial ||
-        provider.status == CalendarioStatus.loading) {
+    if (provider.resumen == null &&
+        (provider.status == CalendarioStatus.initial ||
+            provider.status == CalendarioStatus.loading)) {
       return const Center(child: CircularProgressIndicator());
     }
     if (provider.status == CalendarioStatus.error) {
@@ -124,7 +125,7 @@ class _Toolbar extends StatelessWidget {
               textAlign: TextAlign.center,
               style: Theme.of(
                 context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
             ),
           ),
           IconButton.filledTonal(
@@ -132,18 +133,20 @@ class _Toolbar extends StatelessWidget {
             icon: const Icon(Icons.chevron_right_rounded),
           ),
           const SizedBox(width: 8),
-          SegmentedButton<String>(
-            segments: const [
-              ButtonSegment(value: 'TODOS', label: Text('Todos')),
-              ButtonSegment(
-                value: 'RESERVACION',
-                label: Text('Reservaciones'),
+          AppFilterPanel(
+            child: SegmentedButton<String>(
+              segments: const [
+                ButtonSegment(value: 'TODOS', label: Text('Todos')),
+                ButtonSegment(
+                  value: 'RESERVACION',
+                  label: Text('Reservaciones'),
+                ),
+                ButtonSegment(value: 'RENTA', label: Text('Rentas')),
+              ],
+              selected: {provider.tipo ?? 'TODOS'},
+              onSelectionChanged: (value) => provider.filtrarTipo(
+                value.first == 'TODOS' ? null : value.first,
               ),
-              ButtonSegment(value: 'RENTA', label: Text('Rentas')),
-            ],
-            selected: {provider.tipo ?? 'TODOS'},
-            onSelectionChanged: (value) => provider.filtrarTipo(
-              value.first == 'TODOS' ? null : value.first,
             ),
           ),
         ],
@@ -174,7 +177,7 @@ class _DayPanel extends StatelessWidget {
               ).format(provider.diaSeleccionado),
               style: Theme.of(
                 context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 4),
             Text('$eventCount eventos'),

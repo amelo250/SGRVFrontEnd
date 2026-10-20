@@ -3,7 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:sgrv_frontend/features/empresas/providers/empresa_provider.dart';
 import 'package:sgrv_frontend/shared/colors/app_colors.dart';
 import 'package:sgrv_frontend/shared/widgets/app_module_ui.dart';
-import 'package:sgrv_frontend/features/empresas/pages/empresa_onboarding_page.dart';
+import 'package:sgrv_frontend/features/empresas/pages/empresa_administracion_page.dart';
+import 'package:sgrv_frontend/features/auth/providers/auth_provider.dart';
 import 'dart:convert';
 import 'package:sgrv_frontend/core/storage/token_storage.dart';
 
@@ -41,7 +42,7 @@ class _EmpresasPageState extends State<EmpresasPage> {
                         final created = await Navigator.push<bool>(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => const EmpresaOnboardingPage(),
+                            builder: (_) => const EmpresaAdministracionPage(),
                           ),
                         );
                         if (created == true && mounted) {
@@ -108,7 +109,7 @@ class _EmpresasPageState extends State<EmpresasPage> {
                           gradient: const LinearGradient(
                             colors: [AppColors.primary, AppColors.secondary],
                           ),
-                          borderRadius: BorderRadius.circular(15),
+                          borderRadius: BorderRadius.circular(8),
                         ),
                         child: Center(
                           child: Text(
@@ -117,7 +118,7 @@ class _EmpresasPageState extends State<EmpresasPage> {
                                 : company.nombre[0].toUpperCase(),
                             style: const TextStyle(
                               color: Colors.white,
-                              fontWeight: FontWeight.w900,
+                              fontWeight: FontWeight.w700,
                               fontSize: 20,
                             ),
                           ),
@@ -133,7 +134,7 @@ class _EmpresasPageState extends State<EmpresasPage> {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: Theme.of(context).textTheme.titleLarge
-                                  ?.copyWith(fontWeight: FontWeight.w900),
+                                  ?.copyWith(fontWeight: FontWeight.w700),
                             ),
                             Text(
                               company.nombreComercial.isEmpty
@@ -154,6 +155,21 @@ class _EmpresasPageState extends State<EmpresasPage> {
                         ),
                         label: Text(company.activo ? 'Activa' : 'Inactiva'),
                       ),
+                      if (context.watch<AuthProvider>().isSuperAdmin)
+                        IconButton(
+                          tooltip: 'Editar empresa y plan',
+                          icon: const Icon(Icons.edit_outlined),
+                          onPressed: () async {
+                            await Navigator.push<bool>(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    EmpresaAdministracionPage(empresa: company),
+                              ),
+                            );
+                            if (mounted) await provider.cargarEmpresas();
+                          },
+                        ),
                     ],
                   ),
                   const Spacer(),
@@ -200,7 +216,7 @@ class _EmpresasPageState extends State<EmpresasPage> {
             Text(
               value,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontWeight: FontWeight.w800),
+              style: const TextStyle(fontWeight: FontWeight.w600),
             ),
           ],
         ),

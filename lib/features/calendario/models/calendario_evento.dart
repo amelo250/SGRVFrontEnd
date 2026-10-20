@@ -9,6 +9,7 @@ class CalendarioEvento {
     required this.cliente,
     required this.estadoCodigo,
     required this.estado,
+    this.periodoSinHora = false,
     required this.fechaInicio,
     required this.fechaFin,
     this.observacion,
@@ -23,6 +24,7 @@ class CalendarioEvento {
   final String cliente;
   final String estadoCodigo;
   final String estado;
+  final bool periodoSinHora;
   final DateTime fechaInicio;
   final DateTime fechaFin;
   final String? observacion;
@@ -40,6 +42,7 @@ class CalendarioEvento {
         cliente: json['cliente']?.toString() ?? '',
         estadoCodigo: json['estadoCodigo']?.toString() ?? '',
         estado: json['estado']?.toString() ?? '',
+        periodoSinHora: json['periodoSinHora'] == true,
         fechaInicio: DateTime.parse(json['fechaInicio'] as String).toLocal(),
         fechaFin: DateTime.parse(json['fechaFin'] as String).toLocal(),
         observacion: json['observacion']?.toString(),
@@ -62,14 +65,11 @@ class CalendarioResumen {
   factory CalendarioResumen.fromJson(Map<String, dynamic> json) =>
       CalendarioResumen(
         totalEventos: (json['totalEventos'] as num?)?.toInt() ?? 0,
-        totalReservaciones:
-            (json['totalReservaciones'] as num?)?.toInt() ?? 0,
+        totalReservaciones: (json['totalReservaciones'] as num?)?.toInt() ?? 0,
         totalRentas: (json['totalRentas'] as num?)?.toInt() ?? 0,
         eventos: (json['eventos'] as List<dynamic>? ?? const [])
             .map(
-              (item) => CalendarioEvento.fromJson(
-                item as Map<String, dynamic>,
-              ),
+              (item) => CalendarioEvento.fromJson(item as Map<String, dynamic>),
             )
             .toList(growable: false),
       );

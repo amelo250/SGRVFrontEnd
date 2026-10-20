@@ -1,8 +1,8 @@
-import 'package:flutter/foundation.dart';
+import 'package:sgrv_frontend/core/session/session_state.dart';
 import '../models/configuracion_catalogo.dart';
 import '../services/configuracion_service.dart';
 
-class ConfiguracionProvider extends ChangeNotifier {
+class ConfiguracionProvider extends SessionNotifier {
   ConfiguracionProvider({ConfiguracionService? service})
     : _service = service ?? ConfiguracionService();
 

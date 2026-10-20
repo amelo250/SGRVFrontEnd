@@ -1,5 +1,5 @@
+import 'package:sgrv_frontend/core/utils/periodo_alquiler_fechas.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:sgrv_frontend/features/reservaciones/models/reservacion.dart';
 
 class ReservacionCard extends StatelessWidget {
@@ -18,57 +18,74 @@ class ReservacionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final format = DateFormat('dd/MM/yyyy HH:mm');
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: reservacion.puedeEditar ? onEdit : null,
         child: Padding(
           padding: const EdgeInsets.all(18),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               CircleAvatar(
                 radius: 27,
                 child: Text('#${reservacion.idReservacion}'),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      reservacion.clienteNombre,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(reservacion.vehiculoDescripcion),
-                    const SizedBox(height: 5),
-                    Text(
-                      '${format.format(reservacion.fechaInicio)} — '
-                      '${format.format(reservacion.fechaFin)}',
-                    ),
-                  ],
-                ),
+              const SizedBox(height: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    reservacion.clienteNombre,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(reservacion.vehiculoDescripcion),
+                  Text(
+                    'Entrega: ${reservacion.lugarEntrega ?? 'Por confirmar'}',
+                  ),
+                  Text(
+                    'Recepción: ${reservacion.lugarRecepcion ?? 'Por confirmar'}',
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    '${PeriodoAlquilerFechas.formato(reservacion.fechaInicio, reservacion.periodoSinHora)} — '
+                    '${PeriodoAlquilerFechas.formato(reservacion.fechaFin, reservacion.periodoSinHora)}',
+                  ),
+                ],
               ),
-              Chip(label: Text(reservacion.estadoNombre)),
-              PopupMenuButton<String>(
-                onSelected: (value) {
-                  if (value == 'edit') onEdit();
-                  if (value == 'confirm') onConfirm();
-                  if (value == 'cancel') onCancel();
-                },
-                itemBuilder: (_) => [
-                  if (reservacion.puedeEditar)
-                    const PopupMenuItem(value: 'edit', child: Text('Editar')),
-                  if (reservacion.puedeConfirmar)
-                    const PopupMenuItem(
-                      value: 'confirm',
-                      child: Text('Confirmar'),
-                    ),
-                  if (reservacion.puedeCancelar)
-                    const PopupMenuItem(
-                      value: 'cancel',
-                      child: Text('Cancelar'),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 12,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Chip(label: Text(reservacion.estadoNombre)),
+                  if (reservacion.puedeEditar ||
+                      reservacion.puedeConfirmar ||
+                      reservacion.puedeCancelar)
+                    PopupMenuButton<String>(
+                      onSelected: (value) {
+                        if (value == 'edit') onEdit();
+                        if (value == 'confirm') onConfirm();
+                        if (value == 'cancel') onCancel();
+                      },
+                      itemBuilder: (_) => [
+                        if (reservacion.puedeEditar)
+                          const PopupMenuItem(
+                            value: 'edit',
+                            child: Text('Editar'),
+                          ),
+                        if (reservacion.puedeConfirmar)
+                          const PopupMenuItem(
+                            value: 'confirm',
+                            child: Text('Confirmar'),
+                          ),
+                        if (reservacion.puedeCancelar)
+                          const PopupMenuItem(
+                            value: 'cancel',
+                            child: Text('Cancelar'),
+                          ),
+                      ],
                     ),
                 ],
               ),

@@ -29,7 +29,7 @@ class VehiculoFeatureBlocked extends StatelessWidget {
                 height: 70,
                 decoration: BoxDecoration(
                   color: const Color(0xFF3867F4).withValues(alpha: .1),
-                  borderRadius: BorderRadius.circular(22),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(icon, size: 34, color: const Color(0xFF3867F4)),
               ),
@@ -39,7 +39,7 @@ class VehiculoFeatureBlocked extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: Theme.of(
                   context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 9),
               Text(

@@ -13,7 +13,7 @@ class RentaFinancialSummary extends StatelessWidget {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(8),
         side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
       ),
       child: Padding(
@@ -25,7 +25,7 @@ class RentaFinancialSummary extends StatelessWidget {
               'Resumen financiero',
               style: Theme.of(
                 context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 18),
             _row(
@@ -68,7 +68,7 @@ class RentaFinancialSummary extends StatelessWidget {
           value,
           style: TextStyle(
             fontSize: emphasized ? 18 : 15,
-            fontWeight: emphasized ? FontWeight.w900 : FontWeight.w700,
+            fontWeight: emphasized ? FontWeight.w700 : FontWeight.w700,
             color: color,
           ),
         ),

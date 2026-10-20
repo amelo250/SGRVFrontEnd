@@ -1,3 +1,4 @@
+import 'package:sgrv_frontend/core/utils/periodo_alquiler_fechas.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:sgrv_frontend/features/rentas/models/renta.dart';
@@ -25,7 +26,7 @@ class RentaHistoryCard extends StatelessWidget {
       elevation: 0,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(8),
         side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
       ),
       clipBehavior: Clip.antiAlias,
@@ -42,7 +43,7 @@ class RentaHistoryCard extends StatelessWidget {
                     child: Text(
                       'Renta #${renta.idRenta}',
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w900,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
@@ -73,13 +74,17 @@ class RentaHistoryCard extends StatelessWidget {
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
-                      date.format(renta.fechaEntregaReal ?? renta.fechaFin),
+                      (renta.fechaEntregaReal == null && renta.periodoSinHora
+                          ? PeriodoAlquilerFechas.formato(renta.fechaFin, true)
+                          : date.format(
+                              renta.fechaEntregaReal ?? renta.fechaFin,
+                            )),
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ),
                   Text(
                     money.format(renta.total),
-                    style: const TextStyle(fontWeight: FontWeight.w900),
+                    style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(width: 6),
                   const Icon(Icons.chevron_right_rounded, size: 19),

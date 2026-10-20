@@ -12,11 +12,56 @@ class ReservacionService {
 
   final ApiClient _apiClient;
 
+  Future<String> obtenerCatalogoFijo() async {
+    final endpoint = Uri.parse(ApiConfig.reservaciones).replace(
+      path: '${Uri.parse(ApiConfig.reservaciones).path}-publicas/catalogo-fijo',
+    );
+    final response = ApiResponse<String>.fromJson(
+      await _apiClient.getJson(endpoint.toString()),
+      (value) => (value as Map<String, dynamic>)['url'] as String,
+    );
+    if (!response.success || response.data == null) {
+      throw ApiException(message: response.message);
+    }
+    return response.data!;
+  }
+
+  Future<String> crearEnlacePublico({
+    int diasVigencia = 30,
+    int? idCliente,
+    bool solicitarTelefono = false,
+    bool solicitarDireccion = false,
+    String? monedaCodigo,
+    double? pesosPorDolar,
+  }) async {
+    final endpoint = Uri.parse(ApiConfig.reservaciones).replace(
+      path: '${Uri.parse(ApiConfig.reservaciones).path}-publicas/enlaces',
+    );
+    final response = ApiResponse<String>.fromJson(
+      await _apiClient.postJson(endpoint.toString(), {
+        'diasVigencia': diasVigencia,
+        'idCliente': ?idCliente,
+        'solicitarTelefono': solicitarTelefono,
+        'solicitarDireccion': solicitarDireccion,
+        'monedaCodigo': ?monedaCodigo,
+        'pesosPorDolar': ?pesosPorDolar,
+      }),
+      (value) => (value as Map<String, dynamic>)['url'] as String,
+    );
+    if (!response.success || response.data == null) {
+      throw ApiException(message: response.message);
+    }
+    return response.data!;
+  }
+
   Future<ReservacionPageResult> getAll({
     int pageNumber = 1,
     int pageSize = 20,
     String? search,
     int? idEstado,
+    bool soloConvertibles = false,
+    bool? historicas,
+    bool soloHoy = false,
   }) async {
     final uri = Uri.parse(ApiConfig.reservaciones).replace(
       queryParameters: {
@@ -24,6 +69,9 @@ class ReservacionService {
         'pageSize': '$pageSize',
         if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
         if (idEstado != null) 'idEstado': '$idEstado',
+        if (soloConvertibles) 'soloConvertibles': 'true',
+        if (historicas != null) 'historicas': '$historicas',
+        if (soloHoy) 'soloHoy': 'true',
       },
     );
     final result = await _apiClient.getJsonResult(uri.toString());
@@ -45,6 +93,27 @@ class ReservacionService {
 
   Future<Reservacion> create(ReservacionDto dto) =>
       _parse(_apiClient.postJson(ApiConfig.reservaciones, dto.toJson()));
+
+  Future<List<Reservacion>> getConvertibles() async {
+    final reservations = <Reservacion>[];
+    var page = 1;
+    while (true) {
+      final result = await getAll(
+        pageNumber: page,
+        pageSize: 100,
+        soloConvertibles: true,
+      );
+      reservations.addAll(result.items);
+      if (result.items.isEmpty || reservations.length >= result.totalCount) {
+        break;
+      }
+      page++;
+    }
+    // Una actualización concurrente entre páginas puede repetir una fila.
+    return {
+      for (final item in reservations) item.idReservacion: item,
+    }.values.toList();
+  }
 
   Future<Reservacion> update(int id, ReservacionDto dto) => _parse(
     _apiClient.putJson('${ApiConfig.reservaciones}/$id', dto.toJson()),

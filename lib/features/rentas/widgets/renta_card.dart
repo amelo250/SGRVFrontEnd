@@ -1,3 +1,4 @@
+import 'package:sgrv_frontend/core/utils/periodo_alquiler_fechas.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:sgrv_frontend/features/rentas/models/renta.dart';
@@ -20,7 +21,7 @@ class RentaCard extends StatelessWidget {
       elevation: 0,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(8),
         side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
       ),
       clipBehavior: Clip.antiAlias,
@@ -37,12 +38,12 @@ class RentaCard extends StatelessWidget {
                     width: 46,
                     height: 46,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFEAF0FF),
-                      borderRadius: BorderRadius.circular(14),
+                      color: Theme.of(context).colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.key_rounded,
-                      color: Color(0xFF3867F4),
+                      color: Theme.of(context).colorScheme.onPrimaryContainer,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -50,7 +51,7 @@ class RentaCard extends StatelessWidget {
                     child: Text(
                       'Renta #${renta.idRenta}',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
@@ -85,8 +86,8 @@ class RentaCard extends StatelessWidget {
                   const SizedBox(width: 7),
                   Expanded(
                     child: Text(
-                      '${date.format(renta.fechaInicio)} – '
-                      '${date.format(renta.fechaFin)}',
+                      '${(renta.periodoSinHora ? PeriodoAlquilerFechas.formato(renta.fechaInicio, true) : date.format(renta.fechaInicio))} – '
+                      '${(renta.periodoSinHora ? PeriodoAlquilerFechas.formato(renta.fechaFin, true) : date.format(renta.fechaFin))}',
                     ),
                   ),
                 ],
@@ -104,7 +105,7 @@ class RentaCard extends StatelessWidget {
                   Text(
                     money.format(renta.total),
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ],

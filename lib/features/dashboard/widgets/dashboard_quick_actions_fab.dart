@@ -76,7 +76,7 @@ class _DashboardQuickActionsFabState extends State<DashboardQuickActionsFab> {
                                   color: Theme.of(
                                     context,
                                   ).colorScheme.onSurface,
-                                  fontWeight: FontWeight.w800,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ),

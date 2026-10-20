@@ -1,8 +1,8 @@
-import 'package:flutter/foundation.dart';
+import 'package:sgrv_frontend/core/session/session_state.dart';
 import 'package:sgrv_frontend/features/auth/services/auth_service.dart';
 import 'package:sgrv_frontend/core/storage/token_storage.dart';
 
-class AuthProvider extends ChangeNotifier {
+class AuthProvider extends SessionNotifier {
   final AuthService _authService;
 
   AuthProvider({AuthService? authService})
@@ -39,6 +39,7 @@ class AuthProvider extends ChangeNotifier {
       return true;
     } catch (error) {
       _isAuthenticated = false;
+      _role = null;
 
       _errorMessage = error.toString().replaceFirst('Exception: ', '');
 

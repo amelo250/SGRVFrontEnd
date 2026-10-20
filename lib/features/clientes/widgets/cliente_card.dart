@@ -35,7 +35,7 @@ class ClienteCard extends StatelessWidget {
                   _initials(cliente),
                   style: TextStyle(
                     color: colors.onPrimaryContainer,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),

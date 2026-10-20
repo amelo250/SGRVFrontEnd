@@ -28,9 +28,12 @@ class RentaStatusChip extends StatelessWidget {
 
   static (Color, Color) _colors(String value, ColorScheme scheme) =>
       switch (value.toUpperCase()) {
-        'ACTIVA' => (const Color(0xFFE4F8EF), const Color(0xFF16855B)),
-        'FINALIZADA' => (const Color(0xFFE9EFFF), const Color(0xFF315BD5)),
-        'CANCELADA' => (const Color(0xFFFFE9E8), const Color(0xFFB73535)),
+        'ACTIVA' =>
+          scheme.brightness == Brightness.dark
+              ? (const Color(0xFF183D35), const Color(0xFF83DBB0))
+              : (const Color(0xFFE4F8EF), const Color(0xFF126F4B)),
+        'FINALIZADA' => (scheme.primaryContainer, scheme.onPrimaryContainer),
+        'CANCELADA' => (scheme.errorContainer, scheme.onErrorContainer),
         _ => (scheme.surfaceContainerHighest, scheme.onSurfaceVariant),
       };
 }

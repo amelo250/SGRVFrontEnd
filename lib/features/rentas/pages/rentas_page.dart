@@ -1,6 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:sgrv_frontend/features/auth/providers/auth_provider.dart';
+import 'package:sgrv_frontend/features/rentas/dtos/politica_renta_dto.dart';
+import 'package:sgrv_frontend/features/rentas/services/renta_service.dart';
+import 'package:sgrv_frontend/features/reservaciones/models/reservacion.dart';
 import 'package:provider/provider.dart';
 import 'package:sgrv_frontend/features/rentas/models/renta_dto.dart';
 import 'package:sgrv_frontend/features/rentas/models/renta_filters.dart';
@@ -10,6 +14,7 @@ import 'package:sgrv_frontend/features/rentas/providers/renta_provider.dart';
 import 'package:sgrv_frontend/features/rentas/widgets/renta_card.dart';
 import 'package:sgrv_frontend/features/rentas/widgets/renta_history_card.dart';
 import 'package:sgrv_frontend/features/rentas/widgets/renta_date_filter_bar.dart';
+import 'package:sgrv_frontend/features/rentas/widgets/reservacion_conversion_selector.dart';
 import 'package:sgrv_frontend/shared/widgets/app_module_ui.dart';
 
 class RentasPage extends StatefulWidget {
@@ -26,7 +31,7 @@ class _RentasPageState extends State<RentasPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<RentaProvider>().load();
+      context.read<RentaProvider>().changeScope(RentaListScope.active);
     });
   }
 
@@ -48,11 +53,6 @@ class _RentasPageState extends State<RentasPage> {
         body: Column(
           children: [
             _toolbar(context, provider),
-            RentaDateFilterBar(
-              from: provider.filters.fechaDesde,
-              to: provider.filters.fechaHasta,
-              onChanged: provider.applyDateRange,
-            ),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
               child: Card(
@@ -78,25 +78,14 @@ class _RentasPageState extends State<RentasPage> {
   }
 
   Widget _toolbar(BuildContext context, RentaProvider provider) => Padding(
-    padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
-    child: LayoutBuilder(
-      builder: (context, constraints) {
-        final search = TextField(
-          onChanged: _search,
-          decoration: InputDecoration(
-            hintText: 'Buscar cliente, vehículo o estado',
-            prefixIcon: const Icon(Icons.search),
-            filled: true,
-            fillColor: Colors.white,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide.none,
-            ),
-          ),
-        );
-        final actions = Wrap(
+    padding: const EdgeInsets.only(bottom: 16),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Wrap(
           spacing: 10,
           runSpacing: 10,
+          alignment: WrapAlignment.end,
           children: [
             OutlinedButton.icon(
               onPressed: provider.isMutating ? null : _convertReservation,
@@ -109,20 +98,33 @@ class _RentasPageState extends State<RentasPage> {
               label: const Text('Nueva renta'),
             ),
           ],
-        );
-        return constraints.maxWidth >= 760
-            ? Row(
+        ),
+        const SizedBox(height: 12),
+        AppFilterPanel(
+          child: Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
                 children: [
-                  Expanded(child: search),
-                  const SizedBox(width: 14),
-                  actions,
+                  TextField(
+                    onChanged: _search,
+                    decoration: const InputDecoration(
+                      hintText: 'Buscar cliente, vehículo o estado',
+                      prefixIcon: Icon(Icons.search),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  RentaDateFilterBar(
+                    from: provider.filters.fechaDesde,
+                    to: provider.filters.fechaHasta,
+                    onChanged: provider.applyDateRange,
+                  ),
                 ],
-              )
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [search, const SizedBox(height: 12), actions],
-              );
-      },
+              ),
+            ),
+          ),
+        ),
+      ],
     ),
   );
 
@@ -260,7 +262,7 @@ class _RentasPageState extends State<RentasPage> {
             title,
             style: Theme.of(
               context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
             textAlign: TextAlign.center,
           ),
           if (message != null) ...[
@@ -334,21 +336,72 @@ class _ConvertReservationDialog extends StatefulWidget {
 
 class _ConvertReservationDialogState extends State<_ConvertReservationDialog> {
   final _key = GlobalKey<FormState>();
-  final _reservation = TextEditingController();
+  int? _reservationId;
+  Reservacion? _selectedReservation;
+  PoliticaRentaDto? _policy;
+  bool _policyLoading = true;
+  String? _policyError;
+  bool _discountOverride = false;
+  bool get _isAdmin =>
+      const ["ADMIN", "SUPADMIN"].contains(context.read<AuthProvider>().role);
+  bool get _allowDiscount =>
+      (_isAdmin && _discountOverride) ||
+      (_policy != null &&
+          _selectedReservation != null &&
+          _policy!.permiteDescuento(
+            _selectedReservation!.fechaInicio,
+            _selectedReservation!.fechaFin,
+          ));
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPolicy();
+  }
+
+  Future<void> _loadPolicy() async {
+    setState(() {
+      _policyLoading = true;
+      _policyError = null;
+    });
+    final service = RentaService();
+    try {
+      final policy = await service.getPolicy();
+      if (!mounted) return;
+      setState(() {
+        _policy = policy;
+        _policyLoading = false;
+        if (!_allowDiscount) _discounts.text = '0';
+      });
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _policyLoading = false;
+          _policyError = 'No se pudo cargar el mínimo de días de renta.';
+        });
+      }
+    } finally {
+      service.dispose();
+    }
+  }
+
   final _taxes = TextEditingController(text: '0');
   final _discounts = TextEditingController(text: '0');
   final _deposit = TextEditingController(text: '0');
   final _rate = TextEditingController(text: '1');
   final _notes = TextEditingController();
+  final _deliveryPlace = TextEditingController();
+  final _receptionPlace = TextEditingController();
 
   @override
   void dispose() {
-    _reservation.dispose();
     _taxes.dispose();
     _discounts.dispose();
     _deposit.dispose();
     _rate.dispose();
     _notes.dispose();
+    _deliveryPlace.dispose();
+    _receptionPlace.dispose();
     super.dispose();
   }
 
@@ -364,16 +417,40 @@ class _ConvertReservationDialogState extends State<_ConvertReservationDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _field(
-                _reservation,
-                'ID de reservación',
-                integer: true,
-                positive: true,
+              if (_policyLoading) const LinearProgressIndicator(),
+              if (_policyError != null) ...[
+                Text(_policyError!),
+                TextButton(
+                  onPressed: _loadPolicy,
+                  child: const Text('Reintentar'),
+                ),
+              ],
+              if (_policy != null)
+                Text(
+                  'Mínimo de renta: ${_policy!.minimoDias} días. Descuento al mínimo requiere habilitación de un administrador.',
+                ),
+              ReservacionConversionSelector(
+                onChanged: (value) => _reservationId = value,
+                onReservationChanged: (value) => setState(() {
+                  _selectedReservation = value;
+                  _deliveryPlace.text = value?.lugarEntrega ?? '';
+                  _receptionPlace.text = value?.lugarRecepcion ?? '';
+                  if (!_allowDiscount) _discounts.text = '0';
+                }),
               ),
               const SizedBox(height: 12),
               _field(_taxes, 'Impuestos'),
               const SizedBox(height: 12),
-              _field(_discounts, 'Descuentos'),
+              if (_isAdmin)
+                SwitchListTile(
+                  title: const Text('Habilitar descuento excepcional'),
+                  value: _discountOverride,
+                  onChanged: (value) => setState(() {
+                    _discountOverride = value;
+                    if (!_allowDiscount) _discounts.text = '0';
+                  }),
+                ),
+              _field(_discounts, 'Descuentos', enabled: _allowDiscount),
               const SizedBox(height: 12),
               _field(_deposit, 'Depósito'),
               const SizedBox(height: 12),
@@ -387,6 +464,24 @@ class _ConvertReservationDialogState extends State<_ConvertReservationDialog> {
                 ),
               ),
               const SizedBox(height: 12),
+              TextFormField(
+                controller: _deliveryPlace,
+                maxLength: 250,
+                decoration: const InputDecoration(
+                  labelText: 'Lugar de entrega',
+                ),
+                validator: (v) =>
+                    (v?.length ?? 0) > 250 ? 'Máximo 250 caracteres' : null,
+              ),
+              TextFormField(
+                controller: _receptionPlace,
+                maxLength: 250,
+                decoration: const InputDecoration(
+                  labelText: 'Lugar de recepción / devolución',
+                ),
+                validator: (v) =>
+                    (v?.length ?? 0) > 250 ? 'Máximo 250 caracteres' : null,
+              ),
               TextField(
                 controller: _notes,
                 maxLines: 3,
@@ -406,7 +501,12 @@ class _ConvertReservationDialogState extends State<_ConvertReservationDialog> {
         onPressed: () => Navigator.pop(context),
         child: const Text('Cancelar'),
       ),
-      FilledButton(onPressed: _submit, child: const Text('Convertir')),
+      FilledButton(
+        onPressed: _policy == null || _policyLoading || _policyError != null
+            ? null
+            : _submit,
+        child: const Text('Convertir'),
+      ),
     ],
   );
 
@@ -415,8 +515,10 @@ class _ConvertReservationDialogState extends State<_ConvertReservationDialog> {
     String label, {
     bool integer = false,
     bool positive = false,
+    bool enabled = true,
   }) => TextFormField(
     controller: controller,
+    enabled: enabled,
     keyboardType: TextInputType.numberWithOptions(decimal: !integer),
     decoration: InputDecoration(
       labelText: label,
@@ -436,11 +538,29 @@ class _ConvertReservationDialogState extends State<_ConvertReservationDialog> {
   );
 
   void _submit() {
+    if (_policy == null ||
+        _selectedReservation == null ||
+        _policyLoading ||
+        _policyError != null) {
+      return;
+    }
     if (!_key.currentState!.validate()) return;
+    final error = _policy!.validar(
+      _selectedReservation!.fechaInicio,
+      _selectedReservation!.fechaFin,
+      double.parse(_discounts.text.trim().replaceAll(',', '.')),
+      permitirDescuentoMinimo: _isAdmin && _discountOverride,
+    );
+    if (error != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
+      return;
+    }
     Navigator.pop(
       context,
       _ConversionData(
-        reservationId: int.parse(_reservation.text.trim()),
+        reservationId: _reservationId!,
         dto: ConvertirReservacionRentaDto(
           impuestos: double.parse(_taxes.text.trim().replaceAll(',', '.')),
           descuentos: double.parse(_discounts.text.trim().replaceAll(',', '.')),
@@ -449,6 +569,8 @@ class _ConvertReservationDialogState extends State<_ConvertReservationDialog> {
             _rate.text.trim().replaceAll(',', '.'),
           ),
           observaciones: _notes.text,
+          lugarEntrega: _deliveryPlace.text,
+          lugarRecepcion: _receptionPlace.text,
         ),
       ),
     );

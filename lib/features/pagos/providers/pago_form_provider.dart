@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:sgrv_frontend/core/session/session_state.dart';
 import 'package:sgrv_frontend/core/network/api_exception.dart';
 import 'package:sgrv_frontend/features/pagos/models/pago_catalog_option.dart';
 import 'package:sgrv_frontend/features/pagos/models/pago_summary.dart';
@@ -8,7 +8,7 @@ import 'package:sgrv_frontend/features/rentas/models/renta.dart';
 import 'package:sgrv_frontend/features/rentas/models/renta_page_result.dart';
 import 'package:sgrv_frontend/features/rentas/services/renta_service.dart';
 
-class PagoFormProvider extends ChangeNotifier {
+class PagoFormProvider extends SessionNotifier {
   PagoFormProvider({
     PagoCatalogService? catalogService,
     RentaService? rentaService,

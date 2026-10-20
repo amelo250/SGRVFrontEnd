@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:sgrv_frontend/core/session/session_state.dart';
 import 'package:sgrv_frontend/core/network/api_exception.dart';
 import 'package:sgrv_frontend/features/vehiculos/models/vehiculo.dart';
 import 'package:sgrv_frontend/features/vehiculos/models/vehiculo_dto.dart';
@@ -9,7 +9,7 @@ import 'package:sgrv_frontend/core/storage/token_storage.dart';
 
 enum VehiculoStatus { initial, loading, success, empty, error }
 
-class VehiculoProvider extends ChangeNotifier {
+class VehiculoProvider extends SessionNotifier {
   VehiculoProvider({VehiculoService? service})
     : _service = service ?? VehiculoService();
 

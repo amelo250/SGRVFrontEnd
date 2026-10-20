@@ -107,7 +107,7 @@ class _UsuarioAdminFormPageState extends State<UsuarioAdminFormPage> {
                               'Crear usuario de la aplicación',
                               style: TextStyle(
                                 fontSize: 24,
-                                fontWeight: FontWeight.w900,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
                             const SizedBox(height: 8),
